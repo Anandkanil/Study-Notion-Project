@@ -40,8 +40,7 @@ exports.sendOTP = async function (req, res) {
         console.log("OTP generated and sent successfully.");
         return res.status(201).json({
             success: true,
-            message: 'OTP generated and sent successfully',
-            OTP:otp
+            message: 'OTP generated and sent successfully'
         });
 
     } catch (error) {
@@ -54,7 +53,8 @@ exports.sendOTP = async function (req, res) {
 };
 
 exports.signUp = async function (req, res) {
-    const { firstName, lastName, email, password, confirmPassword, accountType, contactNumber, otp } = req.body;
+
+    const { firstName, lastName, email, password, confirmPassword, accountType, otp } = req.body;
 
     // Validate required fields
     if (!firstName || !lastName || !email || !password || !confirmPassword || !otp) {
@@ -98,7 +98,6 @@ exports.signUp = async function (req, res) {
             email,
             password: hashedPassword,
             accountType,
-            contactNumber,
             additionalDetails: profileDetails._id,
             image: `https://api.dicebear.com/9.x/initials/svg?seed=${encodeURIComponent(firstName)}%20${encodeURIComponent(lastName)}&bold=true`
         });
@@ -131,7 +130,7 @@ exports.login = async function (req, res) {
         // Check if the user exists
         const user = await User.findOne({ email }).populate('additionalDetails');
         if (!user) {
-            return res.status(401).json({ success: false, message: "User is not registered with us. Please signUp to continue." });
+            return res.status(401).json({ success: false, message: "You are not registered with us yet. Please sign up to get started!" });
         }
 
         // Verify the password

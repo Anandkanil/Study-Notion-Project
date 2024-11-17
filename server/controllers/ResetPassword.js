@@ -1,6 +1,8 @@
 const crypto = require('crypto');
 const bcrypt = require('bcrypt');
 const User = require('../models/User'); // User model
+const passwordResetTokenMailTemplate=require('../mail/templates/passwordResetLink')
+const emailVerificationTemplate =require('../mail/templates/emailVerificationTemplate');
 const mailSender = require('../utils/mailSender'); // Custom mail function or use Nodemailer
 
 exports.createPasswordResetToken = async function (req, res) {
@@ -10,7 +12,7 @@ exports.createPasswordResetToken = async function (req, res) {
         // Step 1: Check if the user exists
         const user = await User.findOne({ email });
         if (!user) {
-            return res.status(404).json({ success: false, message: 'User not found' });
+            return res.status(404).json({ success: false, message: "User doesn't exist" });
         }
 
         // Step 2: Generate a secure reset token
@@ -24,11 +26,14 @@ exports.createPasswordResetToken = async function (req, res) {
         user.resetPasswordExpires = Date.now() + 5 * 60 * 1000; // Token expires in 5 minutes
         await user.save();
 
+		const encodedToken = encodeURIComponent(hashedToken);
+
         // Step 5: Create the password reset URL
-        const resetUrl = `${req.protocol}://${req.get('host')}/reset-password/${hashedToken}`;
+        const resetUrl = `http://localhost:3000/reset-password/${encodedToken}`;
 
         // Step 6: Send the reset URL to the user's email
-        const mailBody = `Hello ${user.firstName},\n\nYou requested a password reset. Please use the following link to reset your password:\n\n${resetUrl}\n\nThis link will expire in 5 minutes.\n\nIf you did not request a password reset, please ignore this email.\n\nBest regards,\nYour App Team`;
+        // const mailBody = `Hello ${user.firstName},\n\nYou requested a password reset. Please use the following link to reset your password:\n\n${resetUrl}\n\nThis link will expire in 5 minutes.\n\nIf you did not request a password reset, please ignore this email.\n\nBest regards,\nYour App Team`;
+		const mailBody=passwordResetTokenMailTemplate.passwordReset(user.email,user.firstName,resetUrl);
         await mailSender(user.email, "Password Reset Request", mailBody);
 
         // Step 7: Respond with a success message
@@ -49,6 +54,8 @@ exports.createPasswordResetToken = async function (req, res) {
 exports.resetPassword = async (req, res) => {
 	try {
 		const { password, confirmPassword, token } = req.body;
+		console.log("The password is ",password);
+		console.log("The confirm password is ",confirmPassword);
 
 		if (confirmPassword !== password) {
 			return res.json({

@@ -2,8 +2,13 @@ import React, { useState } from 'react';
 import toast from 'react-hot-toast';
 import { AiOutlineEyeInvisible,AiOutlineEye } from "react-icons/ai";
 import { Link, useNavigate } from 'react-router-dom';
+import { login } from '../../../services/operations/authAPI';
+import { useDispatch } from 'react-redux';
 
-export default function LoginForm({setIsLoggedIn}) {
+export default function LoginForm() {
+
+    const dispatch=useDispatch();
+    const navigate=useNavigate();
     const [formData, setFormData] = useState({
         email: "",
         password: ""
@@ -17,15 +22,11 @@ export default function LoginForm({setIsLoggedIn}) {
     }
     
     const [showPassword, setShowPassword] = useState(false);
-    const navigate=useNavigate();
 
     function submitHandler(e){
         e.preventDefault();
         if(formData.email!=="" && formData.password!==""){
-            toast.success("Logged In");
-            setIsLoggedIn(true);
-            navigate('/dashboard');
-            console.log(formData);
+            dispatch(login(formData.email,formData.password,navigate));
         }
     }
     return (
@@ -41,7 +42,7 @@ export default function LoginForm({setIsLoggedIn}) {
                 <span className='absolute right-3 top-[38px] z-[10] cursor-pointer' onClick={() => { setShowPassword(!showPassword) }}>
                     {showPassword ? <AiOutlineEyeInvisible color="white" height="1em" width="1em" font-size="24"/> : <AiOutlineEye color="white" height="1em" width="1em" font-size="24"/>}
                 </span>
-            <Link to="#"><p className='text-xs mt-1 text-blue-100 max-w-max ml-auto'>Forgot Password?</p></Link>
+            <Link to="/forgot-password"><p className='text-xs mt-1 text-blue-100 max-w-max ml-auto'>Forgot Password?</p></Link>
             </label>
             <button className='bg-yellow-50 py-[8px] px-[12px] rounded-[8px] mt-6 font-medium text-richblack-900' type='submit'>Sign In</button>
 

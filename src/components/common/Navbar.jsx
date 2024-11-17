@@ -20,7 +20,6 @@ const Navbar = () => {
         try {
             // Making an API call to fetch category data
             const result = await apiConnector("GET", categories.CATEGORIES_API);
-            console.log("Printing the sublinks data ", result.data.allCategories);
             setSubLinks(result.data.allCategories); // Set the fetched sublinks to state
         } catch (error) {
             console.log("Could not fetch the Category List");
