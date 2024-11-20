@@ -26,8 +26,6 @@ export function sendOtp(email, navigate) {
         checkUserPresent: true, // Option to check if the user already exists
       });
 
-      console.log("SENDOTP API RESPONSE:", response); // Log the API response
-
       if (!response.data.success) {
         throw new Error(response.data.message); // Handle unsuccessful response
       }
@@ -84,28 +82,56 @@ export function signUp(firstName, lastName, email, password, confirmPassword, ac
   };
 }
 
-export function login(email,password,navigate){
-  return async (dispatch)=>{
-    // const toastId = toast.loading("Loading...");
+export function login(email, password, navigate) {
+  return async (dispatch) => {
     dispatch(setLoading(true));
+
     try {
-      const response=await apiConnector('POST',LOGIN_API,{email,password});
-      if(!response.data.success){
+      const response = await apiConnector("POST", LOGIN_API, { email, password });
+
+      if (!response.data.success) {
         throw new Error(response.data.message);
       }
 
-      toast.success("Log In Success");
-      navigate('/');
+      // Extract the user data and token
+      const user = response.data.data;
+      const token = response.data.token; 
+
+      // Update Redux state with user and token
+      dispatch(setUser(user));
+      dispatch(setToken(token));
+
+      // Persist user info and token to localStorage
+      localStorage.setItem("user", JSON.stringify(user));
+      localStorage.setItem("token", JSON.stringify(token));
+
+      // Notify the user and redirect
+      toast.success("Login successful! Welcome back.");
+      navigate("/dashboard/my-profile");
 
     } catch (error) {
-      console.error("Authentication ERROR:", error.message);
-      const errorMessage = error.response?.data?.message || "Login Failed";
+      console.error("Login Error:", error);
+
+      const errorMessage =
+        error.response?.data?.message || "Failed to log in. Please try again.";
       toast.error(errorMessage);
-    }
-    finally{
+    } finally {
       dispatch(setLoading(false));
-      // toast.dismiss(toastId);
     }
+  };
+}
+
+
+// Function to Log Out
+export function logout(navigate){
+  return (dispatch)=>{
+    dispatch((setToken(null)));
+    dispatch((setUser(null)));
+    // dispatch((resetCart()));
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    toast.success("Logged Out");
+    navigate('/');
   }
 }
 
@@ -128,7 +154,7 @@ export function getPasswordResetToken(email, setEmailSent) {
       setEmailSent(true);
     } catch (error) {
       console.error("RESET PASSWORD TOKEN ERROR:", error);
-      toast.error("Failed to send email for resetting password");
+      toast.error(error.response?.data?.message || "Failed to send email for resetting password");
     } finally {
       dispatch(setLoading(false));
     }
@@ -136,7 +162,7 @@ export function getPasswordResetToken(email, setEmailSent) {
 }
 
 // Function to reset password
-export function resetPassword(password, confirmPassword, token) {
+export function resetPassword(password, confirmPassword, token,navigate) {
   return async (dispatch) => {
     dispatch(setLoading(true));
 
@@ -155,11 +181,15 @@ export function resetPassword(password, confirmPassword, token) {
 
       // Success: Notify user
       toast.success("Password has been reset successfully");
+      navigate('/login')
     } catch (error) {
       console.error("RESET PASSWORD ERROR:", error);
-      toast.error("Unable to reset password");
+      toast.error(error.response?.data?.message||"Unable to reset password");
     } finally {
       dispatch(setLoading(false));
     }
   };
 }
+
+
+

@@ -41,13 +41,15 @@ exports.passwordReset = (email, name, resetLink) => {
     
             .button {
                 display: inline-block;
-                background-color: #007BFF;
-                color: #ffffff;
+                background-color: #007BFF; 
+                color: #fff;
                 text-decoration: none;
-                padding: 10px 20px;
+                padding: 12px 24px;
                 border-radius: 5px;
                 font-size: 16px;
+                font-weight: bold; 
                 margin-top: 20px;
+                text-align: center;
             }
     
             .support {

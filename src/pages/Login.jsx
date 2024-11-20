@@ -1,5 +1,5 @@
 import React from 'react'
-import Template from '../components/core/LoginPage/Template'
+import Template from '../components/core/Auth/Template'
 import loginImage from '../assets/Images/login.webp' 
 export default function Login({setIsLoggedIn}) {
   return (

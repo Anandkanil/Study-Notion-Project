@@ -149,7 +149,8 @@ exports.login = async function (req, res) {
         res.cookie('token', token, options).status(200).json({
             success: true,
             message: "Login successful",
-            token
+            token,
+            data:user
         });
 
         // Send response with token

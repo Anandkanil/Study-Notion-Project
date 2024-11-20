@@ -2,6 +2,7 @@ import React from 'react'
 import  {HomePageExplore} from "../../../data/homepage-explore"
 import HighlightText from './HighlightText';
 import { useState } from 'react';
+import CourseCard from './CourseCard'
 
 
 const tabsName = [
@@ -64,7 +65,7 @@ const ExploreMore = () => {
 
       {/* course card ka group */}
 
-      {/* <div className='absolute flex flex-row gap-10 justify-between w-full'>
+      <div className='absolute flex flex-row gap-10 justify-between w-full'>
         {
             courses.map(  (element, index) => {
                 return (
@@ -77,7 +78,7 @@ const ExploreMore = () => {
                 )
             } )
         }
-      </div> */}
+      </div>
 
 
     </div>

@@ -1,5 +1,5 @@
 import React from 'react'
-import Template from '../components/core/LoginPage/Template'
+import Template from '../components/core/Auth/Template'
 import signUpImage from '../assets/Images/signup.webp'
 export default function Signup() {
   return <Template
