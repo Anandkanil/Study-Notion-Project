@@ -18,7 +18,6 @@ const ConfirmationModal = ( modalData ) => {
           <IconBtn
             onclick={modalData?.btn1Handler}
             text={modalData?.btn1Text}
-            style="bg-yellow-50 font-semibold hover:bg-yellow-600 text-black py-2 px-4 rounded-lg transition duration-300"
           />
 
           {/* Secondary action button */}

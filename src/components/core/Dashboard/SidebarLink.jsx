@@ -14,7 +14,7 @@ const SidebarLink = ({ name, path, type, iconName }) => {
   return (
     <NavLink
       to={path}
-      className={`relative px-8 py-2 text-sm transition-all duration-300 text-white ${
+      className={`relative min-w-[200px] px-8 py-2 text-md transition-all duration-300 text-white ${
         matchRoute(path) ? "bg-yellow-800" : "hover:bg-yellow-800"
       }`}
     >

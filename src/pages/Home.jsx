@@ -6,6 +6,7 @@ import CTAButton from '../components/core/HomePage/Button'
 import Footer from '../components/common/Footer'
 import InstructorSection from '../components/core/HomePage/InstructorSection'
 import Banner from '../assets/Images/banner.mp4'
+import Banner2 from '../assets/Images/banner2.mp4'
 import CodeBlocks from '../components/core/HomePage/CodeBlocks';
 import TimelineSection from '../components/core/HomePage/TimelineSection';
 import LanguageLearningSection from '../components/core/HomePage/LanguageLearningSection';
@@ -48,7 +49,7 @@ const Home = () => {
 
                 <div className='shadow-custom-blue mx-3 my-12'>
                     <video muted autoPlay loop>
-                        <source src={Banner} type="video/mp4" />
+                        <source src={Banner2} type="video/mp4" />
 
                     </video>
                 </div>

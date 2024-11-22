@@ -183,29 +183,43 @@ exports.updateDisplayPicture = async (req, res) => {
       })
     }
 };
-  
 exports.getEnrolledCourses = async (req, res) => {
     try {
-      const userId = req.user.userId
-      const userDetails = await User.findOne({
-        _id: userId,
-      })
+      const userId = req.user.userId;
+  
+      // Fetch user details along with their enrolled courses
+      const userDetails = await User.findOne({ _id: userId })
         .populate("courses")
-        .exec()
+        .exec();
+  
+      // Check if the user exists
       if (!userDetails) {
-        return res.status(400).json({
+        return res.status(404).json({
           success: false,
-          message: `Could not find user with id: ${userDetails}`,
-        })
+          message: `User not found with ID: ${userId}`,
+        });
       }
+  
+      // Check if the user has enrolled in any courses
+      if (userDetails.courses.length === 0) {
+        return res.status(200).json({
+          success: true,
+          message: "No courses enrolled",
+          data: [],
+        });
+      }
+  
+      // Return the list of enrolled courses
       return res.status(200).json({
         success: true,
         data: userDetails.courses,
-      })
+      });
     } catch (error) {
+      // Handle unexpected errors
       return res.status(500).json({
         success: false,
         message: error.message,
-      })
+      });
     }
-};
+  };
+  

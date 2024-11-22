@@ -3,14 +3,12 @@ import logo from "../../assets/Logo/Logo-Full-Light.png";
 import { Link, matchPath } from 'react-router-dom';
 import { NavbarLinks } from "../../data/navbar-links";
 import { useLocation } from 'react-router-dom';
-import { useDispatch, useSelector } from 'react-redux';
+import { useSelector } from 'react-redux';
 import { AiOutlineShoppingCart } from "react-icons/ai";
 import ProfileDropDown from '../core/Auth/ProfileDropDown';
 import { apiConnector } from '../../services/apiconnector';
 import { categories } from '../../services/apis';
 import { FaChevronDown } from "react-icons/fa6";
-import { setUser } from '../../slices/profileSlice';
-import { setToken } from '../../slices/authSlice';
 
 // Navbar Component
 const Navbar = () => {
@@ -29,8 +27,6 @@ const Navbar = () => {
             setLoadingCategories(false); // Set loading to false after fetch completes
         }
     };
-    const [showProfileDropdown, setShowProfileDropdown] = useState(false); // Controls dropdown visibility
-
 
     // React Router hooks to track the current location
     const location = useLocation();
@@ -47,13 +43,8 @@ const Navbar = () => {
 
     // Fetch sublinks data only on component mount
     useEffect(() => {
-        if (user) {
-            setShowProfileDropdown(true);
-        } else {
-            setShowProfileDropdown(false);
-        }
         fetchSubLinks();
-    },[]);
+    },[user,token]);
 
     return (
         <div className='flex h-14 items-center justify-center border-b-[1px] border-b-richblack-700'>
@@ -118,7 +109,7 @@ const Navbar = () => {
                     {/* Display cart icon only if user is logged in and is not an instructor */}
                     {user && user?.accountType !== "Instructor" && (
                         <Link to="/dashboard/cart" className='relative'>
-                            <AiOutlineShoppingCart />
+                            <AiOutlineShoppingCart className='text-white' size={20} />
                             {totalItems > 0 && (
                                 // Display total items in cart if greater than 0
                                 <span className='absolute'>{totalItems}</span>
@@ -143,7 +134,7 @@ const Navbar = () => {
                     )}
 
                     {/* Show Profile Dropdown if user is logged in */}
-                    {user != null && showProfileDropdown && (
+                    {user != null && (
                     <ProfileDropDown />
                 )}
                 </div>

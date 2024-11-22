@@ -4,7 +4,9 @@ function authenticateToken(req, res, next) {
     // Retrieve token from headers
     const authHeader = req.headers['authorization'];
     // const token = authHeader && authHeader.split(' ')[1]; // Extract token if Bearer format
-    const token = req.cookies.token || req.body.token || req.headers['authorization'].split(' ')[1];  // Extract token if Bearer format
+    const token = req.cookies.token || req.body.token || (req.headers['authorization'] && req.headers['authorization'].startsWith('Bearer ') 
+    ? req.headers['authorization'].replace('Bearer ', '') 
+    : null);  // Extract token if Bearer format
 
     // Check if token is present
     if (!token) {
@@ -21,7 +23,7 @@ function authenticateToken(req, res, next) {
         // Call the next middleware or route handler
         next();
     } catch (error) {
-        return res.status(403).json({ success: false, message: 'Invalid or expired token.' });
+        return res.status(403).json({ success: false, message: `Invalid or expired token. ${error.message}` });
     }
 }
 

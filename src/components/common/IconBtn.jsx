@@ -8,7 +8,7 @@ const IconBtn = ({
     outline=false,
     customClasses,
     type,
-    style
+    style=`bg-yellow-100 font-semibold hover:bg-yellow-600 text-black py-2 px-4 rounded-lg transition duration-300 flex items-center gap-2`
 }) => {
   return (
     <button 
