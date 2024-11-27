@@ -45,7 +45,7 @@ exports.updateProfile = async (req, res) => {
 
     // Update profile in the database
     await Profile.findByIdAndUpdate(
-      user.additionalDetails._id,
+      user.additionalDetails,
       updatedProfileData,
       { new: true, runValidators: true }
     );
@@ -64,7 +64,7 @@ exports.updateProfile = async (req, res) => {
     console.error("Error updating profile:", error.message);
     return res.status(500).json({
       success: false,
-      message: "An error occurred while updating the profile.",
+      message: error.message,
     });
   }
 };

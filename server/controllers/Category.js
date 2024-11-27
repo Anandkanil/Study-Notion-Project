@@ -10,7 +10,7 @@ const createCategory = async function (req, res) {
         if (!name || !description) {
             return res.status(400).json({
                 success: false,
-                message: "Both name and description are required."
+                message: "Both name and description are required.",
             });
         }
 
@@ -19,7 +19,7 @@ const createCategory = async function (req, res) {
         if (existingCategory) {
             return res.status(400).json({
                 success: false,
-                message: "Category with this name already exists."
+                message: "Category with this name already exists.",
             });
         }
 
@@ -30,13 +30,14 @@ const createCategory = async function (req, res) {
         // Respond with success
         return res.status(201).json({
             success: true,
-            message: "Category successfully created."
+            message: "Category successfully created.",
+            data: newCategory,
         });
     } catch (error) {
         console.error("Category creation failed:", error.message);
         return res.status(500).json({
             success: false,
-            message: "An internal server error occurred while creating the Category."
+            message: "An internal server error occurred while creating the category.",
         });
     }
 };
@@ -51,73 +52,112 @@ const showAllCategories = async function (req, res) {
         if (allCategories.length === 0) {
             return res.status(404).json({
                 success: false,
-                message: "No Categories found."
+                message: "No categories found.",
             });
         }
 
         // Respond with the list of Categories
         return res.status(200).json({
             success: true,
-            allCategories
+            data: allCategories,
         });
     } catch (error) {
-        console.error("Error fetching Categories:", error.message);
+        console.error("Error fetching categories:", error.message);
         return res.status(500).json({
             success: false,
-            message: "An error occurred while fetching Categories."
+            message: "An error occurred while fetching categories.",
         });
     }
 };
 
-// Function to get details of a specific category along with associated courses
+// Function to get category page details
 const categoryPageDetails = async (req, res) => {
     try {
-        // Get categoryId from request body
         const { categoryId } = req.body;
 
-        // Validate categoryId
         if (!categoryId) {
             return res.status(400).json({
                 success: false,
-                message: "categoryId is required."
+                message: "Category ID is required.",
             });
         }
 
-        // Find the category by ID
-        const category = await Category.findById(categoryId).populate('courses');
+        console.log("PRINTING CATEGORY ID: ", categoryId);
 
-        // Check if the category exists
-        if (!category) {
+        // Get courses for the specified category
+        const selectedCategory = await Category.findById(categoryId)
+            .populate({
+                path: "courses",
+                match: { status: "Published" },
+                populate: { path: "ratingAndReviews" },
+            })
+            .exec();
+
+        // Handle the case when the category is not found
+        if (!selectedCategory) {
+            console.log("Category not found.");
             return res.status(404).json({
                 success: false,
-                message: "Category not found."
+                message: "Category not found.",
             });
         }
-        //get the Categories other that the current category
-        const differentCategories=Category.find({_id:{$ne:categoryId}}).populate('courses');
 
+        // Handle the case when there are no courses
+        if (!selectedCategory.courses || selectedCategory.courses.length === 0) {
+            console.log("No courses found for the selected category.");
+            return res.status(404).json({
+                success: false,
+                message: "No courses found for the selected category.",
+            });
+        }
 
-        // Find all courses associated with this category
-        const courses = await Course.find({ category: categoryId })
-            .populate('instructor', 'username email')
-            .select('title description price instructor');
+        // Get courses for a random other category
+        const categoriesExceptSelected = await Category.find({
+            _id: { $ne: categoryId },
+        });
 
-        // Respond with category details and associated courses
+        let differentCategory = null;
+
+        if (categoriesExceptSelected.length > 0) {
+            const randomIndex = Math.floor(Math.random() * categoriesExceptSelected.length);
+            differentCategory = await Category.findById(categoriesExceptSelected[randomIndex]._id)
+                .populate({
+                    path: "courses",
+                    match: { status: "Published" },
+                })
+                .exec();
+        }
+
+        // Get top-selling courses across all categories
+        const allCategories = await Category.find()
+            .populate({
+                path: "courses",
+                match: { status: "Published" },
+                populate: { path: "instructor" },
+            })
+            .exec();
+
+        const allCourses = allCategories.flatMap((category) => category.courses);
+        const mostSellingCourses = allCourses
+            .sort((a, b) => b.sold - a.sold)
+            .slice(0, 10);
+
         return res.status(200).json({
             success: true,
-            category,
-            courses,
-            message: "Category details retrieved successfully."
+            data: {
+                selectedCategory,
+                differentCategory,
+                mostSellingCourses,
+            },
         });
     } catch (error) {
-        console.error("Error fetching category details:", error.message);
+        console.error("Error fetching category page details:", error.message);
         return res.status(500).json({
             success: false,
-            message: "An error occurred while fetching category details. Please try again later."
+            message: "Internal server error.",
         });
     }
 };
 
-
-// Export both functions
+// Export the functions
 module.exports = { createCategory, showAllCategories, categoryPageDetails };

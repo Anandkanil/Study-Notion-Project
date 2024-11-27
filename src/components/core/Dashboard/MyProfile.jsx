@@ -34,7 +34,7 @@ export default function MyProfile() {
             navigate("/dashboard/settings")
           }}
         >
-          <RiEditBoxLine />
+          <RiEditBoxLine className="ml-2" />
         </IconBtn>
       </div>
       <div className="my-10 flex flex-col gap-y-10 rounded-md border-[1px] border-richblack-700 bg-richblack-800 p-8 px-12">
@@ -46,7 +46,7 @@ export default function MyProfile() {
               navigate("/dashboard/settings")
             }}
           >
-            <RiEditBoxLine />
+            <RiEditBoxLine className="ml-2" />
           </IconBtn>
         </div>
         <p
@@ -70,7 +70,7 @@ export default function MyProfile() {
               navigate("/dashboard/settings")
             }}
           >
-            <RiEditBoxLine />
+           <RiEditBoxLine className="ml-2" />
           </IconBtn>
         </div>
         <div className="flex max-w-[500px] justify-between">

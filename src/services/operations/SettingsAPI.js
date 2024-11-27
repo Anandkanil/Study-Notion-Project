@@ -120,7 +120,7 @@ export async function changePassword(token, formData) {
       Authorization: `Bearer ${token}`,
     });
 
-    console.log("CHANGE_PASSWORD_API response:", response);
+    // console.log("CHANGE_PASSWORD_API response:", response);
 
     // Handle unsuccessful responses
     if (!response.data?.success) {
