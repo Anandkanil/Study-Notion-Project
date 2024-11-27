@@ -4,7 +4,7 @@ import { FiUploadCloud } from "react-icons/fi"
 import { useSelector } from "react-redux"
 
 import "video-react/dist/video-react.css"
-import { Player } from "video-react"
+import { BigPlayButton, Player } from "video-react"
 
 export default function Upload({
   name,
@@ -79,7 +79,9 @@ export default function Upload({
                 className="h-full w-full rounded-md object-cover"
               />
             ) : (
-              <Player aspectRatio="16:9" playsInline src={previewSource} />
+              <Player aspectRatio="16:9" playsInline src={previewSource}  >
+              <BigPlayButton position="center" />
+              </Player>
             )}
             {!viewData && (
               <button
@@ -111,7 +113,7 @@ export default function Upload({
               Drag and drop an {!video ? "image" : "video"}, or click to{" "}
               <span
                 className="font-semibold text-yellow-50 cursor-pointer"
-                onClick={handleBrowseClick} // Open file dialog
+                // onClick={handleBrowseClick} // Open file dialog
               >
                 Browse
               </span>{" "}

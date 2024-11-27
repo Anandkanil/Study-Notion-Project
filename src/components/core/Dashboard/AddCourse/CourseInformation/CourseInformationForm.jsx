@@ -48,7 +48,7 @@ export default function CourseInformationForm() {
       setValue("courseTitle", course.courseName)
       setValue("courseShortDesc", course.courseDescription)
       setValue("coursePrice", course.price)
-      setValue("courseTags", course.tag)
+      setValue("courseTags", course.tags)
       setValue("courseBenefits", course.whatYouWillLearn)
       setValue("courseCategory", course.category)
       setValue("courseRequirements", course.instructions)
@@ -66,7 +66,7 @@ export default function CourseInformationForm() {
       currentValues.courseTitle !== course.courseName ||
       currentValues.courseShortDesc !== course.courseDescription ||
       currentValues.coursePrice !== course.price ||
-      currentValues.courseTags.toString() !== course.tag.toString() ||
+      currentValues.courseTags.toString() !== course.tags.toString() ||
       currentValues.courseBenefits !== course.whatYouWillLearn ||
       currentValues.courseCategory._id !== course.category._id ||
       currentValues.courseRequirements.toString() !==
@@ -88,6 +88,7 @@ export default function CourseInformationForm() {
       // console.log("now course:", course)
       // console.log("Has Form Changed:", isFormUpdated())
       if (isFormUpdated()) {
+        console.log("The form edit came here")
         const currentValues = getValues()
         const formData = new FormData()
         // console.log(data)
@@ -101,7 +102,7 @@ export default function CourseInformationForm() {
         if (currentValues.coursePrice !== course.price) {
           formData.append("price", data.coursePrice)
         }
-        if (currentValues.courseTags.toString() !== course.tag.toString()) {
+        if (currentValues.courseTags.toString() !== course.tags.toString()) {
           formData.append("tag", JSON.stringify(data.courseTags))
         }
         if (currentValues.courseBenefits !== course.whatYouWillLearn) {
@@ -125,10 +126,11 @@ export default function CourseInformationForm() {
         // console.log("Edit Form data: ", formData)
         setLoading(true)
         const result = await editCourseDetails(formData, token)
+        console.log("Edit SetCourse data: ", result)
         setLoading(false)
         if (result) {
-          dispatch(setStep(2))
           dispatch(setCourse(result))
+          dispatch(setStep(2))
         }
       } else {
         toast.error("No changes made to the form")
@@ -140,7 +142,7 @@ export default function CourseInformationForm() {
     formData.append("courseName", data.courseTitle)
     formData.append("courseDescription", data.courseShortDesc)
     formData.append("price", data.coursePrice)
-    formData.append("tag", JSON.stringify(data.courseTags))
+    formData.append("tags", JSON.stringify(data.courseTags))
     formData.append("whatYouWillLearn", data.courseBenefits)
     formData.append("category", data.courseCategory)
     formData.append("status", COURSE_STATUS.DRAFT)
@@ -148,9 +150,11 @@ export default function CourseInformationForm() {
     formData.append("thumbnailImage", data.thumbnailImage)
     setLoading(true)
     const result = await addCourseDetails(formData, token)
+    console.log("Edit SetCourse data: ", result)
     if (result) {
       dispatch(setStep(2))
       dispatch(setCourse(result))
+      console.log("The course name is",result.courseName);
     }
     setLoading(false)
   }

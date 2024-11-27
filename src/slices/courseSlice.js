@@ -5,6 +5,7 @@ const initialState = {
   course: null,
   editCourse: false,
   paymentLoading: false,
+  loading:false
 }
 
 const courseSlice = createSlice({
@@ -27,6 +28,9 @@ const courseSlice = createSlice({
       state.step = 1
       state.course = null
       state.editCourse = false
+    },
+    setLoading: (state, action) => {
+      state.loading = action.payload
     },
   },
 })

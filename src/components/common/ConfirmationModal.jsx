@@ -1,7 +1,6 @@
 import React from "react";
-import IconBtn from "./IconBtn"; // Assuming this component exists for custom button styles
-
-const ConfirmationModal = ( modalData ) => {
+import IconBtn from "./IconBtn"; 
+const ConfirmationModal = ( {modalData} ) => {
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
       {/* Modal Content */}

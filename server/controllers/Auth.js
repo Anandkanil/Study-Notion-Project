@@ -4,6 +4,8 @@ const User = require('../models/User');
 const OTP = require('../models/OTP');
 const Profile = require('../models/Profile')
 const otpGenerator = require('otp-generator');
+const mailSender = require('../utils/mailSender');
+const  {passwordUpdated}  = require('../mail/templates/passwordUpdate');
 require('dotenv').config()
 
 exports.sendOTP = async function (req, res) {
@@ -140,7 +142,7 @@ exports.login = async function (req, res) {
         }
 
         // Generate a JWT token
-        const token = jwt.sign({ userId: user._id,email:user.email, accountType:user.accountType }, process.env.JWT_SECRET, { expiresIn: '1h' }); // Token expires in 1 hour
+        const token = jwt.sign({ userId: user._id,email:user.email, accountType:user.accountType }, process.env.JWT_SECRET, { expiresIn: '2h' }); // Token expires in 1 hour
         user.token = token;
         user.password = undefined;
 
@@ -228,17 +230,13 @@ exports.resetPassword = async function (req, res) {
 };
 
 exports.changePassword = async function (req, res) {
-    const { oldPassword, newPassword, confirmPassword } = req.body;
-    const userId = req.userId;  // Assume the userId is available from authentication middleware
+    const { oldPassword, newPassword } = req.body;
+    const userId = req.user.userId;  // Assume the userId is available from authentication middleware
 
     try {
         // Validate input data
-        if (!oldPassword || !newPassword || !confirmPassword) {
+        if (!oldPassword || !newPassword ) {
             return res.status(400).json({ success: false, message: 'All fields are required' });
-        }
-
-        if (newPassword !== confirmPassword) {
-            return res.status(400).json({ success: false, message: 'Passwords do not match' });
         }
 
         // Find the user by ID
@@ -264,7 +262,8 @@ exports.changePassword = async function (req, res) {
         async function sendPasswordChangeEmail(email) {
             try {
                 const body = "Your account password has been successfully changed. If you did not request this change, please contact support immediately.";
-                const mailResponse = await mailSender(email, "Password Changed - Study Notion", body);
+                const emailContent=passwordUpdated(email,user.firstName)
+                const mailResponse = await mailSender(email, "Password Changed - Study Notion", emailContent);
                 console.log("Password change confirmation email sent successfully:", mailResponse);
             } catch (error) {
                 console.error("Error occurred while sending password change email:", error);

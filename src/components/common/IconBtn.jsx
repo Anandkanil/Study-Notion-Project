@@ -8,11 +8,12 @@ const IconBtn = ({
     outline=false,
     customClasses,
     type,
-    style=`bg-yellow-100 font-semibold hover:bg-yellow-600 text-black py-2 px-4 rounded-lg transition duration-300 flex items-center gap-2`
+    style,
+    defaultStyle=`bg-yellow-100 font-semibold hover:bg-yellow-600 text-black py-2 px-4 rounded-lg transition duration-300 flex items-center gap-2`
 }) => {
   return (
     <button 
-    className={style}
+    className={defaultStyle+style}
     disabled={disabled}
     onClick={onclick}
     type={type}>
