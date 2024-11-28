@@ -14,6 +14,7 @@ import { FaChevronDown } from "react-icons/fa6";
 const Navbar = () => {
     // State to store sublinks for category dropdown
     const [subLinks, setSubLinks] = useState([]);
+    const [loading, setLoading] = useState(false)
     const [loadingCategories, setLoadingCategories] = useState(true); // To handle loading state for categories
 
     // Function to fetch sublinks (categories) from API
@@ -45,7 +46,7 @@ const Navbar = () => {
     // Fetch sublinks data only on component mount
     useEffect(() => {
         fetchSubLinks();
-    },[user,token]);
+    }, [user, token]);
 
     return (
         <div className='flex h-14 items-center justify-center border-b-[1px] border-b-richblack-700'>
@@ -61,41 +62,52 @@ const Navbar = () => {
                         {NavbarLinks.map((link, index) => (
                             <li key={index}>
                                 {link.title === "Catalog" ? (
-                                    // Dropdown for Catalog link
-                                    <div className='relative flex items-center gap-2 group'>
-                                        <p className='hover:cursor-pointer'>{link.title}</p>
-                                        <FaChevronDown size={13} />
-
-                                        {/* Dropdown menu for categories */}
-                                        <div className='invisible opacity-0 absolute left-[50%] z-[10] translate-x-[-50%] flex flex-col gap-4 translate-y-[50%] top-[-25%] rounded-md bg-richblack-700 p-5 text-richblack-50 shadow-lg transition-all duration-300 group-hover:visible group-hover:opacity-100 lg:w-[320px]'>
-                                            {/* Triangle pointer */}
-                                            <div className='absolute left-[50%] top-[0] translate-x-[80%] translate-y-[-45%] h-6 w-6 rotate-45 rounded bg-richblack-700 shadow-md'></div>
-
-                                            {/* Dropdown links */}
-                                            {loadingCategories ? (
-                                                <div className='text-sm text-center text-richblack-300'>Loading categories...</div>
-                                            ) : subLinks.length ? (
-                                                subLinks.map((subLink, index) => (
-                                                    <Link
-                                                        to={`${subLink.name}`}
-                                                        key={index}
-                                                        className='relative hover:bg-richblack-600 p-2 rounded-md transition-all duration-200'
-                                                    >
-                                                        <p className='text-sm'>{subLink.name}</p>
-
-                                                        {/* Bottom line (border) with enhanced style */}
-                                                        <div className='absolute bottom-0 left-0 w-full h-[2px] bg-richblack-500 opacity-30 transition-all duration-300 group-hover:opacity-100'></div>
-                                                    </Link>
-                                                ))
-                                            ) : (
-                                                <div className='text-sm text-center text-richblack-300'>No categories available</div>
-                                            )}
+                                    <>
+                                        <div
+                                            className={`group relative flex cursor-pointer items-center gap-1 ${matchRoute("/catalog/:catalogName")
+                                                    ? "text-yellow-25"
+                                                    : "text-richblack-25"
+                                                }`}
+                                        >
+                                            <p>{link.title}</p>
+                                            <FaChevronDown />
+                                            <div className="invisible absolute left-[50%] top-[50%] z-[1000] flex w-[200px] translate-x-[-50%] translate-y-[3em] flex-col rounded-lg bg-richblack-5 p-4 text-richblack-900 opacity-0 transition-all duration-150 group-hover:visible group-hover:translate-y-[1.65em] group-hover:opacity-100 lg:w-[300px]">
+                                                <div className="absolute left-[50%] top-0 -z-10 h-6 w-6 translate-x-[80%] translate-y-[-40%] rotate-45 select-none rounded bg-richblack-5"></div>
+                                                {loading ? (
+                                                    <p className="text-center">Loading...</p>
+                                                ) : subLinks.length ? (
+                                                    <>
+                                                        {subLinks
+                                                            ?.filter(
+                                                                (subLink) => subLink?.courses?.length > 0
+                                                            )
+                                                            ?.map((subLink, i) => (
+                                                                <Link
+                                                                    to={`/catalog/${subLink.name
+                                                                        .split(" ")
+                                                                        .join("-")
+                                                                        .toLowerCase()}`}
+                                                                    className="rounded-lg bg-transparent py-4 pl-4 hover:bg-richblack-50"
+                                                                    key={i}
+                                                                >
+                                                                    <p>{subLink.name}</p>
+                                                                </Link>
+                                                            ))}
+                                                    </>
+                                                ) : (
+                                                    <p className="text-center">No Courses Found</p>
+                                                )}
+                                            </div>
                                         </div>
-                                    </div>
+                                    </>
                                 ) : (
-                                    // Regular link rendering for other items
                                     <Link to={link?.path}>
-                                        <p className={`${matchRoute(link.path) ? "text-yellow-5" : "text-white"}`}>
+                                        <p
+                                            className={`${matchRoute(link?.path)
+                                                    ? "text-yellow-25"
+                                                    : "text-richblack-25"
+                                                }`}
+                                        >
                                             {link.title}
                                         </p>
                                     </Link>
@@ -136,8 +148,8 @@ const Navbar = () => {
 
                     {/* Show Profile Dropdown if user is logged in */}
                     {user != null && (
-                    <ProfileDropDown />
-                )}
+                        <ProfileDropDown />
+                    )}
                 </div>
             </div>
         </div>

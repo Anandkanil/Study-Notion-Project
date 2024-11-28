@@ -30,6 +30,7 @@ import EditCourse from "./components/core/Dashboard/AddCourse/CourseInformation/
 // State Management
 import { useSelector } from "react-redux";
 import MyCourses from "./components/core/Dashboard/MyCourses";
+import Catalog from "./pages/Catalog";
 
 function App() {
   const { user } = useSelector((state) => state.profile);
@@ -45,6 +46,7 @@ function App() {
         <Route path="/signup" element={<Signup />} />
         <Route path="/about" element={<About />} />
         <Route path="/contact" element={<Contact />} />
+        <Route path="/catalog/:catalogName" element={<Catalog />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password/:token" element={<UpdatePassword />} />
         <Route path="/verify-email" element={<VerifyEmail />} />

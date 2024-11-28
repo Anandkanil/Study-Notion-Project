@@ -82,14 +82,7 @@ const Sidebar = () => {
 
       {/* Confirmation Modal */}
       {confirmationModal && (
-        <ConfirmationModal
-          text1={confirmationModal.text1}
-          text2={confirmationModal.text2}
-          btn1Text={confirmationModal.btn1Text}
-          btn2Text={confirmationModal.btn2Text}
-          btn1Handler={confirmationModal.btn1Handler}
-          btn2Handler={confirmationModal.btn2Handler}
-        />
+        <ConfirmationModal modalData={confirmationModal} />
       )}
     </div>
   );

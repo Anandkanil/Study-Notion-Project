@@ -162,7 +162,7 @@ export function deleteProfile(token, navigate) {
       // Clear Redux state and localStorage, navigate to login
       toast.success("Profile deleted successfully!");
       localStorage.removeItem("user"); // Clear user data from localStorage
-      dispatch(logout(navigate));
+      // dispatch(logout(navigate));
     } catch (error) {
       console.error("Error deleting profile:", error);
       const errorMessage =
