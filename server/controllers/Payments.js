@@ -1,154 +1,167 @@
-const instance = require('../config/Razorpay');
-const Course = require('../models/Course');
-const User = require('../models/User');
-const mailSender = require('../utils/mailSender');
-const { courseEnrollmentEmail } = require('../mail/templates/courseEnrollmentEmail');
-const crypto = require('crypto'); 
+const instance = require("../config/Razorpay");
+const Course = require("../models/Course");
+const User = require("../models/User");
+const mailSender = require("../utils/mailSender");
+const { courseEnrollmentEmail } = require("../mail/templates/courseEnrollmentEmail");
+const { paymentSuccessEmail } = require("../mail/templates/paymentSuccessEmail");
+const crypto = require("crypto");
+const mongoose = require("mongoose");
 
-// Capture the payment and initiate Razorpay
+// Initiate the Razorpay order
 exports.capturePayment = async (req, res) => {
-    // Get courseId and userId from request
-    const courseId = req.body.courseId;
-    const userId = req.user.userId;
+  const { courses } = req.body;
+  const userId = req.user.userId;
 
-    // Validate if courseId is provided
-    if (!courseId) {
-        return res.status(400).json({ success: false, message: 'Please provide a valid CourseId' });
-    }
+  if (courses.length === 0) {
+    return res.json({ success: false, message: "Please provide Course Id" });
+  }
 
+  let totalAmount = 0;
+
+  for (const course_id of courses) {
+    let course;
     try {
-        // Find the course using the courseId
-        const course = await Course.findById(courseId);
+      course = await Course.findById(course_id);
+      if (!course) {
+        return res.status(200).json({ success: false, message: "Could not find the course" });
+      }
 
-        // Validate if the course exists
-        if (!course) {
-            return res.status(400).json({ success: false, message: 'Not a valid Course' });
-        }
+      const uid = new mongoose.Types.ObjectId(userId);
+      if (course.studentsEnrolled.includes(uid)) {
+        return res.status(200).json({ success: false, message: "Student is already Enrolled" });
+      }
 
-        // Check if the user is already enrolled in the course
-        if (course.studentsEnrolled.includes(userId)) {
-            return res.status(400).json({ success: false, message: 'You have already enrolled in this course' });
-        }
-
-        // Calculate the amount for payment (in smallest currency unit, i.e., paise)
-        const amount = course.price * 100;
-        const currency = "INR";
-
-        // Razorpay order creation options
-        const options = {
-            amount, // amount in paise
-            currency, // currency type
-            receipt: `receipt#${courseId}_${userId}`, // unique receipt id
-            notes: {
-                courseId, // pass courseId and userId in notes
-                userId
-            }
-        };
-
-        // Create the payment order using Razorpay API
-        const order = await instance.orders.create(options);
-
-        // Respond with order details and other relevant course info
-        return res.status(200).json({
-            success: true,
-            message: 'Payment initiated successfully',
-            amount,
-            currency,
-            courseName: course.courseName,
-            courseDescription: course.courseDescription,
-            thumbnail: course.thumbnail,
-            orderId: order.id,
-            order
-        });
-
+      totalAmount += course.price;
     } catch (error) {
-        console.error('Error during payment capture:', error.message);
-        return res.status(500).json({
-            success: false,
-            message: 'An error occurred while processing your request'
-        });
+      console.log(error);
+      return res.status(500).json({ success: false, message: error.message });
     }
+  }
+
+  const currency = "INR";
+  const options = {
+    amount: totalAmount * 100,
+    currency,
+    receipt: Math.random(Date.now()).toString(),
+  };
+
+  try {
+    const paymentResponse = await instance.orders.create(options);
+    res.json({
+      success: true,
+      message: paymentResponse,
+    });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({ success: false, message: "Could not Initiate Order" });
+  }
 };
 
-// Verify the payment signature to ensure payment authenticity
-exports.verifySignature = async (req, res) => {
+// Verify the payment
+exports.verifyPayment = async (req, res) => {
+  const razorpay_order_id = req.body?.razorpay_order_id;
+  const razorpay_payment_id = req.body?.razorpay_payment_id;
+  const razorpay_signature = req.body?.razorpay_signature;
+  const courses = req.body?.courses;
+  const userId = req.user.userId;
+
+  if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature || !courses || !userId) {
+    return res.status(200).json({ success: false, message: "Payment Failed" });
+  }
+
+  let body = razorpay_order_id + "|" + razorpay_payment_id;
+  const expectedSignature = crypto
+    .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET)
+    .update(body.toString())
+    .digest("hex");
+
+  console.log(`The expected signature is ${expectedSignature} and the received signature is ${razorpay_signature}`);
+
+  if (expectedSignature === razorpay_signature) {
+    // Enroll the student
+    await enrollStudents(courses, userId, res);
+    // Return success
+    return res.status(200).json({ success: true, message: "Payment Verified" });
+  }
+  return res.status(200).json({ success: "false", message: "Payment Failed" });
+};
+
+const enrollStudents = async (courses, userId, res) => {
+  if (!courses || !userId) {
+    return res.status(400).json({ success: false, message: "Please Provide data for Courses or UserId" });
+  }
+
+  for (const courseId of courses) {
     try {
-        // Extract payment and order details from the request body
-        const { razorpay_payment_id, razorpay_order_id, razorpay_signature } = req.body;
+      console.log(`The course id is ${courseId} and the user Id is ${userId}`);
 
-        // Validate the presence of essential fields
-        if (!razorpay_payment_id || !razorpay_order_id || !razorpay_signature) {
-            return res.status(400).json({ success: false, message: 'Missing payment information' });
-        }
+      // Find the course and enroll the student in it
+      const enrolledCourse = await Course.findOneAndUpdate(
+        { _id: courseId },
+        { $push: { studentsEnrolled: userId } },
+        { new: true }
+      );
 
-        // Generate the expected signature based on the order and payment IDs
-        const generatedSignature = crypto
-            .createHmac('sha256', process.env.RAZORPAY_SECRET) // Use your Razorpay secret key
-            .update(`${razorpay_order_id}|${razorpay_payment_id}`)
-            .digest('hex');
+      if (!enrolledCourse) {
+        return res.status(500).json({ success: false, message: "Course not Found" });
+      }
 
-        // Compare the generated signature with the received signature
-        if (generatedSignature === razorpay_signature) {
-            // Extract courseId and userId from Razorpay's payment entity
-            const { courseId, userId } = req.body.payload.payment.entity.notes;
+      // Find the student and add the course to their list of enrolledCourses
+      const enrolledStudent = await User.findByIdAndUpdate(userId, {
+        $push: { courses: courseId },
+      }, { new: true });
 
-            try {
-                // Find the course and add the user to the studentsEnrolled array
-                const course = await Course.findByIdAndUpdate(
-                    courseId,
-                    { $addToSet: { studentsEnrolled: userId } }, // $addToSet ensures no duplicate entries
-                    { new: true } // Return the updated course
-                );
-
-                // If course is not found, return an error
-                if (!course) {
-                    return res.status(404).json({ success: false, message: "Course not found" });
-                }
-
-                // Find the user and add the courseId to the user's courses list
-                await User.findByIdAndUpdate(
-                    userId,
-                    { $addToSet: { courses: courseId } }, // $addToSet ensures no duplicate course entries
-                    { new: true } // Return the updated user
-                );
-
-                //Mailing the student about the enrollment success
-                 // Fetch user details (email) for sending the enrollment confirmation email
-                 const user = await User.findById(userId);
-
-                 // Send a confirmation email to the user about successful enrollment
-                 const emailSubject = `Successful Enrollment in ${course.courseName}`;
-                 const emailContent = courseEnrollmentEmail(course.courseName, user.firstName); // Email template with course and user data
- 
-                 await mailSender.sendMail(user.email, emailSubject, emailContent);
-
-                // Respond with a success message
-                return res.status(200).json({
-                    success: true,
-                    message: "User successfully enrolled in the course.",
-                    course
-                });
-            } catch (error) {
-                // Catch any errors related to enrolling the student
-                console.error("Error enrolling student:", error);
-                return res.status(500).json({
-                    success: false,
-                    message: "An error occurred while enrolling the student."
-                });
-            }
-        } else {
-            // If the signatures don’t match, return an error
-            return res.status(400).json({
-                success: false,
-                message: 'Invalid signature, payment verification failed'
-            });
-        }
+      // Send email to the student
+      const emailResponse = await mailSender(
+        enrolledStudent.email,
+        `Successfully Enrolled into ${enrolledCourse.courseName}`,
+        courseEnrollmentEmail(enrolledCourse.courseName, enrolledStudent.firstName,enrolledCourse.thumbnail)
+      );
+      // console.log("Email Sent Successfully", emailResponse.response);
     } catch (error) {
-        // Catch any errors during signature verification
-        console.error('Error verifying payment signature:', error.message);
-        return res.status(500).json({
-            success: false,
-            message: 'An error occurred during signature verification'
-        });
+      console.log(error);
+      return res.status(500).json({ success: false, message: error.message });
     }
+  }
+};
+
+exports.sendPaymentSuccessEmail = async (req, res) => {
+  const { orderId, paymentId, amount } = req.body;
+  const userId = req.user.userId;
+
+  if (!orderId || !paymentId || !amount || !userId) {
+    return res.status(400).json({ success: false, message: "Please provide all the fields" });
+  }
+
+  try {
+    // Find the student
+    const enrolledStudent = await User.findById(userId);
+    if (!enrolledStudent) {
+      return res.status(404).json({ success: false, message: "User not found" });
+    }
+
+    // Send payment success email
+    await mailSender(
+      enrolledStudent.email,
+      "Payment Received",
+      paymentSuccessEmail(
+        enrolledStudent.firstName,
+        amount / 100,
+        orderId,
+        paymentId
+      )
+    );
+
+    // Respond with success message
+    return res.status(200).json({
+      success: true,
+      message: "Payment success email sent successfully",
+    });
+  } catch (error) {
+    console.log("Error in sending email:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Could not send email",
+    });
+  }
 };

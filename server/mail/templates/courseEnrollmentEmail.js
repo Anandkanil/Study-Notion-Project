@@ -1,4 +1,4 @@
-exports.courseEnrollmentEmail = (courseName, name) => {
+exports.courseEnrollmentEmail = (courseName, name, courseImageUrl) => {
     return `<!DOCTYPE html>
     <html>
     
@@ -60,22 +60,29 @@ exports.courseEnrollmentEmail = (courseName, name) => {
             .highlight {
                 font-weight: bold;
             }
+            
+            .course-image {
+                margin-top: 20px;
+                max-width: 100%;
+                height: auto;
+                border-radius: 8px;
+            }
         </style>
     
     </head>
     
     <body>
         <div class="container">
-            <a href="https://studynotion-edtech-project.vercel.app"><img class="logo" src="https://i.ibb.co/7Xyj3PC/logo.png"
+            <a href=""><img class="logo" src="https://i.ibb.co/7Xyj3PC/logo.png"
                     alt="StudyNotion Logo"></a>
             <div class="message">Course Registration Confirmation</div>
             <div class="body">
                 <p>Dear ${name},</p>
                 <p>You have successfully registered for the course <span class="highlight">"${courseName}"</span>. We
                     are excited to have you as a participant!</p>
-                <p>Please log in to your learning dashboard to access the course materials and start your learning journey.
-                </p>
-                <a class="cta" href="https://studynotion-edtech-project.vercel.app/dashboard">Go to Dashboard</a>
+                <p>Please log in to your learning dashboard to access the course materials and start your learning journey.</p>
+                <img class="course-image" src="${courseImageUrl}" alt="${courseName} course image" />
+                <a class="cta" href="/dashboard">Go to Dashboard</a>
             </div>
             <div class="support">If you have any questions or need assistance, please feel free to reach out to us at <a
                     href="mailto:studynotionbiz@gmail.com">studynotionbiz@gmail.com</a>. We are here to help!</div>

@@ -1,104 +1,142 @@
-import React, { useEffect, useState } from 'react';
-import Footer from '../components/common/Footer';
-import { useParams } from 'react-router-dom';
+import React, { useEffect, useState } from 'react'
+import Footer from '../components/common/Footer'
+import { useParams } from 'react-router-dom'
 import { apiConnector } from '../services/apiconnector';
 import { categories } from '../services/apis';
-import getCatalogPageData from '../services/operations/pageAndComponentData';
+import getCatalogPageData  from '../services/operations/pageAndComponentData';
 import Course_Card from '../components/core/Catalog/Course_Card';
 import CourseSlider from '../components/core/Catalog/CourseSlider';
+import { useSelector } from "react-redux"
+import Error from "./Error"
 
 const Catalog = () => {
-  const { catalogName } = useParams();
-  const [catalogPageData, setCatalogPageData] = useState(null);
-  const [categoryId, setCategoryId] = useState('');
-  const [loading, setLoading] = useState(true);
 
-  // Fetch all categories
-  useEffect(() => {
-    const getCategories = async () => {
-      try {
-        const res = await apiConnector('GET', categories.CATEGORIES_API);
-        const category = res?.data?.data?.find(
-          (ct) => ct.name.split(' ').join('-').toLowerCase() === catalogName
-        );
-        if (category) {
-          setCategoryId(category._id);
-        } else {
-          console.error('Category not found');
+    const { loading } = useSelector((state) => state.profile)
+  const { catalogName } = useParams()
+  const [active, setActive] = useState(1)
+    const [catalogPageData, setCatalogPageData] = useState(null);
+    const [categoryId, setCategoryId] = useState("");
+
+    //Fetch all categories
+    useEffect(()=> {
+        const getCategories = async() => {
+            const res = await apiConnector("GET", categories.CATEGORIES_API);
+            const category_id = 
+            res?.data?.data?.filter((ct) => ct.name.split(" ").join("-").toLowerCase() === catalogName)[0]._id;
+            setCategoryId(category_id);
         }
-      } catch (error) {
-        console.error('Error fetching categories:', error);
-      }
-    };
-    getCategories();
-  }, [catalogName]);
+        getCategories();
+    },[catalogName]);
 
-  // Fetch category details
-  useEffect(() => {
-    const getCategoryDetails = async () => {
-      if (!categoryId) return;
+    useEffect(() => {
+        const getCategoryDetails = async() => {
+            try{
+                const res = await getCatalogPageData(categoryId);
+                console.log("PRinting res: ", res);
+                setCatalogPageData(res);
+            }
+            catch(error) {
+                console.log(error)
+            }
+        }
+        if(categoryId) {
+            getCategoryDetails();
+        }
+        
+    },[categoryId]);
 
-      try {
-        const res = await getCatalogPageData(categoryId);
-        setCatalogPageData(res);
-      } catch (error) {
-        console.error('Error fetching catalog page data:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    getCategoryDetails();
-  }, [categoryId]);
 
-  if (loading) {
-    return <div className="text-white text-center">Loading...</div>;
-  }
-
-  return (
-    <div className="text-white">
-      {/* Header Section */}
-      <div className="p-4">
-        <p>{`Home / Catalog / `}
-          <span>{catalogPageData?.data?.selectedCategory?.name}</span>
-        </p>
-        <h1 className="text-2xl font-bold">
-          {catalogPageData?.data?.selectedCategory?.name}
-        </h1>
-        <p className="text-gray-300">{catalogPageData?.data?.selectedCategory?.description}</p>
-      </div>
-
-      {/* Main Content */}
-      <div className="p-4 space-y-8">
-        {/* Section 1: Courses to get you started */}
-        <div>
-          <h2 className="text-xl font-semibold">Courses to get you started</h2>
-          <div className="flex gap-x-3 my-2">
-            <button className="py-1 px-4 bg-yellow-500 text-black rounded">Most Popular</button>
-            <button className="py-1 px-4 bg-gray-700 rounded">New</button>
+    if (loading || !catalogPageData) {
+        return (
+          <div className="grid min-h-[calc(100vh-3.5rem)] place-items-center">
+            <div className="spinner"></div>
           </div>
-          <CourseSlider courses={catalogPageData?.data?.selectedCategory?.courses || []} />
-        </div>
-
-        {/* Section 2: Top Courses */}
-        <div>
-          <h2 className="text-xl font-semibold">Top Courses in {catalogPageData?.data?.selectedCategory?.name}</h2>
-          <CourseSlider courses={catalogPageData?.data?.differentCategory?.courses || []} />
-        </div>
-
-        {/* Section 3: Frequently Bought Together */}
-        <div>
-          <h2 className="text-xl font-semibold">Frequently Bought</h2>
-          <div className="py-8 grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {catalogPageData?.data?.mostSellingCourses?.slice(0, 4).map((course, index) => (
-              <Course_Card course={course} key={index} height="h-[400px]" />
-            ))}
+        )
+      }
+      if (!loading && !catalogPageData.success) {
+        return <Error />
+      }
+    
+      return (
+        <>
+          {/* Hero Section */}
+          <div className=" box-content bg-richblack-800 px-4">
+            <div className="mx-auto flex min-h-[260px] max-w-maxContentTab flex-col justify-center gap-4 lg:max-w-maxContent ">
+              <p className="text-sm text-richblack-300">
+                {`Home / Catalog / `}
+                <span className="text-yellow-25">
+                  {catalogPageData?.data?.selectedCategory?.name}
+                </span>
+              </p>
+              <p className="text-3xl text-richblack-5">
+                {catalogPageData?.data?.selectedCategory?.name}
+              </p>
+              <p className="max-w-[870px] text-richblack-200">
+                {catalogPageData?.data?.selectedCategory?.description}
+              </p>
+            </div>
           </div>
-        </div>
-      </div>
-
-      <Footer />
-    </div>
-  );
-};
-
-export default Catalog;
+    
+          {/* Section 1 */}
+          <div className=" mx-auto box-content w-full max-w-maxContentTab px-4 py-12 lg:max-w-maxContent">
+            <div className="section_heading">Courses to get you started</div>
+            <div className="my-4 flex border-b border-b-richblack-600 text-sm">
+              <p
+                className={`px-4 py-2 ${
+                  active === 1
+                    ? "border-b border-b-yellow-25 text-yellow-25"
+                    : "text-richblack-50"
+                } cursor-pointer`}
+                onClick={() => setActive(1)}
+              >
+                Most Populer
+              </p>
+              <p
+                className={`px-4 py-2 ${
+                  active === 2
+                    ? "border-b border-b-yellow-25 text-yellow-25"
+                    : "text-richblack-50"
+                } cursor-pointer`}
+                onClick={() => setActive(2)}
+              >
+                New
+              </p>
+            </div>
+            <div>
+              <CourseSlider
+                Courses={catalogPageData?.data?.selectedCategory?.courses}
+              />
+            </div>
+          </div>
+          {/* Section 2 */}
+          <div className=" mx-auto box-content w-full max-w-maxContentTab px-4 py-12 lg:max-w-maxContent">
+            <div className="section_heading">
+              Top courses in {catalogPageData?.data?.differentCategory?.name}
+            </div>
+            <div className="py-8">
+              <CourseSlider
+                Courses={catalogPageData?.data?.differentCategory?.courses}
+              />
+            </div>
+          </div>
+    
+          {/* Section 3 */}
+          <div className=" mx-auto box-content w-full max-w-maxContentTab px-4 py-12 lg:max-w-maxContent">
+            <div className="section_heading">Frequently Bought</div>
+            <div className="py-8">
+              <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+                {catalogPageData?.data?.mostSellingCourses
+                  ?.slice(0, 4)
+                  .map((course, i) => (
+                    <Course_Card course={course} key={i} Height={"h-[400px]"} />
+                  ))}
+              </div>
+            </div>
+          </div>
+    
+          <Footer />
+        </>
+      )
+    }
+    
+    export default Catalog
