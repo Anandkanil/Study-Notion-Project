@@ -51,6 +51,7 @@ function App() {
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password/:token" element={<UpdatePassword />} />
         <Route path="/verify-email" element={<VerifyEmail />} />
+        <Route path="courses/:courseId" element={<CourseDetails/>} />
 
         {/* Private Routes */}
         <Route
@@ -62,13 +63,14 @@ function App() {
         >
           <Route path="dashboard/my-profile" element={<MyProfile />} />
           <Route path="dashboard/settings" element={<Settings />} />
+          
 
           {/* Student-Specific Routes */}
           {user?.accountType === ACCOUNT_TYPE.STUDENT && (
             <>
               <Route path="dashboard/cart" element={<Cart />} />
               <Route path="dashboard/enrolled-courses" element={<EnrolledCourses />} />
-              <Route path="courses/:courseId" element={<CourseDetails/>} />
+             
             </>
           )}
 

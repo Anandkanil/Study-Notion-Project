@@ -5,6 +5,7 @@ const User = require('../models/User');
 const SubSection = require("../models/SubSection")
 const Section = require("../models/Section")
 const { uploadImageToCloudinary } = require('../utils/imageUploader');
+const { convertSecondsToDuration } = require("../utils/secToDuration")
 require('dotenv').config();
 
 // Function to create a new course
@@ -174,7 +175,12 @@ const getCourseDetails = async (req, res) => {
 
     try {
         const courseDetails = await Course.findById(courseId)
-            .populate('instructor')
+            .populate({
+              path: 'instructor',
+              populate:{
+                path:'additionalDetails'
+              }
+            })
             .populate({
                 path: 'courseContent',
                 populate: {
@@ -188,12 +194,23 @@ const getCourseDetails = async (req, res) => {
         if (!courseDetails) {
             return res.status(404).json({ success: false, message: "No course found with the provided ID." });
         }
-
+        let totalDurationInSeconds = 0
+        courseDetails.courseContent.forEach((content) => {
+          content.subSection.forEach((subSection) => {
+            const timeDurationInSeconds = parseInt(subSection.timeDuration)
+            totalDurationInSeconds += timeDurationInSeconds
+          })
+        })
+    
+        const totalDuration = convertSecondsToDuration(totalDurationInSeconds)
+    
         return res.status(200).json({
-            data: courseDetails,
-            success: true,
-            message: "Course details retrieved successfully."
-        });
+          success: true,
+          data: {
+            courseDetails,
+            totalDuration,
+          },
+        })
     } catch (error) {
         console.error(error);
         return res.status(500).json({
@@ -265,7 +282,12 @@ const getInstructorCourses =  async(req,res) => {
     // Find all courses belonging to the instructor
     const instructorCourses = await Course.find({
       instructor: instructorId,
-    }).sort({ createdAt: -1 })
+    }).populate({
+      path: 'courseContent',
+      populate: {
+          path: 'subSection',
+      }
+  }).sort({ createdAt: -1 })
 
     // Return the instructor's courses
     res.status(200).json({

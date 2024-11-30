@@ -18,7 +18,8 @@ exports.uploadImageToCloudinary = async (file, folder, height, quality) => {
         return {
             success: true,
             url: result.secure_url,
-            public_id: result.public_id
+            public_id: result.public_id,
+            duration:result.duration
         };
     } catch (error) {
         console.error("Error uploading image to Cloudinary:", error.message);
