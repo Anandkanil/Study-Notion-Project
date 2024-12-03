@@ -125,7 +125,7 @@ const Navbar = () => {
                             <AiOutlineShoppingCart className='text-white' size={20} />
                             {totalItems > 0 && (
                                 // Display total items in cart if greater than 0
-                                <span className='absolute'>{totalItems}</span>
+                                <span className='absolute -top-3 -right-2 bg-caribbeangreen-300 rounded-full px-1 text-xs font-bold '>{totalItems}</span>
                             )}
                         </Link>
                     )}

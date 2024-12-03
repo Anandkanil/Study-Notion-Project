@@ -4,6 +4,7 @@ const Category = require('../models/Category');
 const User = require('../models/User');
 const SubSection = require("../models/SubSection")
 const Section = require("../models/Section")
+const CourseProgress = require("../models/CourseProgress")
 const { uploadImageToCloudinary } = require('../utils/imageUploader');
 const { convertSecondsToDuration } = require("../utils/secToDuration")
 require('dotenv').config();
@@ -379,11 +380,11 @@ const getFullCourseDetails = async (req, res) => {
       })
       .exec()
 
-    // let courseProgressCount = await CourseProgress.findOne({
-    //   courseID: courseId,
-    //   userId: userId,
-    // })
-    let courseProgressCount=1;
+    let courseProgressCount = await CourseProgress.findOne({
+      courseID: courseId,
+      userId: userId,
+    })
+    // let courseProgressCount=1;
 
     console.log("courseProgressCount : ", courseProgressCount)
 
@@ -409,8 +410,8 @@ const getFullCourseDetails = async (req, res) => {
       })
     })
 
-    // const totalDuration = convertSecondsToDuration(totalDurationInSeconds)
-     const totalDuration =1
+    const totalDuration = convertSecondsToDuration(totalDurationInSeconds)
+    //  const totalDuration =1
 
     return res.status(200).json({
       success: true,

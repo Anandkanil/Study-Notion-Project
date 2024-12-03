@@ -1,21 +1,20 @@
-const mongoose = require('mongoose');
+const mongoose = require("mongoose")
 
-// Define the CourseProgress schema
-const courseProgressSchema = new mongoose.Schema({
-  courseId: {
+const courseProgress = new mongoose.Schema({
+  courseID: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'Course', // Reference to the Course schema
-    required: true
+    ref: "Course",
+  },
+  userId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "user",
   },
   completedVideos: [
     {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'SubSection' // Reference to the SubSection schema (for individual videos)
-    }
-  ]
-}, {
-  timestamps: true // Automatically adds createdAt and updatedAt timestamps
-});
+      ref: "SubSection",
+    },
+  ],
+})
 
-// Export the CourseProgress model
-module.exports = mongoose.model('CourseProgress', courseProgressSchema);
+module.exports = mongoose.model("courseProgress", courseProgress)

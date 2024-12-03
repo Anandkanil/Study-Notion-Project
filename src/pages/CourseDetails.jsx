@@ -12,6 +12,9 @@ import Footer from "../components/common/Footer"
 import RatingStars from "../components/common/RatingStars"
 import CourseDetailsCard from '../components/core/Course/CourseDetailsCard'
 import CourseAccordionBar from '../components/core/Course/CourseAccordionBar';
+import toast from 'react-hot-toast';
+import { ACCOUNT_TYPE } from '../utils/constants';
+import { addToCart } from '../slices/cartSlice';
 
 const CourseDetails = () => {
   // Redux store values
@@ -72,7 +75,7 @@ const CourseDetails = () => {
     if (!token) {
       setConfirmationModal({
         text1:"You're not Logged In",
-        text2:"Plaese Login to purchase the Course",
+        text2:"Please Login to purchase the Course",
         btn1Text:"Login",
         btn2Text:"Cancel",
         btn1Handler:()=>navigate('/login'),
@@ -87,6 +90,8 @@ const CourseDetails = () => {
       console.error('Error buying course:', error);
     }
   };
+
+
   // const [collapse, setCollapse] = useState("")
   const [isActive, setIsActive] = useState(Array(0))
   const handleActive = (id) => {
@@ -121,6 +126,28 @@ const CourseDetails = () => {
     studentsEnrolled,
     createdAt,
   }=courseData.courseDetails;
+
+  const handleAddToCart = () => {
+    if (user?.accountType === ACCOUNT_TYPE.INSTRUCTOR) {
+      toast.error("You are an Instructor. You can't buy a course.");
+      return;
+    }
+    if (token) {
+      dispatch(addToCart(courseData.courseDetails));
+      return;
+    }
+    setConfirmationModal({
+      text1: "You are not logged in!",
+      text2: "Please login to add to the cart.",
+      btn1Text: "Login",
+      btn2Text: "Cancel",
+      btn1Handler: () => navigate("/login"),
+      btn2Handler: () => setConfirmationModal(null),
+    });
+  };
+
+  const isEnrolled =
+    user && studentsEnrolled.some((student) => student._id === user._id);
 
   // Render course details
   return (
@@ -173,14 +200,21 @@ const CourseDetails = () => {
               <p className="space-x-3 pb-4 text-3xl font-semibold text-richblack-5">
                 Rs. {price}
               </p>
-              <button className="yellowButton" onClick={handleBuyCourse}>
-                Buy Now
+              <button className="yellowButton" onClick={studentsEnrolled.some((student)=>student._id===user._id)?() => navigate("/dashboard/enrolled-courses"):handleBuyCourse}>
+                {/* Buy Now */}
+                {
+                  studentsEnrolled.some((student)=>student._id===user._id)?"Go to Course":"Buy Now"
+                }
               </button>
-              <button className="blackButton">Add to Cart</button>
+              {!isEnrolled && (
+            <button onClick={handleAddToCart} className="blackButton w-full">
+              Add to Cart
+            </button>
+          )}
             </div>
           </div>
           {/* Courses Card */}
-          <div className="right-[1rem] top-[60px] mx-auto hidden min-h-[600px] w-1/3 max-w-[410px] translate-y-24 md:translate-y-0 lg:absolute  lg:block">
+          <div className="right-[1rem] top-[60px] mx-auto hidden min-h-[600px] w-1/3 max-w-[410px] translate-y-24 md:translate-y-0 lg:absolute lg:block">
             <CourseDetailsCard
               course={courseData?.courseDetails}
               setConfirmationModal={setConfirmationModal}

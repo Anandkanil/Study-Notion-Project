@@ -6,6 +6,7 @@ const { courseEnrollmentEmail } = require("../mail/templates/courseEnrollmentEma
 const { paymentSuccessEmail } = require("../mail/templates/paymentSuccessEmail");
 const crypto = require("crypto");
 const mongoose = require("mongoose");
+const CourseProgress = require("../models/CourseProgress");
 
 // Initiate the Razorpay order
 exports.capturePayment = async (req, res) => {
@@ -105,11 +106,27 @@ const enrollStudents = async (courses, userId, res) => {
       if (!enrolledCourse) {
         return res.status(500).json({ success: false, message: "Course not Found" });
       }
+      const courseProgress = await CourseProgress.create({
+        courseID: courseId,
+        userId: userId,
+        completedVideos: [],
+      })
+      // Find the student and add the course to their list of enrolled courses
+      const enrolledStudent = await User.findByIdAndUpdate(
+        userId,
+        {
+          $push: {
+            courses: courseId,
+            courseProgress: courseProgress._id,
+          },
+        },
+        { new: true }
+      )
 
       // Find the student and add the course to their list of enrolledCourses
-      const enrolledStudent = await User.findByIdAndUpdate(userId, {
-        $push: { courses: courseId },
-      }, { new: true });
+      // const enrolledStudent = await User.findByIdAndUpdate(userId, {
+      //   $push: { courses: courseId },
+      // }, { new: true });
 
       // Send email to the student
       const emailResponse = await mailSender(

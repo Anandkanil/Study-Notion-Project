@@ -19,6 +19,8 @@ export default function EnrolledCourses() {
     setError(null)
     try {
       const res = await getUserEnrolledCourses(token)
+      console.log("The result is ",res);
+      console.log("The result is content ",res[0]?.courseContent[0]);
       setEnrolledCourses(res)
     } catch (error) {
       console.log("Error fetching enrolled courses:", error)
@@ -78,9 +80,7 @@ export default function EnrolledCourses() {
             <div
               className="flex w-[45%] cursor-pointer items-center gap-4 px-5 py-3"
               onClick={() => {
-                navigate(
-                  `/view-course/${course?._id}/section/${course.courseContent?.[0]?._id}/sub-section/${course.courseContent?.[0]?.subSection?.[0]?._id}`
-                )
+                navigate(`/view-course/${course._id}/section/${course.courseContent?.[0]._id}/sub-section/${course.courseContent?.[0].subSection?.[0]._id}`);
               }}
             >
               <img
