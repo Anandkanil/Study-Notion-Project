@@ -19,8 +19,6 @@ export default function EnrolledCourses() {
     setError(null)
     try {
       const res = await getUserEnrolledCourses(token)
-      console.log("The result is ",res);
-      console.log("The result is content ",res[0]?.courseContent[0]);
       setEnrolledCourses(res)
     } catch (error) {
       console.log("Error fetching enrolled courses:", error)

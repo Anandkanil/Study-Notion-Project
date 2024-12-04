@@ -5,7 +5,7 @@ import { apiConnector } from "../apiconnector"
 import { profileEndpoints } from "../apis"
 import { logout } from "./authAPI"
 
-const { GET_USER_DETAILS_API, GET_USER_ENROLLED_COURSES_API } = profileEndpoints
+const { GET_USER_DETAILS_API, GET_USER_ENROLLED_COURSES_API,GET_INSTRUCTOR_DATA_API } = profileEndpoints
 
 export function getUserDetails(token, navigate) {
   return async (dispatch) => {
@@ -59,3 +59,28 @@ export async function getUserEnrolledCourses(token) {
   toast.dismiss(toastId)
   return result
 }
+
+export async function getInstructorData(token) {
+  const toastId = toast.loading("Loading instructor data...");
+  let instructorCourses = [];
+  
+  try {
+    const response = await apiConnector("GET", GET_INSTRUCTOR_DATA_API, null, {
+      Authorization: `Bearer ${token}`,
+    });
+    if (response?.data) {
+      // console.log("GET_INSTRUCTOR_DATA_API Response:", response);
+      instructorCourses = response?.data?.courses ;
+    } else {
+      throw new Error(response?.data?.message || "Failed to fetch instructor data.");
+    }
+  } catch (error) {
+    console.error("GET_INSTRUCTOR_DATA_API Error:", error);
+    toast.error(error.response?.data?.message || "Could not get instructor data.");
+  } finally {
+    toast.dismiss(toastId);
+  }
+
+  return instructorCourses;
+}
+

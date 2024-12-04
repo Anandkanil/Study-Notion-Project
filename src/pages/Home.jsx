@@ -12,6 +12,7 @@ import TimelineSection from '../components/core/HomePage/TimelineSection';
 import LanguageLearningSection from '../components/core/HomePage/LanguageLearningSection';
 import ExploreMore from '../components/core/HomePage/ExploreMore'
 import { Toaster } from 'react-hot-toast';
+import ReviewSlider from '../components/common/ReviewSlider';
 
 
 const Home = () => {
@@ -169,8 +170,9 @@ const Home = () => {
 
                 <InstructorSection />
 
-                <h2 className='text-center text-4xl font-semobold mt-10'>review from Other Learners</h2>
+                <h2 className='text-center text-4xl font-semobold mt-10'>Review from Other Learners</h2>
                 {/* Review Slider here */}
+                <ReviewSlider/>
             </div>
 
             {/* Section footer */}

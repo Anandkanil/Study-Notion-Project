@@ -1,6 +1,10 @@
-const User = require("../models/User");
-const Profile = require("../models/Profile");
-const { uploadImageToCloudinary } = require("../utils/imageUploader");
+const Profile = require("../models/Profile")
+const Course = require("../models/Course")
+const CourseProgress = require("../models/CourseProgress")
+
+const User = require("../models/User")
+const { uploadImageToCloudinary } = require("../utils/imageUploader")
+const { convertSecondsToDuration } = require("../utils/secToDuration")
 
 // Update User Profile
 exports.updateProfile = async (req, res) => {
@@ -206,38 +210,98 @@ exports.updateDisplayPicture = async (req, res) => {
 // Get Enrolled Courses
 exports.getEnrolledCourses = async (req, res) => {
   try {
-    const userId = req.user.userId;
-
-    const userDetails = await User.findById(userId).populate({
-    path: 'courses',
-    populate: {
-        path: 'courseContent', // Populate sections
+    const userId = req.user.userId
+    let userDetails = await User.findOne({
+      _id: userId,
+    })
+      .populate({
+        path: "courses",
         populate: {
-            path: 'subSection', // Populate sub-sections inside sections
+          path: "courseContent",
+          populate: {
+            path: "subSection",
+          },
         },
-    },
-});
-
-    if (!userDetails) {
-      return res.status(404).json({
-        success: false,
-        message: "User not found.",
-      });
+      })
+      .exec()
+    userDetails = userDetails.toObject()
+    var SubsectionLength = 0
+    for (var i = 0; i < userDetails.courses.length; i++) {
+      let totalDurationInSeconds = 0
+      SubsectionLength = 0
+      for (var j = 0; j < userDetails.courses[i].courseContent.length; j++) {
+        totalDurationInSeconds += userDetails.courses[i].courseContent[
+          j
+        ].subSection.reduce((acc, curr) => acc + parseInt(curr.timeDuration), 0)
+        userDetails.courses[i].totalDuration = convertSecondsToDuration(
+          totalDurationInSeconds
+        )
+        SubsectionLength +=
+          userDetails.courses[i].courseContent[j].subSection.length
+      }
+      let courseProgressCount = await CourseProgress.findOne({
+        courseID: userDetails.courses[i]._id,
+        userId: userId,
+      })
+      courseProgressCount = courseProgressCount?.completedVideos.length
+      if (SubsectionLength === 0) {
+        userDetails.courses[i].progressPercentage = 100
+      } else {
+        // To make it up to 2 decimal point
+        const multiplier = Math.pow(10, 2)
+        userDetails.courses[i].progressPercentage =
+          Math.round(
+            (courseProgressCount / SubsectionLength) * 100 * multiplier
+          ) / multiplier
+      }
     }
 
-    const enrolledCourses = userDetails.courses || [];
+    if (!userDetails) {
+      return res.status(400).json({
+        success: false,
+        message: `Could not find user with id: ${userDetails}`,
+      })
+    }
     return res.status(200).json({
       success: true,
-      data: enrolledCourses,
-      message: enrolledCourses.length
-        ? "Enrolled courses retrieved successfully."
-        : "No courses enrolled.",
-    });
+      data: userDetails.courses,
+    })
   } catch (error) {
-    console.error("Error retrieving enrolled courses:", error.message);
     return res.status(500).json({
       success: false,
-      message: "An error occurred while retrieving enrolled courses.",
-    });
+      message: error.message,
+    })
   }
-};
+}
+
+//Instructor DashBoard controller
+exports.instructorDashboard=async(req,res)=>{
+  try {
+    const userId=req.user.userId;
+    const instructorCourses=await Course.find({instructor:userId});
+    const dashBoardData=instructorCourses.map((course)=>{
+       const totalStudentsEnrolled=course.studentsEnrolled.length;
+       const totalAmountGenerated=totalStudentsEnrolled*course.price;
+
+       //Creating a new Object with additional Feilds
+       const courseDataWithStats={
+        _id:course._id,
+        courseName:course.courseName,
+        courseDescription:course.courseDescription,
+        totalStudentsEnrolled,
+        totalAmountGenerated
+       };
+       return courseDataWithStats;
+    })
+    res.status(200).json({
+      success:true,
+      courses:dashBoardData,
+      message:"Succesfully retreived DashBoard Data"
+    })
+  } catch (error) {
+    console.error(error)
+    res.status(500).json({
+      success:false,
+      message:"Internal Server error",error});
+  }
+}

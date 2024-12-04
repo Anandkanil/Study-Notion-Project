@@ -4,6 +4,7 @@ import { useSelector } from "react-redux"
 import CourseBuilderForm from "./CourseBuilder/CourseBuilderForm"
 import CourseInformationForm from "./CourseInformation/CourseInformationForm"
 import PublishCourse from "./PublishCourse"
+import React from "react"
 
 
 export default function RenderSteps() {
@@ -28,10 +29,10 @@ export default function RenderSteps() {
     <>
       <div className="relative mb-2 flex w-full justify-center">
         {steps.map((item) => (
-          <>
+          <React.Fragment key={item.id}>
             <div
               className="flex flex-col items-center "
-              key={item.id}
+              
             >
               <button
                 className={`grid cursor-default aspect-square w-[34px] place-items-center rounded-full border-[1px] ${
@@ -57,7 +58,7 @@ export default function RenderSteps() {
                 ></div>
               </>
             )}
-          </>
+          </React.Fragment>
         ))}
       </div>
 

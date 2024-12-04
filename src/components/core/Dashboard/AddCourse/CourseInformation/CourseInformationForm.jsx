@@ -36,7 +36,6 @@ export default function CourseInformationForm() {
     const getCategories = async () => {
       setLoading(true)
       const categories = await fetchCourseCategories()
-      console.log("categories", categories)
       if (categories.length > 0) {
         setCourseCategories(categories)
       }
@@ -80,15 +79,9 @@ export default function CourseInformationForm() {
 
   //   handle next button click
   const onSubmit = async (data) => {
-    console.log("The form data is :",data)
 
     if (editCourse) {
-      // const currentValues = getValues()
-      // console.log("changes after editing form values:", currentValues)
-      // console.log("now course:", course)
-      // console.log("Has Form Changed:", isFormUpdated())
       if (isFormUpdated()) {
-        console.log("The form edit came here")
         const currentValues = getValues()
         const formData = new FormData()
         // console.log(data)
@@ -126,7 +119,6 @@ export default function CourseInformationForm() {
         // console.log("Edit Form data: ", formData)
         setLoading(true)
         const result = await editCourseDetails(formData, token)
-        console.log("Edit SetCourse data: ", result)
         setLoading(false)
         if (result) {
           dispatch(setCourse(result))
@@ -154,7 +146,6 @@ export default function CourseInformationForm() {
     if (result) {
       dispatch(setStep(2))
       dispatch(setCourse(result))
-      console.log("The course name is",result.courseName);
     }
     setLoading(false)
   }

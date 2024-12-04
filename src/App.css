@@ -226,6 +226,7 @@ details > summary::-webkit-details-marker {
 .swiper-slide {
   width: 100%;
   height: 100%;
+  margin-bottom: 40px;
 }
 /* .swiper-slide {
   @apply bg-richblack-800 text-richblack-25 p-3 text-[14px];
