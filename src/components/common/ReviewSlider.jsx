@@ -28,7 +28,7 @@ function ReviewSlider() {
 
   return (
     <div className="text-white flex items-center justify-center">
-      <div className="my-[50px] min-h-[184px] max-w-maxContentTab lg:max-w-maxContent">
+      <div className="my-[50px] min-h-[184px] w-full lg:max-w-maxContent">
         <Swiper
           slidesPerView={4} // Number of slides visible
           spaceBetween={25} // Space between slides

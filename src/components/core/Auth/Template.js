@@ -2,7 +2,7 @@ import React from 'react'
 import frameImage from '../../../assets/Images/frame.png'
 import LoginForm from './LoginForm';
 import SignupForm from './SignupForm';
-import { FcGoogle } from "react-icons/fc";
+// import { FcGoogle } from "react-icons/fc";
 const Template= ({title,desc1,desc2,image,formType,setIsLoggedIn})=> {
   return (
     <div className='flex justify-between w-11/12 max-w-[1160px] mx-auto py-12 flex-col-reverse gap-y-12 md:gap-y-0 md:gap-x-12 md:flex-row mt-12'>
@@ -17,7 +17,7 @@ const Template= ({title,desc1,desc2,image,formType,setIsLoggedIn})=> {
           {
             formType==="signup"?<SignupForm setIsLoggedIn={setIsLoggedIn}/>:<LoginForm setIsLoggedIn={setIsLoggedIn}/>
           }
-          <div className='w-full flex items-center gap-x-2 my-4'>
+          {/* <div className='w-full flex items-center gap-x-2 my-4'>
             <div className='flex-1 h-[1px] bg-richblack-700'></div>
             <p className='text-white'>OR</p>
             <div className='flex-1 h-[1px] bg-richblack-700'></div>
@@ -25,7 +25,7 @@ const Template= ({title,desc1,desc2,image,formType,setIsLoggedIn})=> {
           <button className='w-full flex justify-center items-center gap-x-2 py-[8px] px-[12px] rounded-[8px] mt-6 font-medium text-richblack-100 border border-richblack-700'>
             <FcGoogle></FcGoogle>
             <p>Sign In with Google</p>
-          </button>  
+          </button>   */}
 
         </div>
 
