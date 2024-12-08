@@ -7,7 +7,7 @@ import getCatalogPageData  from '../services/operations/pageAndComponentData';
 import CourseSlider from '../components/core/Catalog/CourseSlider';
 import { useSelector } from "react-redux"
 import Error from "./Error"
-import CourseCard from '../components/core/HomePage/CourseCard';
+import CourseCard from '../components/core/Catalog/CourseCard';
 
 const Catalog = () => {
 
