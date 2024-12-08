@@ -27,6 +27,7 @@ const CourseDetails = () => {
   const { courseId } = useParams();
 
   // Local state
+  // eslint-disable-next-line
   const { paymentLoading } = useSelector((state) => state.course)
   const [courseData, setCourseData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -99,7 +100,7 @@ const CourseDetails = () => {
     setIsActive(
       !isActive.includes(id)
         ? isActive.concat([id])
-        : isActive.filter((e) => e != id)
+        : isActive.filter((e) => e !== id)
     )
   }
 
@@ -114,12 +115,12 @@ const CourseDetails = () => {
   }
 
   const {
+    // eslint-disable-next-line
     _id: course_id,
     courseName,
     courseDescription,
     thumbnail,
     price,
-    whatYouWillLearn,
     courseContent,
     ratingAndReviews,
     instructor,

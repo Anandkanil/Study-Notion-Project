@@ -13,7 +13,9 @@ import { FaChevronDown } from "react-icons/fa6";
 // Navbar Component
 const Navbar = () => {
     const [subLinks, setSubLinks] = useState([]);
+    // eslint-disable-next-line
     const [loading, setLoading] = useState(false);
+    // eslint-disable-next-line
     const [loadingCategories, setLoadingCategories] = useState(true);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 

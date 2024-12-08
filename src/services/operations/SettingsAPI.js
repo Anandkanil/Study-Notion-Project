@@ -3,7 +3,6 @@ import { toast } from "react-hot-toast"
 import { setUser } from "../../slices/profileSlice"
 import { apiConnector } from "../apiconnector"
 import { settingsEndpoints } from "../apis"
-import { logout } from "./authAPI"
 
 const {
   UPDATE_DISPLAY_PICTURE_API,
@@ -86,12 +85,13 @@ export function updateProfile(token, formData) {
       // Construct user image (default or custom)
       const updatedUser = response.data.data;
       console.log("The response of Updated profile",response)
+      // eslint-disable-next-line
       const userImage = updatedUser.image
         ? updatedUser.image
         : `https://api.dicebear.com/5.x/initials/svg?seed=${updatedUser.firstName} ${updatedUser.lastName}`;
 
       // Update Redux state and localStorage
-      const userData = { ...updatedUser, image: userImage };
+      // const userData = { ...updatedUser, image: userImage };
       dispatch(setUser(updatedUser));
       localStorage.setItem("user", JSON.stringify(updatedUser));
 

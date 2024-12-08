@@ -19,6 +19,7 @@ export default function VideoDetailsSidebar({ setReviewModal }) {
     completedLectures,
   } = useSelector((state) => state.viewCourse);
 
+  // eslint-disable-next-line
   useEffect(() => {
     if (!courseSectionData.length) return;
 

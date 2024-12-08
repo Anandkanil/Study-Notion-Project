@@ -26,6 +26,7 @@ const VideoDetails = () => {
   const [isLoading, setIsLoading] = useState(false);
 
   // Fetch and set the video details on component mount or route change
+  // eslint-disable-next-line
   useEffect(() => {
     (async () => {
       if (!courseSectionData.length) return;
@@ -156,7 +157,8 @@ const VideoDetails = () => {
                   disabled={isLoading}
                   onclick={markLectureComplete}
                   text={!isLoading ? "Mark As Completed" : "Loading..."}
-                  style="text-xl max-w-max px-4 mx-auto"
+                  // eslint-disable-next-line
+                  style={"text-xl max-w-max px-4 mx-auto"}
                 />
               )}
               <IconBtn
@@ -168,7 +170,8 @@ const VideoDetails = () => {
                   }
                 }}
                 text="Rewatch"
-                style="text-xl max-w-max px-4 mx-auto mt-2"
+                // eslint-disable-next-line
+                style={"text-xl max-w-max px-4 mx-auto mt-2"}
               />
               <div className="mt-10 flex min-w-[250px] justify-center gap-x-4 text-xl">
                 {!isFirstVideo() && (

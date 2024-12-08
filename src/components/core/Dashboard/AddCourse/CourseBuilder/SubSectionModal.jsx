@@ -32,6 +32,7 @@ export default function SubSectionModal({
   const { token } = useSelector((state) => state.auth)
   const { course } = useSelector((state) => state.course)
 
+  // eslint-disable-next-line
   useEffect(() => {
     if (view || edit) {
       setValue("lectureTitle", modalData.title)

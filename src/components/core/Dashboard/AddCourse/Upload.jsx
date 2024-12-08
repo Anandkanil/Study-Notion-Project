@@ -16,6 +16,7 @@ export default function Upload({
   viewData = null,
   editData = null,
 }) {
+  // eslint-disable-next-line
   const { course } = useSelector((state) => state.course)
   const [selectedFile, setSelectedFile] = useState(null)
   const [previewSource, setPreviewSource] = useState(

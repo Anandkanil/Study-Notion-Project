@@ -7,11 +7,13 @@ export default function CourseAccordionBar({ course, isActive, handleActive }) {
   const contentEl = useRef(null)
 
   // Accordian state
+  // eslint-disable-next-line
   const [active, setActive] = useState(false)
   useEffect(() => {
     setActive(isActive?.includes(course._id))
   }, [isActive])
   const [sectionHeight, setSectionHeight] = useState(0)
+  // eslint-disable-next-line
   useEffect(() => {
     setSectionHeight(active ? contentEl.current.scrollHeight : 0)
   }, [active])

@@ -17,7 +17,7 @@ const VerifyEmail = () => {
         }
     }, [signupData, navigate]);
 
-    const { firstName, lastName, email, password, confirmPassword, accountType, contactNumber } = signupData;
+    const { firstName, lastName, email, password, confirmPassword, accountType } = signupData;
 
     const dispatch = useDispatch();
 
