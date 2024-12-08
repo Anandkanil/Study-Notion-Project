@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { IoIosArrowBack } from "react-icons/io";
 import { useSelector } from "react-redux";
-import { useLocation, useNavigate, useParams } from "react-router-dom";
+import {  useNavigate, useParams } from "react-router-dom";
 
 import IconBtn from "../../common/IconBtn";
 import { RiArrowDownSLine, RiArrowUpSLine } from "react-icons/ri";
@@ -10,7 +10,7 @@ export default function VideoDetailsSidebar({ setReviewModal }) {
   const [activeStatus, setActiveStatus] = useState("");
   const [videoBarActive, setVideoBarActive] = useState("");
   const navigate = useNavigate();
-  const location = useLocation();
+  // const location = useLocation();
   const { sectionId, subSectionId } = useParams();
   const {
     courseSectionData,
@@ -21,25 +21,23 @@ export default function VideoDetailsSidebar({ setReviewModal }) {
 
   // eslint-disable-next-line
   useEffect(() => {
-    if (!courseSectionData.length) return;
-
-    const currentSectionIndx = courseSectionData.findIndex(
-      (data) => data._id === sectionId
-    );
-    if (currentSectionIndx === -1) return; // Handle invalid sectionId
-
-    const currentSubSectionIndx = courseSectionData?.[
-      currentSectionIndx
-    ]?.subSection.findIndex((data) => data._id === subSectionId);
-    if (currentSubSectionIndx === -1) return; // Handle invalid subSectionId
-
-    const activeSubSectionId =
-      courseSectionData[currentSectionIndx]?.subSection?.[
-        currentSubSectionIndx
-      ]?._id;
-    setActiveStatus(courseSectionData?.[currentSectionIndx]?._id);
+    if (!courseSectionData.length) return;  // If no course sections, exit early
+  
+    // Find the current section by ID
+    const currentSectionIndx = courseSectionData.findIndex((data) => data._id === sectionId);
+    if (currentSectionIndx === -1) return;  // If invalid sectionId, exit early
+  
+    // Find the current subsection by ID
+    const currentSubSectionIndx = courseSectionData[currentSectionIndx]?.subSection.findIndex((data) => data._id === subSectionId);
+    if (currentSubSectionIndx === -1) return;  // If invalid subSectionId, exit early
+  
+    // Get the active sub-section ID
+    const activeSubSectionId = courseSectionData[currentSectionIndx]?.subSection[currentSubSectionIndx]?._id;
+  
+    // Set active section and video bar active status
+    setActiveStatus(courseSectionData[currentSectionIndx]?._id);
     setVideoBarActive(activeSubSectionId);
-  }, [courseSectionData, courseEntireData, location.pathname]);
+  }, [courseSectionData, courseEntireData,sectionId,subSectionId]);
 
   return (
     <div className="flex h-[calc(100vh-3.5rem)] w-[320px] max-w-[350px] flex-col border-r-[1px] border-r-richblack-700 bg-richblack-800">

@@ -32,14 +32,14 @@ export default function SubSectionModal({
   const { token } = useSelector((state) => state.auth)
   const { course } = useSelector((state) => state.course)
 
-  // eslint-disable-next-line
-  useEffect(() => {
-    if (view || edit) {
-      setValue("lectureTitle", modalData.title)
-      setValue("lectureDesc", modalData.description)
-      setValue("lectureVideo", modalData.videoUrl)
-    }
-  }, [])
+// eslint-disable-next-line react-hooks/exhaustive-deps
+useEffect(() => {
+  if (view || edit) {
+    setValue("lectureTitle", modalData.title);
+    setValue("lectureDesc", modalData.description);
+    setValue("lectureVideo", modalData.videoUrl);
+  }
+}, [view, edit, modalData,setValue]);
 
   // detect whether form is updated or not
   const isFormUpdated = () => {

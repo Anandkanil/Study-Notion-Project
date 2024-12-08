@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { useNavigate, useParams, useLocation } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 
 import "video-react/dist/video-react.css";
 import { BigPlayButton, Player } from "video-react";
@@ -12,7 +12,7 @@ import IconBtn from "../../common/IconBtn";
 const VideoDetails = () => {
   const { courseId, sectionId, subSectionId } = useParams();
   const navigate = useNavigate();
-  const location = useLocation();
+  // const location = useLocation();
   const videoPlayerRef = useRef(null);
   const dispatch = useDispatch();
 
@@ -28,26 +28,29 @@ const VideoDetails = () => {
   // Fetch and set the video details on component mount or route change
   // eslint-disable-next-line
   useEffect(() => {
-    (async () => {
-      if (!courseSectionData.length) return;
-
+    const populateCourseData = async () => {
+      if (!courseSectionData.length) return; // If no course section data, exit early
+  
+      // Redirect if any essential ID is missing
       if (!courseId || !sectionId || !subSectionId) {
         navigate(`/dashboard/enrolled-courses`);
         return;
       }
-
-      const selectedSection = courseSectionData.find(
-        (section) => section._id === sectionId
-      );
+  
+      // Find the relevant section and sub-section
+      const selectedSection = courseSectionData.find((section) => section._id === sectionId);
       const selectedSubSection = selectedSection?.subSection.find(
         (subSection) => subSection._id === subSectionId
       );
-
+  
+      // Set state based on found data
       setCurrentVideoData(selectedSubSection || null);
       setCourseThumbnail(courseEntireData.thumbnail || "");
       setIsVideoEnded(false);
-    })();
-  }, [courseSectionData, courseEntireData, location.pathname]);
+    };
+  
+    populateCourseData();
+  }, [courseSectionData, courseEntireData,courseId, navigate, sectionId,subSectionId]); 
 
   // Check if the current lecture is the first video in the course
   const isFirstVideo = () => {
