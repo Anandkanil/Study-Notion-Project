@@ -27,7 +27,7 @@ function ReviewSlider() {
   }, []);
 
   return (
-    <div className="text-white flex items-center justify-center">
+    <div className="text-white flex items-center justify-center sm:hidden">
       <div className="my-[50px] min-h-[184px] w-full lg:max-w-maxContent">
         <Swiper
           slidesPerView={4} // Number of slides visible
