@@ -122,3 +122,15 @@
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; scroll-behavior: auto !important; }
 }
+
+/* Certificate printing: only the certificate, landscape A4, no browser margins */
+@media print {
+  @page { size: A4 landscape; margin: 0; }
+  html, body { background: #fff !important; }
+  body * { visibility: hidden; }
+  #certificate, #certificate * { visibility: visible; }
+  #certificate {
+    position: fixed; inset: 0; width: 100vw; height: 100vh; max-width: none; aspect-ratio: auto;
+    -webkit-print-color-adjust: exact; print-color-adjust: exact;
+  }
+}
