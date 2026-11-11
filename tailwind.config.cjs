@@ -16,6 +16,7 @@ module.exports = {
       surface: "rgb(var(--surface) / <alpha-value>)",
       raised: "rgb(var(--raised) / <alpha-value>)",
       line: "rgb(var(--line) / <alpha-value>)",
+      field: "rgb(var(--field) / <alpha-value>)",
       ink: "rgb(var(--ink) / <alpha-value>)",
       muted: "rgb(var(--muted) / <alpha-value>)",
       accent: "rgb(var(--accent) / <alpha-value>)",

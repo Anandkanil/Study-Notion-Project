@@ -34,7 +34,7 @@ export const Button = forwardRef(function Button(
 });
 
 const inputBase =
-  "w-full rounded-xl border bg-surface px-4 py-3 text-base text-ink placeholder:text-richblack-400 transition-colors focus:outline-none focus-visible:outline-none focus:border-accent focus:ring-2 focus:ring-accent/30";
+  "w-full rounded-xl border bg-bg px-4 py-3 text-base text-ink placeholder:text-richblack-400 transition-colors focus:outline-none focus-visible:outline-none focus:border-accent focus:ring-2 focus:ring-accent/30";
 
 /**
  * Labelled input with optional hint and error. Extra props go to the <input>.
@@ -66,7 +66,7 @@ export const Field = forwardRef(function Field(
         required={required}
         aria-invalid={error ? true : undefined}
         aria-describedby={[hintId, errId].filter(Boolean).join(" ") || undefined}
-        className={`${inputBase} ${error ? "border-danger" : "border-line"} ${as === "textarea" ? "min-h-[120px] resize-y" : ""} ${inputClassName}`}
+        className={`${inputBase} ${error ? "border-danger" : "border-field"} ${as === "textarea" ? "min-h-[120px] resize-y" : ""} ${inputClassName}`}
         {...rest}
       >
         {children}
@@ -112,7 +112,7 @@ export const PasswordField = forwardRef(function PasswordField(props, ref) {
           required={required}
           aria-invalid={error ? true : undefined}
           aria-describedby={[hintId, errId].filter(Boolean).join(" ") || undefined}
-          className={`${inputBase} pr-14 ${error ? "border-danger" : "border-line"}`}
+          className={`${inputBase} pr-14 ${error ? "border-danger" : "border-field"}`}
           {...rest}
         />
         <button

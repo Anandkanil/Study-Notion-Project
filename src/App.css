@@ -237,7 +237,7 @@ details > summary::-webkit-details-marker {
   @apply text-sm font-semibold text-ink;
 }
 .form-style {
-  @apply w-full rounded-xl border border-line bg-surface px-4 py-3 text-base text-ink placeholder:text-richblack-400 focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/30;
+  @apply w-full rounded-xl border border-field bg-bg px-4 py-3 text-base text-ink placeholder:text-richblack-400 focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/30;
 }
 .section_heading {
   @apply text-2xl font-bold text-richblack-5 lg:text-4xl;
