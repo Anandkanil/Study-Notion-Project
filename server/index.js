@@ -5,6 +5,7 @@ const courseRoute=require('./routes/Course');
 const paymentRoute=require('./routes/Payments');
 const profileRoute=require('./routes/Profile');
 const userRoute=require('./routes/User');
+const contactRoute=require('./routes/Contact');
 
 const connectDB=require('./config/database');
 const cookieParser=require('cookie-parser');
@@ -39,6 +40,7 @@ app.use('/api/v1/auth',userRoute);
 app.use('/api/v1/profile',profileRoute);
 app.use('/api/v1/course',courseRoute);
 app.use('/api/v1/payment',paymentRoute);
+app.use('/api/v1/reach',contactRoute);
 
 app.get('/',(req,res)=>{res.send(`<h1>Welcomr to Study Notion Home page</h1>`)});
 

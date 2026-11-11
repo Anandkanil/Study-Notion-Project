@@ -1,8 +1,9 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import CountryCode from "../../data/countrycode.json";
 import { apiConnector } from "../../services/apiconnector";
 import { contactusEndpoint } from "../../services/apis";
+import { toast } from "react-hot-toast";
 
 const ContactUsForm = () => {
   const [loading, setLoading] = useState(false);
@@ -10,36 +11,25 @@ const ContactUsForm = () => {
     register,
     handleSubmit,
     reset,
-    formState: { errors, isSubmitSuccessful },
+    formState: { errors },
   } = useForm();
 
   const submitContactForm = async (data) => {
+    setLoading(true);
     try {
-      setLoading(true);
-      const res = await apiConnector(
-        "POST",
-        contactusEndpoint.CONTACT_US_API,
-        data
-      );
-      console.log("Form submitted successfully:", res);
-      setLoading(false);
+      const res = await apiConnector("POST", contactusEndpoint.CONTACT_US_API, data);
+      if (!res?.data?.success) throw new Error(res?.data?.message);
+      toast.success(res.data.message || "Thanks! Your message has been sent.");
+      // Clear the form only once the message has really been sent
+      reset({ email: "", firstname: "", lastname: "", message: "", phoneNo: "" });
     } catch (error) {
-      console.error("Error submitting form:", error.message);
+      toast.error(
+        error.response?.data?.message || "Could not send your message. Please try again."
+      );
+    } finally {
       setLoading(false);
     }
   };
-
-  useEffect(() => {
-    if (isSubmitSuccessful) {
-      reset({
-        email: "",
-        firstname: "",
-        lastname: "",
-        message: "",
-        phoneNo: "",
-      });
-    }
-  }, [reset, isSubmitSuccessful]);
 
   return (
     <div className="flex items-center justify-center bg-richblack-900">

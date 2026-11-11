@@ -1,6 +1,7 @@
 const Profile = require("../models/Profile")
 const Course = require("../models/Course")
 const CourseProgress = require("../models/CourseProgress")
+const RatingAndReview = require("../models/RatingAndReview")
 
 const User = require("../models/User")
 const { uploadImageToCloudinary } = require("../utils/imageUploader")
@@ -85,6 +86,27 @@ exports.deleteAccount = async (req, res) => {
         message: "User not found.",
       });
     }
+
+    // Instructors must remove their courses first, so enrolled students never lose access silently
+    if (user.accountType === "Instructor") {
+      const ownCourses = await Course.countDocuments({ instructor: userId });
+      if (ownCourses > 0) {
+        return res.status(409).json({
+          success: false,
+          message: `Please delete your ${ownCourses} course${ownCourses === 1 ? "" : "s"} before deleting your account.`,
+        });
+      }
+    }
+
+    // Remove the user from every course, with their progress and reviews
+    const reviews = await RatingAndReview.find({ user: userId }).select("_id");
+    const reviewIds = reviews.map((r) => r._id);
+    await Course.updateMany(
+      { $or: [{ studentsEnrolled: userId }, { ratingAndReviews: { $in: reviewIds } }] },
+      { $pull: { studentsEnrolled: userId, ratingAndReviews: { $in: reviewIds } } }
+    );
+    await RatingAndReview.deleteMany({ user: userId });
+    await CourseProgress.deleteMany({ userId });
 
     // Delete associated profile
     if (user.additionalDetails) {

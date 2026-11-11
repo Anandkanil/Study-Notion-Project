@@ -19,9 +19,10 @@ export default function DeleteAccount() {
   async function handleDeleteAccount() {
     try {
       setLoading(true);
-      await dispatch(deleteProfile(token, navigate)); // Await to handle async logic
+      const deleted = await dispatch(deleteProfile(token, navigate));
       setConfirmationModal(null);
-      dispatch(logout(navigate)); // Close the modal after successful deletion
+      // Only sign out once the account is really gone
+      if (deleted) dispatch(logout(navigate));
     } catch (error) {
       console.error("Error deleting account: ", error.message);
     } finally {

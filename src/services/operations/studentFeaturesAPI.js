@@ -98,7 +98,7 @@ export async function buyCourse(token, courses, userDetails, navigate, dispatch)
         });
     } catch (error) {
         console.error("Payment API Error:", error);
-        toast.error(error.message || "Could not complete the payment process.");
+        toast.error(error.response?.data?.message || error.message || "Could not complete the payment process.");
     } finally {
         toast.dismiss(toastId); // Dismiss loading toast once process completes
     }
@@ -147,7 +147,7 @@ async function verifyPayment(bodyData, token, navigate, dispatch) {
         dispatch(resetCart());
     } catch (error) {
         console.error("Payment Verification Error:", error);
-        toast.error(error.message || "Could not verify the payment.");
+        toast.error(error.response?.data?.message || error.message || "Could not verify the payment.");
     } finally {
         toast.dismiss(toastId); // Dismiss loading toast after verification
         dispatch(setPaymentLoading(false)); // Reset loading state
