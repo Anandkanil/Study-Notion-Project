@@ -1,7 +1,8 @@
 import {createSlice} from "@reduxjs/toolkit"
 
 const initialState = {
-    user:localStorage.getItem('user')? JSON.parse(localStorage.getItem("user")) : null,
+    // Only trust the saved profile while a saved login exists (an expired login is cleared at startup)
+    user: localStorage.getItem("token") && localStorage.getItem("user") ? JSON.parse(localStorage.getItem("user")) : null,
     loading:false
 };
 
