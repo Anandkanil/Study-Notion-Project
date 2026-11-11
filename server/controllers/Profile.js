@@ -279,6 +279,16 @@ exports.getEnrolledCourses = async (req, res) => {
       }
     }
 
+    // The learner's own rating per course, so the site knows whether to ask for one
+    const myRatings = await RatingAndReview.find({
+      user: userId,
+      course: { $in: userDetails.courses.map((c) => c._id) },
+    }).select('course rating').lean()
+    const ratingByCourse = new Map(myRatings.map((r) => [String(r.course), r.rating]))
+    userDetails.courses.forEach((c) => {
+      c.myRating = ratingByCourse.get(String(c._id)) || null
+    })
+
     if (!userDetails) {
       return res.status(400).json({
         success: false,

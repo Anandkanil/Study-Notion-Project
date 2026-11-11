@@ -6,6 +6,7 @@ import { apiConnector } from "../../../services/apiconnector";
 import { profileEndpoints } from "../../../services/apis";
 import { Button, EmptyState, buttonClass } from "../../ui";
 import { formatClock, getLastLesson, getPosition } from "../../../utils/learningMemory";
+import RatePrompt from "./RatePrompt";
 
 /** First lesson not yet completed (or the first lesson, for a finished course). */
 const nextLesson = (course) => {
@@ -155,9 +156,12 @@ export default function EnrolledCourses() {
                       <div className="flex h-full flex-col gap-3 rounded-2xl border border-line bg-surface p-4">{body}</div>
                     )}
                     {pct >= 100 && lessons > 0 && (
-                      <Link to={`/dashboard/certificate/${course._id}`} className={buttonClass("secondary", "sm")}>
-                        View certificate
-                      </Link>
+                      <>
+                        <Link to={`/dashboard/certificate/${course._id}`} className={buttonClass("secondary", "sm")}>
+                          View certificate
+                        </Link>
+                        <RatePrompt compact course={course} myRating={course.myRating} />
+                      </>
                     )}
                   </li>
                 );

@@ -25,7 +25,6 @@ const {
 } = courseEndpoints
 
 export const getAllCourses = async () => {
-  const toastId = toast.loading("Loading courses…")
   let result = []
   try {
     const response = await apiConnector("GET", GET_ALL_COURSE_API)
@@ -38,12 +37,10 @@ export const getAllCourses = async () => {
     console.log("GET_ALL_COURSE_API API ERROR............", error)
     toast.error(error.response?.data?.message || "Courses couldn't load. Please try again.")
   }
-  toast.dismiss(toastId)
   return result
 }
 
 export const fetchCourseDetails = async (courseId) => {
-  const toastId = toast.loading("Loading course…")
   //   dispatch(setLoading(true));
   let result = null
   try {
@@ -58,11 +55,8 @@ export const fetchCourseDetails = async (courseId) => {
     result = response.data;
   } catch (error) {
     console.log("COURSE_DETAILS_API API ERROR............", error)
-    result = error.response.data
-    // toast.error(error.response.data.message);
+    result = error.response?.data || { success: false }
   }
-  toast.dismiss(toastId)
-  //   dispatch(setLoading(false));
   return result
 }
 
@@ -361,22 +355,15 @@ export const markLectureAsComplete = async (data, token) => {
 // create a rating for course
 export const createRating = async (data, token) => {
   const toastId = toast.loading("Posting your review…")
-  let success = false
   try {
     const response = await apiConnector("POST", CREATE_RATING_API, data, {
       Authorization: `Bearer ${token}`,
     })
-    // console.log("CREATE RATING API RESPONSE............", response)
-    if (!response?.data?.success) {
-      throw new Error("Could Not Create Rating")
-    }
-    toast.success("Thanks! Your review is posted.")
-    success = true
+    if (!response?.data?.success) throw new Error("Review not saved")
+    toast.success("Thanks! Your review is posted.", { id: toastId })
+    return true
   } catch (error) {
-    success = false
-    console.log("CREATE RATING API ERROR............", error)
-    toast.error(error.response?.data?.message || "Review couldn't be posted. Please try again.")
+    toast.error(error.response?.data?.message || "Your review couldn't be posted. Please try again.", { id: toastId })
+    return false
   }
-  toast.dismiss(toastId)
-  return success
 }

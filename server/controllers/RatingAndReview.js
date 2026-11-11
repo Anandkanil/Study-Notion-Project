@@ -5,7 +5,19 @@ exports.createRating = async (req, res) => {
     try {
         // Get user ID and course ID
         const userId = req.user.userId;
-        const { rating, review, courseId } = req.body;
+        const { courseId } = req.body;
+        const rating = Number(req.body.rating);
+        const review = typeof req.body.review === 'string' ? req.body.review.trim() : '';
+
+        if (!Number.isInteger(rating) || rating < 1 || rating > 5) {
+            return res.status(400).json({ success: false, message: "Choose a rating from 1 to 5 stars." });
+        }
+        if (!review) {
+            return res.status(400).json({ success: false, message: "Write a few words about the course." });
+        }
+        if (review.length > 500) {
+            return res.status(400).json({ success: false, message: "Keep your review under 500 characters." });
+        }
 
         // Validate that the user is enrolled in the course
         const courseDetails = await Course.findOne({
@@ -16,7 +28,7 @@ exports.createRating = async (req, res) => {
         if (!courseDetails) {
             return res.status(400).json({
                 success: false,
-                message: "Invalid course ID or the user is not enrolled in this course."
+                message: "You can only review courses you're enrolled in."
             });
         }
 
@@ -26,7 +38,7 @@ exports.createRating = async (req, res) => {
         if (alreadyReviewed) {
             return res.status(400).json({
                 success: false,
-                message: "User has already submitted a rating and review for this course."
+                message: "You've already reviewed this course."
             });
         }
 

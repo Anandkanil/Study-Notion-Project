@@ -5,16 +5,21 @@ import { Button, Field } from "../../ui";
 
 const LABELS = ["", "Poor", "Fair", "Good", "Very good", "Excellent"];
 
-export default function CourseReviewModal({ setReviewModal }) {
+/**
+ * Rating dialog. Works inside the lesson player (course from the store) or anywhere
+ * else with `course` ({ _id, courseName }), `onClose` and `onReviewed`.
+ */
+export default function CourseReviewModal({ setReviewModal, course, onClose, onReviewed, initialRating = 0 }) {
   const { user } = useSelector((state) => state.profile);
   const { token } = useSelector((state) => state.auth);
-  const { courseEntireData } = useSelector((state) => state.viewCourse);
-  const [rating, setRating] = useState(0);
+  const { courseEntireData: storeCourse } = useSelector((state) => state.viewCourse);
+  const courseEntireData = course || storeCourse;
+  const [rating, setRating] = useState(initialRating);
   const [review, setReview] = useState("");
   const [submitted, setSubmitted] = useState(false);
   const [saving, setSaving] = useState(false);
   const titleId = useId();
-  const close = () => setReviewModal(false);
+  const close = () => (onClose ? onClose() : setReviewModal?.(false));
 
   useEffect(() => {
     const onKey = (e) => e.key === "Escape" && close();
@@ -35,7 +40,10 @@ export default function CourseReviewModal({ setReviewModal }) {
     setSaving(true);
     const ok = await createRating({ courseId: courseEntireData._id, rating, review: review.trim() }, token);
     setSaving(false);
-    if (ok !== false) close();
+    if (ok !== false) {
+      onReviewed?.(rating);
+      close();
+    }
   };
 
   return (
@@ -97,8 +105,12 @@ export default function CourseReviewModal({ setReviewModal }) {
             value={review}
             onChange={(e) => setReview(e.target.value)}
             placeholder="What did you learn? Who would you recommend it to?"
+            maxLength={500}
             error={submitted && !review.trim() ? "Write a few words about the course." : undefined}
           />
+          <p className="-mt-3 text-right text-sm text-muted" aria-live="polite">
+            {review.length}/500
+          </p>
 
           <div className="flex justify-end gap-3">
             <Button variant="secondary" onClick={close}>
