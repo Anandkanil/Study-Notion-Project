@@ -89,7 +89,7 @@ const Navbar = () => {
 
   return (
     <header className="sticky top-0 z-40 border-b border-line bg-bg/85 backdrop-blur supports-[backdrop-filter]:bg-bg/70">
-      <div className="mx-auto flex h-16 w-full max-w-6xl items-center gap-3 px-4 sm:px-6">
+      <div className="mx-auto flex h-16 w-full max-w-6xl items-center gap-2 px-3 sm:gap-3 sm:px-6">
         <button
           type="button"
           className="grid h-11 w-11 place-items-center rounded-xl border border-line bg-surface text-ink lg:hidden"
@@ -159,8 +159,9 @@ const Navbar = () => {
               <Link to="/login" className="hidden rounded-xl px-4 py-2.5 font-semibold text-ink hover:bg-raised sm:inline-block">
                 Log in
               </Link>
-              <Link to="/signup" className="rounded-xl bg-accent px-4 py-2.5 font-bold text-on-accent hover:brightness-105">
-                Start learning
+              <Link to="/signup" className="whitespace-nowrap rounded-xl bg-accent px-4 py-2.5 font-bold text-on-accent hover:brightness-105">
+                <span className="sm:hidden">Join</span>
+                <span className="hidden sm:inline">Start learning</span>
               </Link>
             </>
           ) : (
