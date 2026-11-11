@@ -3,8 +3,6 @@ import { useDropzone } from "react-dropzone"
 import { FiUploadCloud } from "react-icons/fi"
 import { useSelector } from "react-redux"
 
-import "video-react/dist/video-react.css"
-import { BigPlayButton, Player } from "video-react"
 
 export default function Upload({
   name,
@@ -80,9 +78,7 @@ export default function Upload({
                 className="h-full w-full rounded-md object-cover"
               />
             ) : (
-              <Player aspectRatio="16:9" playsInline src={previewSource}  >
-              <BigPlayButton position="center" />
-              </Player>
+              <video src={previewSource} controls playsInline preload="metadata" className="aspect-video w-full rounded-md bg-black" />
             )}
             {!viewData && (
               <button
@@ -100,7 +96,7 @@ export default function Upload({
           </div>
         ) : (
           <div className="flex w-full flex-col items-center p-6">
-            <input {...getInputProps()} ref={inputRef} />
+            <input {...getInputProps()} id={name} aria-label={label} ref={inputRef} />
             <div
               className="grid aspect-square w-14 place-items-center rounded-full bg-pure-greys-800"
               {...getRootProps()}

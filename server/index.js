@@ -5,6 +5,7 @@ const courseRoute=require('./routes/Course');
 const paymentRoute=require('./routes/Payments');
 const profileRoute=require('./routes/Profile');
 const userRoute=require('./routes/User');
+const contactRoute=require('./routes/Contact');
 
 const connectDB=require('./config/database');
 const cookieParser=require('cookie-parser');
@@ -14,10 +15,6 @@ const fileUpload=require('express-fileupload');
 const dotenv=require('dotenv');
 dotenv.config();
 
-app.use((req,res,next)=>{
-    console.log(`A ${req.method} response came with for the URL : ${req.url}`);
-    next();
-})
 
 const PORT=process.env.PORT || 4000;
 
@@ -25,8 +22,21 @@ connectDB();
 
 app.use(express.json());
 app.use(cookieParser());
+// Allowed front ends: the live site, its Netlify deploy previews, local dev,
+// plus any extra comma-separated origins in CORS_ORIGINS.
+const ALLOWED_ORIGINS = [
+    'https://studynotion-project-1.netlify.app',
+    ...(process.env.CORS_ORIGINS || '').split(',').map((o) => o.trim()).filter(Boolean),
+];
+const PREVIEW_ORIGIN = /^https:\/\/deploy-preview-\d+--studynotion-project-1\.netlify\.app$/;
+const LOCAL_ORIGIN = /^http:\/\/localhost:(3000|5173)$/;
 app.use(cors({
-    origin: ['https://studynotion-project-1.netlify.app'],
+    origin: (origin, callback) => {
+        if (!origin || ALLOWED_ORIGINS.includes(origin) || PREVIEW_ORIGIN.test(origin) || LOCAL_ORIGIN.test(origin)) {
+            return callback(null, true);
+        }
+        return callback(null, false);
+    },
     credentials:true,
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
 }));
@@ -39,6 +49,7 @@ app.use('/api/v1/auth',userRoute);
 app.use('/api/v1/profile',profileRoute);
 app.use('/api/v1/course',courseRoute);
 app.use('/api/v1/payment',paymentRoute);
+app.use('/api/v1/reach',contactRoute);
 
 app.get('/',(req,res)=>{res.send(`<h1>Welcomr to Study Notion Home page</h1>`)});
 

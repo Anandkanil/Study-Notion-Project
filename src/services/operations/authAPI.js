@@ -82,7 +82,7 @@ export function signUp(firstName, lastName, email, password, confirmPassword, ac
   };
 }
 
-export function login(email, password, navigate) {
+export function login(email, password, navigate, redirectTo = "/dashboard/my-profile") {
   return async (dispatch) => {
     dispatch(setLoading(true));
 
@@ -107,7 +107,7 @@ export function login(email, password, navigate) {
 
       // Notify the user and redirect
       toast.success("Login successful! Welcome back.");
-      navigate("/dashboard/my-profile");
+      navigate(redirectTo, { replace: true });
 
     } catch (error) {
       console.error("Login Error:", error);

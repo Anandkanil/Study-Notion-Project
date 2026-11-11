@@ -1,220 +1,200 @@
-// Icons Import
-import { FaArrowRight } from "react-icons/fa"
-import { Link } from "react-router-dom"
+import React, { useCallback, useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 
-// Image and Video Import
-// import Banner from "../assets/Images/banner.mp4"
-import Banner2 from '../assets/Images/banner2.mp4'
-// Component Imports
-import Footer from "../components/common/Footer"
-import ReviewSlider from "../components/common/ReviewSlider"
-import CTAButton from "../components/core/HomePage/Button"
-import CodeBlocks from "../components/core/HomePage/CodeBlocks"
-import ExploreMore from "../components/core/HomePage/ExploreMore"
-import HighlightText from "../components/core/HomePage/HighlightText"
-import InstructorSection from "../components/core/HomePage/InstructorSection"
-import LearningLanguageSection from "../components/core/HomePage/LanguageLearningSection"
-import TimelineSection from "../components/core/HomePage/TimelineSection"
+import Footer from "../components/common/Footer";
+import ReviewSlider from "../components/common/ReviewSlider";
+import CourseCard from "../components/core/Catalog/CourseCard";
+import { categorySlug } from "../components/common/Navbar";
+import { apiConnector } from "../services/apiconnector";
+import { categories, courseEndpoints } from "../services/apis";
+import InstructorImage from "../assets/Images/Instructor.png";
 
-function Home() {
-    return (
-        <div>
-            {/* Section 1 */}
-            <div className="relative mx-auto flex w-11/12 max-w-maxContent flex-col items-center justify-between gap-8 text-white">
-                {/* Become a Instructor Button */}
-                <Link to={"/signup"}>
-                    <div className="group mx-auto mt-16 w-fit rounded-full bg-richblack-800 p-1 font-bold text-richblack-200 drop-shadow-[0_1.5px_rgba(255,255,255,0.25)] transition-all duration-200 hover:scale-95 hover:drop-shadow-none">
-                        <div className="flex flex-row items-center gap-2 rounded-full px-10 py-[5px] transition-all duration-200 group-hover:bg-richblack-900">
-                            <p>Become an Instructor</p>
-                            <FaArrowRight />
-                        </div>
-                    </div>
-                </Link>
+const btnPrimary =
+  "inline-flex items-center justify-center rounded-xl bg-accent px-6 py-3.5 text-base font-bold text-on-accent transition hover:brightness-105";
+const btnGhost =
+  "inline-flex items-center justify-center rounded-xl border border-richblack-600 px-6 py-3.5 text-base font-bold text-ink transition hover:bg-raised";
 
-                {/* Heading */}
-                <div className="text-center text-4xl font-semibold">
-                    Empower Your Future with
-                    <HighlightText text={"Coding Skills"} />
-                </div>
-
-                {/* Sub Heading */}
-                <div className="-mt-3 w-[90%] text-center text-lg font-bold text-richblack-300">
-                    With our online coding courses, you can learn at your own pace, from
-                    anywhere in the world, and get access to a wealth of resources,
-                    including hands-on projects, quizzes, and personalized feedback from
-                    instructors.
-                </div>
-
-                {/* CTA Buttons */}
-                <div className="mt-8 flex flex-row gap-7">
-                    <CTAButton active={true} linkto={"/signup"}>
-                        Learn More
-                    </CTAButton>
-                    <CTAButton active={false} linkto={"/login"}>
-                        Book a Demo
-                    </CTAButton>
-                </div>
-
-                {/* Video */}
-                <div className="mx-3 my-7 shadow-[10px_-5px_50px_-5px] shadow-blue-200">
-                    <video
-                        className="shadow-[20px_20px_rgba(255,255,255)]"
-                        muted
-                        loop
-                        autoPlay
-                    >
-                        <source src={Banner2} type="video/mp4" />
-                    </video>
-                </div>
-
-                {/* Code Section 1  */}
-                <div>
-                    <CodeBlocks
-                        position={"lg:flex-row"}
-                        heading={
-                            <div className="text-4xl font-semibold">
-                                Unlock your
-                                <HighlightText text={"coding potential"} /> with our online
-                                courses.
-                            </div>
-                        }
-                        subheading={
-                            "Our courses are designed and taught by industry experts who have years of experience in coding and are passionate about sharing their knowledge with you."
-                        }
-                        ctabtn1={{
-                            btnText: "Try it Yourself",
-                            link: "/signup",
-                            active: true,
-                        }}
-                        ctabtn2={{
-                            btnText: "Learn More",
-                            link: "/signup",
-                            active: false,
-                        }}
-                        codeColor={"text-yellow-25"}
-                        codeblock={`<!DOCTYPE html>
-                        <html lang="en">
-                        <head>
-                            <meta charset="UTF-8">
-                            <meta name="viewport">
-                            <title>StudyNotion</title>
-                        </head>
-                        <body>
-                            <h1>Welcome to Study Notion</h1>
-                            <p>Let's Learn together</p>
-                        </body>
-                        </html>`}
-                        backgroundGradient={<div className="codeblock1 absolute"></div>}
-                    />
-                </div>
-
-                {/* Code Section 2 */}
-                <div>
-                    <CodeBlocks
-                        position={"lg:flex-row-reverse"}
-                        heading={
-                            <div className="w-[100%] text-4xl font-semibold lg:w-[50%]">
-                                Start
-                                <HighlightText text={"coding in seconds"} />
-                            </div>
-                        }
-                        subheading={
-                            "Go ahead, give it a try. Our hands-on learning environment means you'll be writing real code from your very first lesson."
-                        }
-                        ctabtn1={{
-                            btnText: "Continue Lesson",
-                            link: "/signup",
-                            active: true,
-                        }}
-                        ctabtn2={{
-                            btnText: "Learn More",
-                            link: "/signup",
-                            active: false,
-                        }}
-                        codeColor={"text-white"}
-                        codeblock={`<!DOCTYPE html>
-                        <html lang="en">
-                        <head>
-                            <meta charset="UTF-8">
-                            <meta name="viewport">
-                            <title>StudyNotion</title>
-                        </head>
-                        <body>
-                            <h1>Welcome to Study Notion</h1>
-                            <p>Let's Learn together</p>
-                        </body>
-                        </html>`}
-                        backgroundGradient={<div className="codeblock2 absolute"></div>}
-                    />
-                </div>
-
-                {/* Explore Section */}
-                <ExploreMore />
-            </div>
-
-            {/* Section 2 */}
-            <div className="bg-pure-greys-5 text-richblack-700">
-                <div className="homepage_bg h-[320px]">
-                    {/* Explore Full Catagory Section */}
-                    <div className="mx-auto flex w-11/12 max-w-maxContent flex-col items-center justify-between gap-8">
-                        <div className="lg:h-[150px]"></div>
-                        <div className="flex flex-row gap-7 text-white lg:mt-8">
-                            <CTAButton active={true} linkto={"/signup"}>
-                                <div className="flex items-center gap-2">
-                                    Explore Full Catalog
-                                    <FaArrowRight />
-                                </div>
-                            </CTAButton>
-                            <CTAButton active={false} linkto={"/login"}>
-                                Learn More
-                            </CTAButton>
-                        </div>
-                    </div>
-                </div>
-
-                <div className="mx-auto flex w-11/12 max-w-maxContent flex-col items-center justify-between gap-8 ">
-                    {/* Job that is in Demand - Section 1 */}
-                    <div className="mb-10 mt-[-100px] flex flex-col justify-between gap-7 lg:mt-20 lg:flex-row lg:gap-0">
-                        <div className="text-4xl font-semibold lg:w-[45%] ">
-                            Get the skills you need for a{" "}
-                            <HighlightText text={"job that is in demand."} />
-                        </div>
-                        <div className="flex flex-col items-start gap-10 lg:w-[40%]">
-                            <div className="text-[16px]">
-                                The modern StudyNotion is the dictates its own terms. Today, to
-                                be a competitive specialist requires more than professional
-                                skills.
-                            </div>
-                            <CTAButton active={true} linkto={"/signup"}>
-                                <div className="">Learn More</div>
-                            </CTAButton>
-                        </div>
-                    </div>
-
-                    {/* Timeline Section - Section 2 */}
-                    <TimelineSection />
-
-                    {/* Learning Language Section - Section 3 */}
-                    <LearningLanguageSection />
-                </div>
-            </div>
-
-            {/* Section 3 */}
-            <div className="relative mx-auto my-20 flex w-11/12 max-w-maxContent flex-col items-center justify-between gap-8 bg-richblack-900 text-white">
-                {/* Become a instructor section */}
-                <InstructorSection />
-
-                {/* Reviws from Other Learner */}
-                <h1 className="text-center text-4xl font-semibold mt-8">
-                    Reviews from other learners
-                </h1>
-                <ReviewSlider />
-            </div>
-
-            {/* Footer */}
-            <Footer />
+function PlayerPreview() {
+  return (
+    <figure className="m-0 rounded-[20px] border border-line bg-surface p-3.5 shadow-[var(--shadow-pop)]">
+      <div className="grid aspect-video place-items-center rounded-xl bg-[rgb(14_17_40)]" aria-hidden="true">
+        <span className="grid h-[72px] w-[72px] place-items-center rounded-full bg-accent">
+          <svg width="28" height="28" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M8 5l12 7-12 7z" fill="rgb(20 24 51)" />
+          </svg>
+        </span>
+      </div>
+      <div className="px-1.5 pb-1 pt-3.5">
+        <div className="relative h-1.5 rounded bg-line" aria-hidden="true">
+          <div className="h-full w-[58%] rounded bg-accent" />
+          {[22, 47, 76].map((left) => (
+            <span key={left} className="absolute -top-[3px] h-3 w-0.5 bg-ink" style={{ left: `${left}%` }} />
+          ))}
         </div>
-    )
+        <figcaption className="mt-3 flex justify-between gap-3 text-[15px] text-muted">
+          <span>Pick up exactly where you stopped</span>
+          <span>12:40 / 21:55</span>
+        </figcaption>
+      </div>
+    </figure>
+  );
 }
 
-export default Home
+const STEPS = [
+  ["Choose a course", "Browse by subject, read the syllabus and see what other learners thought."],
+  ["Pay once, in rupees", "Check out with UPI, card or net banking. The course stays in your account."],
+  ["Learn at your pace", "Short video lessons. Your progress saves after every lesson."],
+];
+
+function Home() {
+  const [cats, setCats] = useState(null);
+  const [popular, setPopular] = useState(null);
+  const [failed, setFailed] = useState(false);
+
+  const load = useCallback(async () => {
+    setFailed(false);
+    setCats(null);
+    setPopular(null);
+    try {
+      const [catRes, courseRes] = await Promise.all([
+        apiConnector("GET", categories.CATEGORIES_API),
+        apiConnector("GET", courseEndpoints.GET_ALL_COURSE_API),
+      ]);
+      setCats((catRes.data?.data || []).filter((c) => c?.courses?.length > 0));
+      const published = (courseRes.data?.courses || []).filter((c) => c.status === "Published");
+      published.sort((a, b) => (b.studentsEnrolled?.length || 0) - (a.studentsEnrolled?.length || 0));
+      setPopular(published.slice(0, 4));
+    } catch (error) {
+      console.error("Home data error:", error);
+      setFailed(true);
+      setCats([]);
+      setPopular([]);
+    }
+  }, []);
+
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  const firstCatalog = cats?.[0] ? `/catalog/${categorySlug(cats[0].name)}` : "/signup";
+
+  return (
+    <div className="flex flex-col">
+      {/* Hero */}
+      <section className="mx-auto grid w-full max-w-6xl items-center gap-12 px-6 pb-12 pt-14 md:grid-cols-[1fr_1.05fr] md:pt-20">
+        <div>
+          <h1 className="font-display text-[clamp(2.4rem,5vw,3.4rem)] font-bold leading-[1.08] text-ink">
+            Learning that fits after work.
+          </h1>
+          <p className="mt-5 max-w-lg text-lg leading-relaxed text-muted">
+            Short video lessons in web development, cloud, machine learning, UI/UX and security. Pause any time — StudyNotion remembers the exact lesson you stopped at.
+          </p>
+          <div className="mt-8 flex flex-wrap gap-3">
+            <Link to={firstCatalog} className={btnPrimary}>
+              Browse courses
+            </Link>
+            <Link to="/signup?role=instructor" className={btnGhost}>
+              Teach on StudyNotion
+            </Link>
+          </div>
+        </div>
+        <PlayerPreview />
+      </section>
+
+      {/* Subjects (hidden if they failed to load; the retry below covers it) */}
+      {(cats === null || cats.length > 0) && (
+      <section aria-labelledby="home-subjects" className="mx-auto w-full max-w-6xl px-6 py-8">
+        <h2 id="home-subjects" className="font-display text-2xl font-medium text-ink">
+          Pick a subject
+        </h2>
+        <div className="mt-5 flex flex-wrap gap-3">
+          {cats === null
+            ? [0, 1, 2, 3, 4].map((i) => <div key={i} className="skeleton h-12 w-40 rounded-xl" aria-hidden="true" />)
+            : cats.map((c) => (
+                <Link
+                  key={c._id}
+                  to={`/catalog/${categorySlug(c.name)}`}
+                  className="flex items-center gap-3 rounded-xl border border-line bg-surface px-4 py-3 font-semibold text-ink transition-colors hover:bg-raised"
+                >
+                  {c.name}
+                  <span className="rounded-md bg-raised px-2 py-0.5 text-sm font-medium text-muted">
+                    {c.courses.length} {c.courses.length === 1 ? "course" : "courses"}
+                  </span>
+                </Link>
+              ))}
+        </div>
+      </section>
+      )}
+
+      {/* Most enrolled */}
+      <section aria-labelledby="home-popular" className="mx-auto w-full max-w-6xl px-6 py-10">
+        <h2 id="home-popular" className="font-display text-2xl font-medium text-ink">
+          Most enrolled
+        </h2>
+        {failed ? (
+          <div className="mt-5 flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-dashed border-richblack-600 bg-surface p-6">
+            <p className="text-muted">Courses couldn't load. The server may still be waking up.</p>
+            <button type="button" onClick={load} className={btnGhost}>
+              Try again
+            </button>
+          </div>
+        ) : (
+          <div className="mt-5 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+            {popular === null
+              ? [0, 1, 2, 3].map((i) => (
+                  <div key={i} className="flex flex-col gap-3 rounded-2xl border border-line bg-surface p-4" aria-hidden="true">
+                    <div className="skeleton aspect-video w-full" />
+                    <div className="skeleton h-5 w-3/4" />
+                    <div className="skeleton h-4 w-1/2" />
+                  </div>
+                ))
+              : popular.map((course) => <CourseCard key={course._id} course={course} />)}
+          </div>
+        )}
+      </section>
+
+      {/* How it works — a real sequence, so numbered */}
+      <section aria-labelledby="home-how" className="mx-auto w-full max-w-6xl px-6 py-12">
+        <h2 id="home-how" className="font-display text-2xl font-medium text-ink">
+          How it works
+        </h2>
+        <ol className="mt-6 grid gap-5 md:grid-cols-3">
+          {STEPS.map(([title, body], i) => (
+            <li key={title} className="rounded-2xl border border-line bg-surface p-6">
+              <span className="grid h-9 w-9 place-items-center rounded-full bg-accent font-bold text-on-accent" aria-hidden="true">
+                {i + 1}
+              </span>
+              <h3 className="mt-4 text-lg font-bold text-ink">{title}</h3>
+              <p className="mt-1.5 text-muted">{body}</p>
+            </li>
+          ))}
+        </ol>
+      </section>
+
+      {/* Teach */}
+      <section aria-labelledby="home-teach" className="mx-auto w-full max-w-6xl px-6 py-12">
+        <div className="grid items-center gap-10 overflow-hidden rounded-3xl border border-line bg-surface md:grid-cols-2">
+          <img src={InstructorImage} alt="" loading="lazy" className="h-full max-h-[420px] w-full object-cover" />
+          <div className="p-8 md:pr-12">
+            <h2 id="home-teach" className="font-display text-3xl font-semibold text-ink">
+              Teach what you know
+            </h2>
+            <p className="mt-4 text-lg text-muted">
+              Build a course from sections and video lessons, set your price, and see enrolments and income on your instructor dashboard.
+            </p>
+            <Link to="/signup?role=instructor" className={`${btnPrimary} mt-7`}>
+              Become an instructor
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* Reviews */}
+      <ReviewSlider />
+
+      <Footer />
+    </div>
+  );
+}
+
+export default Home;

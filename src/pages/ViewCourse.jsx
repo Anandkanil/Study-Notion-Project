@@ -1,50 +1,74 @@
-import { useEffect, useState } from "react"
-import { useDispatch, useSelector } from "react-redux"
-import { Outlet, useParams } from "react-router-dom"
+import React, { useCallback, useEffect, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { Link, Outlet, useParams } from "react-router-dom";
 
-import CourseReviewModal from "../components/core/ViewCourse/CourseReviewModal"
-import VideoDetailsSideBar from "../components/core/ViewCourse/VideoDetailsSideBar"
-import { getFullDetailsOfCourse } from "../services/operations/courseDetailsAPI"
-import {
-  setCompletedLectures,
-  setCourseSectionData,
-  setEntireCourseData,
-  setTotalNoOfLectures,
-} from "../slices/viewCourseSlice"
+import CourseReviewModal from "../components/core/ViewCourse/CourseReviewModal";
+import VideoDetailsSideBar from "../components/core/ViewCourse/VideoDetailsSideBar";
+import { Button, EmptyState, buttonClass } from "../components/ui";
+import { apiConnector } from "../services/apiconnector";
+import { courseEndpoints } from "../services/apis";
+import { setCompletedLectures, setCourseSectionData, setEntireCourseData, setTotalNoOfLectures } from "../slices/viewCourseSlice";
 
 export default function ViewCourse() {
-  const { courseId } = useParams()
-  const { token } = useSelector((state) => state.auth)
-  const dispatch = useDispatch()
-  const [reviewModal, setReviewModal] = useState(false)
+  const { courseId } = useParams();
+  const { token } = useSelector((state) => state.auth);
+  const dispatch = useDispatch();
+  const [reviewModal, setReviewModal] = useState(false);
+  const [status, setStatus] = useState("loading");
+
+  const load = useCallback(async () => {
+    setStatus("loading");
+    try {
+      const res = await apiConnector("POST", courseEndpoints.GET_FULL_COURSE_DETAILS_AUTHENTICATED, { courseId }, { Authorization: `Bearer ${token}` });
+      const data = res.data?.data;
+      if (!data?.courseDetails) throw new Error("No course");
+      dispatch(setCourseSectionData(data.courseDetails.courseContent || []));
+      dispatch(setEntireCourseData(data.courseDetails));
+      dispatch(setCompletedLectures(data.completedVideos || []));
+      dispatch(setTotalNoOfLectures((data.courseDetails.courseContent || []).reduce((n, s) => n + (s.subSection?.length || 0), 0)));
+      document.title = `${data.courseDetails.courseName} · StudyNotion`;
+      setStatus("ready");
+    } catch (error) {
+      setStatus(error?.response?.status === 403 ? "forbidden" : "error");
+    }
+  }, [courseId, token, dispatch]);
 
   useEffect(() => {
-    ;(async () => {
-      const courseData = await getFullDetailsOfCourse(courseId, token)
-      // console.log("Course Data here... ", courseData.courseDetails)
-      dispatch(setCourseSectionData(courseData.courseDetails.courseContent))
-      dispatch(setEntireCourseData(courseData.courseDetails))
-      dispatch(setCompletedLectures(courseData.completedVideos))
-      let lectures = 0
-      courseData?.courseDetails?.courseContent?.forEach((sec) => {
-        lectures += sec.subSection.length
-      })
-      dispatch(setTotalNoOfLectures(lectures))
-    })()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+    load();
+  }, [load]);
+
+  if (status !== "ready") {
+    return (
+      <div className="mx-auto w-full max-w-3xl px-6 py-14">
+        {status === "loading" ? (
+          <div className="flex flex-col gap-4" role="status" aria-label="Loading lesson">
+            <div className="skeleton aspect-video w-full rounded-2xl" />
+            <div className="skeleton h-7 w-2/3" />
+          </div>
+        ) : status === "forbidden" ? (
+          <EmptyState as="h1" title="You're not enrolled in this course" action={<Link to={`/courses/${courseId}`} className={buttonClass("primary")}>See the course</Link>}>
+            Buy the course to watch its lessons.
+          </EmptyState>
+        ) : (
+          <EmptyState as="h1" title="This lesson couldn't load" action={<Button variant="secondary" onClick={load}>Try again</Button>}>
+            The server may still be waking up. This usually takes under a minute.
+          </EmptyState>
+        )}
+      </div>
+    );
+  }
 
   return (
     <>
-      <div className="relative flex min-h-[calc(100vh-3.5rem)]">
+      <div className="flex flex-1 flex-col lg:flex-row">
         <VideoDetailsSideBar setReviewModal={setReviewModal} />
-        <div className="h-[calc(100vh-3.5rem)] flex-1 overflow-auto">
-          <div className="mx-6">
+        <div className="min-w-0 flex-1">
+          <div className="mx-auto w-full max-w-5xl px-4 py-6 sm:px-6 lg:py-8">
             <Outlet />
           </div>
         </div>
       </div>
       {reviewModal && <CourseReviewModal setReviewModal={setReviewModal} />}
     </>
-  )
+  );
 }

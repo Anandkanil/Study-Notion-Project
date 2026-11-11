@@ -68,6 +68,16 @@ exports.signUp = async function (req, res) {
         return res.status(400).json({ success: false, message: "Passwords do not match" });
     }
 
+    if (password.length < 8) {
+        return res.status(400).json({ success: false, message: "Password must be at least 8 characters" });
+    }
+
+    // Admin accounts can never be created through public sign-up
+    const SIGNUP_ROLES = ['Student', 'Instructor'];
+    if (accountType && !SIGNUP_ROLES.includes(accountType)) {
+        return res.status(400).json({ success: false, message: "Invalid account type" });
+    }
+
     try {
         // Fetch the latest OTP record for the user
         const latestOtpRecord = await OTP.findOne({ email }).sort({ createdAt: -1 }).limit(1);
@@ -237,6 +247,9 @@ exports.changePassword = async function (req, res) {
         // Validate input data
         if (!oldPassword || !newPassword ) {
             return res.status(400).json({ success: false, message: 'All fields are required' });
+        }
+        if (String(newPassword).length < 8) {
+            return res.status(400).json({ success: false, message: 'New password must be at least 8 characters' });
         }
 
         // Find the user by ID

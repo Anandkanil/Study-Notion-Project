@@ -1,117 +1,109 @@
-import { useEffect, useState } from "react";
-import { IoIosArrowBack } from "react-icons/io";
+import React, { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
-import {  useNavigate, useParams } from "react-router-dom";
-
-import IconBtn from "../../common/IconBtn";
-import { RiArrowDownSLine, RiArrowUpSLine } from "react-icons/ri";
+import { Link, NavLink, useParams } from "react-router-dom";
 
 export default function VideoDetailsSidebar({ setReviewModal }) {
-  const [activeStatus, setActiveStatus] = useState("");
-  const [videoBarActive, setVideoBarActive] = useState("");
-  const navigate = useNavigate();
-  // const location = useLocation();
-  const { sectionId, subSectionId } = useParams();
-  const {
-    courseSectionData,
-    courseEntireData,
-    totalNoOfLectures,
-    completedLectures,
-  } = useSelector((state) => state.viewCourse);
+  const { courseId, sectionId, subSectionId } = useParams();
+  const { courseSectionData, courseEntireData, totalNoOfLectures, completedLectures } = useSelector((state) => state.viewCourse);
+  const [open, setOpen] = useState({});
+  const [mobileOpen, setMobileOpen] = useState(false);
 
-  // eslint-disable-next-line
+  // Keep the current section expanded
   useEffect(() => {
-    if (!courseSectionData.length) return;  // If no course sections, exit early
-  
-    // Find the current section by ID
-    const currentSectionIndx = courseSectionData.findIndex((data) => data._id === sectionId);
-    if (currentSectionIndx === -1) return;  // If invalid sectionId, exit early
-  
-    // Find the current subsection by ID
-    const currentSubSectionIndx = courseSectionData[currentSectionIndx]?.subSection.findIndex((data) => data._id === subSectionId);
-    if (currentSubSectionIndx === -1) return;  // If invalid subSectionId, exit early
-  
-    // Get the active sub-section ID
-    const activeSubSectionId = courseSectionData[currentSectionIndx]?.subSection[currentSubSectionIndx]?._id;
-  
-    // Set active section and video bar active status
-    setActiveStatus(courseSectionData[currentSectionIndx]?._id);
-    setVideoBarActive(activeSubSectionId);
-  }, [courseSectionData, courseEntireData,sectionId,subSectionId]);
+    if (sectionId) setOpen((o) => ({ ...o, [sectionId]: true }));
+    setMobileOpen(false);
+  }, [sectionId, subSectionId]);
+
+  const done = new Set((completedLectures || []).map(String));
+  const pct = totalNoOfLectures ? Math.round((done.size / totalNoOfLectures) * 100) : 0;
 
   return (
-    <div className="flex h-[calc(100vh-3.5rem)] w-[320px] max-w-[350px] flex-col border-r-[1px] border-r-richblack-700 bg-richblack-800">
-      <div className="mx-5 flex flex-col items-start justify-between gap-2 gap-y-4 border-b border-richblack-600 py-5 text-lg font-bold text-richblack-25">
-        <div className="flex w-full items-center justify-between ">
-          <div
-            onClick={() => navigate(`/dashboard/enrolled-courses`)}
-            className="flex h-[35px] w-[35px] items-center justify-center rounded-full bg-richblack-100 p-1 text-richblack-700 hover:scale-90"
-            title="back"
-          >
-            <IoIosArrowBack size={30} />
+    <aside className="border-b border-line bg-surface lg:sticky lg:top-16 lg:flex lg:h-[calc(100vh-4rem)] lg:w-80 lg:shrink-0 lg:flex-col lg:border-b-0 lg:border-r">
+      <div className="flex flex-col gap-3 border-b border-line p-4">
+        <Link to="/dashboard/enrolled-courses" className="w-fit text-sm font-semibold text-muted hover:text-ink">
+          ← My learning
+        </Link>
+        <p className="font-display text-lg font-medium leading-snug text-ink">{courseEntireData?.courseName}</p>
+        <div>
+          <div className="flex justify-between text-sm text-muted">
+            <span>
+              {done.size} of {totalNoOfLectures} lessons
+            </span>
+            <span>{pct}%</span>
           </div>
-          <IconBtn
-            text="Add Review"
-            customClasses="ml-auto"
-            onclick={() => setReviewModal(true)}
-          />
+          <div role="progressbar" aria-label="Course progress" aria-valuemin={0} aria-valuemax={100} aria-valuenow={pct} className="mt-1.5 h-1.5 rounded-full bg-line">
+            <div className={`h-full rounded-full ${pct >= 100 ? "bg-success" : "bg-accent"}`} style={{ width: `${pct}%` }} />
+          </div>
         </div>
-        <div className="flex flex-col">
-          <p>{courseEntireData?.courseName}</p>
-          <p className="text-sm font-semibold text-richblack-500">
-            {completedLectures?.length} / {totalNoOfLectures}
-          </p>
+        <div className="flex flex-wrap gap-2">
+          <button type="button" onClick={() => setReviewModal(true)} className="rounded-lg border border-richblack-600 px-3 py-2 text-sm font-semibold text-ink hover:bg-raised">
+            Rate this course
+          </button>
+          <button
+            type="button"
+            onClick={() => setMobileOpen((o) => !o)}
+            aria-expanded={mobileOpen}
+            aria-controls="lesson-list"
+            className="rounded-lg border border-richblack-600 px-3 py-2 text-sm font-semibold text-ink hover:bg-raised lg:hidden"
+          >
+            {mobileOpen ? "Hide lessons" : "All lessons"}
+          </button>
         </div>
       </div>
 
-      <div className="h-[calc(100vh - 5rem)] overflow-y-auto">
-        {courseSectionData.map((course, index) => (
-          <div
-            className="mt-2 cursor-pointer text-sm text-richblack-5"
-            onClick={() => setActiveStatus(course?._id)}
-            key={index}
-          >
-            <div className="flex flex-row justify-between bg-richblack-600 px-5 py-4">
-              <div className="w-[70%] font-semibold">{course?.sectionName}</div>
-              <div className="flex items-center gap-3">
-                {activeStatus === course?._id ? (
-                  <RiArrowUpSLine />
-                ) : (
-                  <RiArrowDownSLine />
-                )}
-              </div>
+      <nav id="lesson-list" aria-label="Lessons" className={`${mobileOpen ? "block" : "hidden"} max-h-[60vh] overflow-y-auto lg:block lg:max-h-none lg:flex-1`}>
+        {(courseSectionData || []).map((section) => {
+          const isOpen = !!open[section._id];
+          const sectionDone = section.subSection.filter((s) => done.has(String(s._id))).length;
+          return (
+            <div key={section._id} className="border-b border-line">
+              <button
+                type="button"
+                aria-expanded={isOpen}
+                onClick={() => setOpen((o) => ({ ...o, [section._id]: !isOpen }))}
+                className="flex w-full items-center gap-2 px-4 py-3 text-left font-semibold text-ink hover:bg-raised"
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true" className={`shrink-0 text-muted transition-transform ${isOpen ? "rotate-90" : ""}`}>
+                  <path d="M9 6l6 6-6 6" />
+                </svg>
+                <span className="flex-1">{section.sectionName}</span>
+                <span className="text-xs font-medium text-muted">
+                  {sectionDone}/{section.subSection.length}
+                </span>
+              </button>
+              {isOpen && (
+                <ul>
+                  {section.subSection.map((lesson) => {
+                    const isDone = done.has(String(lesson._id));
+                    return (
+                      <li key={lesson._id}>
+                        <NavLink
+                          to={`/view-course/${courseId}/section/${section._id}/sub-section/${lesson._id}`}
+                          className={({ isActive }) =>
+                            `flex items-start gap-3 py-2.5 pl-10 pr-4 text-sm ${isActive ? "bg-accent/15 font-semibold text-ink" : "text-muted hover:bg-raised hover:text-ink"}`
+                          }
+                        >
+                          <span aria-hidden="true" className={`mt-0.5 grid h-4 w-4 shrink-0 place-items-center rounded-full ${isDone ? "bg-success" : "border border-field"}`}>
+                            {isDone && (
+                              <svg width="10" height="10" viewBox="0 0 24 24">
+                                <path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="rgb(var(--bg))" strokeWidth="4" strokeLinecap="round" />
+                              </svg>
+                            )}
+                          </span>
+                          <span>
+                            {lesson.title}
+                            {isDone && <span className="sr-only"> (completed)</span>}
+                          </span>
+                        </NavLink>
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
             </div>
-
-            {activeStatus === course?._id && (
-              <div className="transition-[height] duration-500 ease-in-out">
-                {course.subSection.map((topic, i) => (
-                  <div
-                    className={`flex gap-3  px-5 py-2 ${
-                      videoBarActive === topic._id
-                        ? "bg-yellow-200 font-semibold text-richblack-800"
-                        : "hover:bg-richblack-900"
-                    } `}
-                    key={i}
-                    onClick={() => {
-                      navigate(
-                        `/view-course/${courseEntireData?._id}/section/${course?._id}/sub-section/${topic?._id}`
-                      );
-                      setVideoBarActive(topic._id);
-                    }}
-                  >
-                    <input
-                      type="checkbox"
-                      checked={completedLectures.includes(topic?._id)}
-                      readOnly
-                    />
-                    {topic.title}
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        ))}
-      </div>
-    </div>
+          );
+        })}
+      </nav>
+    </aside>
   );
 }

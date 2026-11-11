@@ -96,7 +96,7 @@ export default function CourseInformationForm() {
           formData.append("price", data.coursePrice)
         }
         if (currentValues.courseTags.toString() !== course.tags.toString()) {
-          formData.append("tag", JSON.stringify(data.courseTags))
+          formData.append("tags", JSON.stringify(data.courseTags))
         }
         if (currentValues.courseBenefits !== course.whatYouWillLearn) {
           formData.append("whatYouWillLearn", data.courseBenefits)
@@ -153,7 +153,7 @@ export default function CourseInformationForm() {
   return (
     <form
       onSubmit={handleSubmit(onSubmit)}
-      className="space-y-8 rounded-md border-[1px] border-richblack-700 bg-richblack-800 p-6"
+      className="space-y-8 rounded-2xl border border-line bg-surface p-5 sm:p-6"
     >
       {/* Course Title */}
       <div className="flex flex-col space-y-2">
@@ -197,21 +197,25 @@ export default function CourseInformationForm() {
         <div className="relative">
           <input
             id="coursePrice"
-            placeholder="Enter Course Price"
+            type="number"
+            inputMode="numeric"
+            min="0"
+            step="1"
+            placeholder="e.g. 999"
+            aria-invalid={errors.coursePrice ? true : undefined}
+            aria-describedby={errors.coursePrice ? "coursePrice-err" : undefined}
             {...register("coursePrice", {
-              required: true,
+              required: "Enter a price in rupees (0 for a free course).",
               valueAsNumber: true,
-              pattern: {
-                value: /^(0|[1-9]\d*)(\.\d+)?$/,
-              },
+              validate: (v) => (Number.isInteger(v) && v >= 0) || "Enter a whole number of rupees, 0 or more.",
             })}
             className="form-style w-full !pl-12"
           />
-          <HiOutlineCurrencyRupee className="absolute left-3 top-1/2 inline-block -translate-y-1/2 text-2xl text-richblack-400" />
+          <HiOutlineCurrencyRupee aria-hidden="true" className="absolute left-3 top-1/2 inline-block -translate-y-1/2 text-2xl text-richblack-400" />
         </div>
         {errors.coursePrice && (
-          <span className="ml-2 text-xs tracking-wide text-pink-200">
-            Course Price is required
+          <span id="coursePrice-err" className="ml-2 text-sm font-medium text-danger">
+            {errors.coursePrice.message || "Enter a valid price."}
           </span>
         )}
       </div>

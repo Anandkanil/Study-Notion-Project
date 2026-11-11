@@ -112,7 +112,7 @@ exports.getAverageRating = async (req, res) => {
 exports.getAllRatingAndReviews = async function(req, res) {
     try {
         // Fetch all ratings and reviews from the database
-        const ratingsAndReviews = await RatingAndReview.find().sort({rating:"desc"}).populate('user', 'firstName lastName email image').populate('course','courseName courseDescription'); // Populate user details if needed
+        const ratingsAndReviews = await RatingAndReview.find().sort({rating:"desc"}).populate('user', 'firstName lastName image').populate('course','courseName courseDescription'); // Populate user details if needed
 
         // Return the ratings and reviews
         return res.status(200).json({
@@ -136,7 +136,7 @@ exports.getCourseAllRatings = async (req, res) => {
         const courseId = req.body.courseId;
 
         // Fetch all ratings and reviews for the specified course
-        const courseRatings = await RatingAndReview.find({ course: courseId }).populate('user', 'username email'); // Populate user details if needed
+        const courseRatings = await RatingAndReview.find({ course: courseId }).populate('user', 'firstName lastName image'); // Populate user details if needed
 
         // Check if there are any ratings for the course
         if (courseRatings.length === 0) {

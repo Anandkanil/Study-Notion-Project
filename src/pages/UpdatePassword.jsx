@@ -1,111 +1,64 @@
-import React, { useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-import { resetPassword } from '../services/operations/authAPI';
-import { Link, useNavigate, useParams } from 'react-router-dom';
-import { AiFillEye, AiFillEyeInvisible } from 'react-icons/ai';
-import { IoArrowBack } from 'react-icons/io5';
+import React, { useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { Link, useNavigate, useParams } from "react-router-dom";
+import { resetPassword } from "../services/operations/authAPI";
+import { Button, PasswordField } from "../components/ui";
 
 const UpdatePassword = () => {
+  const { token } = useParams();
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const { loading } = useSelector((state) => state.auth);
 
-    const [showPassword, setShowPassword] = useState(false);
-    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [formData, setFormData] = useState({ password: "", confirmPassword: "" });
+  const [submitted, setSubmitted] = useState(false);
+  const onChange = (e) => setFormData((d) => ({ ...d, [e.target.name]: e.target.value }));
 
-    const { loading } = useSelector((state) => state.auth.loading);
-    const { token } = useParams();
-    const decodedToken = decodeURIComponent(token);
+  const tooShort = formData.password.length < 8;
+  const mismatch = formData.confirmPassword !== formData.password;
 
-    const dispatch = useDispatch();
-    const navigate=useNavigate();
+  const onSubmit = (e) => {
+    e.preventDefault();
+    setSubmitted(true);
+    if (tooShort || mismatch) return;
+    dispatch(resetPassword(formData.password, formData.confirmPassword, decodeURIComponent(token), navigate));
+  };
 
-    const [formData, setFormData] = useState({
-        password: "",
-        confirmPassword: "",
-    });
+  return (
+    <div className="mx-auto flex w-full max-w-md flex-1 flex-col justify-center px-6 py-14">
+      <h1 className="font-display text-3xl font-bold text-ink">Choose a new password</h1>
+      <p className="mt-3 text-lg text-muted">You'll use it the next time you log in.</p>
 
-    function handleOnChange(e) {
-        const { name, value } = e.target;
-        setFormData((prevData) => ({
-            ...prevData,
-            [name]: value,
-        }));
-    }
+      <form onSubmit={onSubmit} className="mt-8 flex flex-col gap-5" noValidate>
+        <PasswordField
+          label="New password"
+          name="password"
+          autoComplete="new-password"
+          required
+          value={formData.password}
+          onChange={onChange}
+          hint="At least 8 characters."
+          error={submitted && tooShort ? "Use at least 8 characters." : undefined}
+        />
+        <PasswordField
+          label="Confirm new password"
+          name="confirmPassword"
+          autoComplete="new-password"
+          required
+          value={formData.confirmPassword}
+          onChange={onChange}
+          error={submitted && mismatch ? "Passwords don't match." : undefined}
+        />
+        <Button type="submit" size="lg" loading={loading} loadingText="Saving…">
+          Save new password
+        </Button>
+      </form>
 
-    function handleOnSubmit(e) {
-        e.preventDefault();
-        dispatch(resetPassword(formData.password, formData.confirmPassword, decodedToken, navigate));
-    }
-
-    return (
-        <div className="w-full min-h-[90vh] flex flex-col items-center justify-center mt-6">
-            <div className="w-full max-w-md p-6 bg-richblack-800 rounded-[0.5rem] shadow-md">
-                {
-                    loading ? (
-                        <div>Loading...</div>
-                    ) : (
-                        <form onSubmit={handleOnSubmit} className="flex flex-col gap-y-4 font-inter text-white">
-                            <h1 className="text-richblack-5 text-2xl font-semibold mb-4">Choose a New Password</h1>
-                            <p className="text-richblack-5 mb-4">Almost done. Enter your new password and you're all set.</p>
-
-                            {/* Input for New Password */}
-                            <label className="flex flex-col mb-4">
-                                <p className="text-richblack-5 mb-2">New Password  <span className='text-red'>*</span></p>
-                                <input
-                                    type={showPassword ? "text" : "password"}
-                                    required
-                                    placeholder="******"
-                                    name="password"
-                                    value={formData.password}
-                                    onChange={handleOnChange}
-                                    className="p-[12px] px-6 bg-richblack-700 border-b border-b-richblack-500 rounded-[0.5rem] text-white font-bold shadow-sm placeholder:text-gray-400"
-                                />
-                                <span
-                                    onClick={() => setShowPassword(!showPassword)}
-                                    className="text-white cursor-pointer absolute top-16 right-6"
-                                >
-                                    {showPassword ? <AiFillEyeInvisible /> : <AiFillEye />}
-                                </span>
-                            </label>
-
-                            {/* Input for Confirm New Password */}
-                            <label className="flex flex-col mb-4">
-                                <p className="text-richblack-5 mb-2">Confirm New Password <span className='text-red'>*</span></p>
-                                <input
-                                    type={showConfirmPassword ? "text" : "password"}
-                                    required
-                                    placeholder="******"
-                                    name="confirmPassword"
-                                    value={formData.confirmPassword}
-                                    onChange={handleOnChange}
-                                    className="p-[12px] px-6 bg-richblack-700 border-b border-b-richblack-500 rounded-[0.5rem] text-white font-bold shadow-sm placeholder:text-gray-400"
-                                />
-                                <span
-                                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                                    className="text-white cursor-pointer absolute top-16 right-6"
-                                >
-                                    {showConfirmPassword ? <AiFillEyeInvisible /> : <AiFillEye />}
-                                </span>
-                            </label>
-
-                            {/* Submit Button */}
-                            <button
-                                type="submit"
-                                className="bg-yellow-50 py-[8px] px-[12px] rounded-[8px] font-bold text-richblack-900"
-                                disabled={loading}
-                            >
-                                Reset Password
-                            </button>
-                        </form>
-                    )
-                }
-                <div className="flex justify-between items-baseline mt-4">
-                    <Link to="/login" className="text-white mb-2 flex gap-1 items-center">
-                    <IoArrowBack />
-                        <p>Back to Login</p>
-                    </Link>
-                </div>
-            </div>
-        </div>
-    );
+      <Link to="/login" className="mt-6 font-semibold text-muted hover:text-ink">
+        Back to log in
+      </Link>
+    </div>
+  );
 };
 
 export default UpdatePassword;

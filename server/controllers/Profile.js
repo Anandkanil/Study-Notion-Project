@@ -1,6 +1,7 @@
 const Profile = require("../models/Profile")
 const Course = require("../models/Course")
 const CourseProgress = require("../models/CourseProgress")
+const RatingAndReview = require("../models/RatingAndReview")
 
 const User = require("../models/User")
 const { uploadImageToCloudinary } = require("../utils/imageUploader")
@@ -11,10 +12,10 @@ exports.updateProfile = async (req, res) => {
   const {firstName,lastName, gender, dateOfBirth, about, contactNumber } = req.body;
   const userId = req.user.userId;
 
-  if (!contactNumber) {
+  if (contactNumber && !/^\+?[0-9]{10,13}$/.test(String(contactNumber))) {
     return res.status(400).json({
       success: false,
-      message: "Contact number is required.",
+      message: "Enter a valid phone number (10 to 13 digits).",
     });
   }
 
@@ -85,6 +86,27 @@ exports.deleteAccount = async (req, res) => {
         message: "User not found.",
       });
     }
+
+    // Instructors must remove their courses first, so enrolled students never lose access silently
+    if (user.accountType === "Instructor") {
+      const ownCourses = await Course.countDocuments({ instructor: userId });
+      if (ownCourses > 0) {
+        return res.status(409).json({
+          success: false,
+          message: `Please delete your ${ownCourses} course${ownCourses === 1 ? "" : "s"} before deleting your account.`,
+        });
+      }
+    }
+
+    // Remove the user from every course, with their progress and reviews
+    const reviews = await RatingAndReview.find({ user: userId }).select("_id");
+    const reviewIds = reviews.map((r) => r._id);
+    await Course.updateMany(
+      { $or: [{ studentsEnrolled: userId }, { ratingAndReviews: { $in: reviewIds } }] },
+      { $pull: { studentsEnrolled: userId, ratingAndReviews: { $in: reviewIds } } }
+    );
+    await RatingAndReview.deleteMany({ user: userId });
+    await CourseProgress.deleteMany({ userId });
 
     // Delete associated profile
     if (user.additionalDetails) {
@@ -243,7 +265,8 @@ exports.getEnrolledCourses = async (req, res) => {
         courseID: userDetails.courses[i]._id,
         userId: userId,
       })
-      courseProgressCount = courseProgressCount?.completedVideos.length
+      userDetails.courses[i].completedVideos = (courseProgressCount?.completedVideos || []).map(String)
+      courseProgressCount = courseProgressCount?.completedVideos.length || 0
       if (SubsectionLength === 0) {
         userDetails.courses[i].progressPercentage = 100
       } else {

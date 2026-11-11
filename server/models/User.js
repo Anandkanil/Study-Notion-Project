@@ -54,5 +54,15 @@ const userSchema = new mongoose.Schema({
     timestamps: true // Adds createdAt and updatedAt timestamps automatically
 });
 
+// Never send secrets to clients, however a user document is serialised or populated.
+const stripSecrets = (doc, ret) => {
+    delete ret.password;
+    delete ret.resetPasswordToken;
+    delete ret.resetPasswordExpires;
+    delete ret.token;
+    return ret;
+};
+userSchema.set('toJSON', { transform: stripSecrets });
+
 // Export the User model
 module.exports = mongoose.model('User', userSchema);

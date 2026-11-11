@@ -1,30 +1,72 @@
-import React from "react";
-import IconBtn from "./IconBtn"; 
-const ConfirmationModal = ( {modalData} ) => {
+import React, { useEffect, useId, useRef } from "react";
+import { buttonClass } from "../ui";
+
+/**
+ * Confirm dialog. modalData: { text1, text2, btn1Text, btn1Handler, btn2Text, btn2Handler, danger? }
+ * Escape, the backdrop and the second button all cancel.
+ */
+const ConfirmationModal = ({ modalData }) => {
+  const titleId = useId();
+  const descId = useId();
+  const cancelRef = useRef(null);
+  const lastFocus = useRef(null);
+
+  useEffect(() => {
+    lastFocus.current = document.activeElement;
+    cancelRef.current?.focus();
+    const onKey = (e) => {
+      if (e.key === "Escape") modalData?.btn2Handler?.();
+      // Keep focus inside the dialog
+      if (e.key === "Tab") {
+        const nodes = document.querySelectorAll("[data-modal] button");
+        if (!nodes.length) return;
+        const first = nodes[0];
+        const last = nodes[nodes.length - 1];
+        if (e.shiftKey && document.activeElement === first) {
+          e.preventDefault();
+          last.focus();
+        } else if (!e.shiftKey && document.activeElement === last) {
+          e.preventDefault();
+          first.focus();
+        }
+      }
+    };
+    document.addEventListener("keydown", onKey);
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      document.body.style.overflow = prevOverflow;
+      lastFocus.current?.focus?.();
+    };
+  }, [modalData]);
+
+  if (!modalData) return null;
+
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-      {/* Modal Content */}
-      <div className="bg-richblack-800 text-white rounded-lg p-8 w-[90%] sm:w-[400px] shadow-lg">
-        {/* Modal Header */}
-        <div className="mb-6 text-center">
-          <p className="text-xl font-semibold">{modalData.text1}</p>
-          <p className="text-sm text-gray-400 mt-2">{modalData.text2}</p>
-        </div>
-
-        {/* Modal Actions */}
-        <div className="flex justify-between gap-4">
-          {/* Primary action button */}
-          <IconBtn
-            onclick={modalData?.btn1Handler}
-            text={modalData?.btn1Text}
-          />
-
-          {/* Secondary action button */}
-          <button
-            onClick={modalData?.btn2Handler}
-            className="bg-transparent hover:bg-gray-600 text-gray-300 py-2 px-4 rounded-lg border border-gray-600 transition duration-300"
-          >
-            {modalData?.btn2Text}
+    <div className="fixed inset-0 z-[80] grid place-items-center bg-[rgb(8_10_24/0.6)] p-4 backdrop-blur-sm" onMouseDown={(e) => e.target === e.currentTarget && modalData.btn2Handler?.()}>
+      <div
+        data-modal
+        role="alertdialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
+        aria-describedby={modalData.text2 ? descId : undefined}
+        className="w-full max-w-md rounded-2xl border border-line bg-surface p-6 shadow-[var(--shadow-pop)]"
+      >
+        <h2 id={titleId} className="font-display text-xl font-semibold text-ink">
+          {modalData.text1}
+        </h2>
+        {modalData.text2 && (
+          <p id={descId} className="mt-2 text-muted">
+            {modalData.text2}
+          </p>
+        )}
+        <div className="mt-6 flex flex-wrap justify-end gap-3">
+          <button ref={cancelRef} type="button" onClick={modalData.btn2Handler} className={buttonClass("secondary")}>
+            {modalData.btn2Text || "Cancel"}
+          </button>
+          <button type="button" onClick={modalData.btn1Handler} className={buttonClass(modalData.danger ? "danger" : "primary")}>
+            {modalData.btn1Text}
           </button>
         </div>
       </div>

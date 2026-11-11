@@ -1,100 +1,82 @@
-import React, { useEffect, useState } from 'react';
-import OTPInput from 'react-otp-input';
-import { useDispatch, useSelector } from 'react-redux';
-import { Link, useNavigate } from 'react-router-dom';
-import { sendOtp, signUp } from '../services/operations/authAPI';
-import { IoArrowBack } from 'react-icons/io5';
-import { GiBackwardTime } from 'react-icons/gi';
+import React, { useEffect, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { Link, Navigate, useNavigate } from "react-router-dom";
+import { sendOtp, signUp } from "../services/operations/authAPI";
+import { Button, Field } from "../components/ui";
+
+const RESEND_AFTER = 30;
 
 const VerifyEmail = () => {
-    const [otp, setOtp] = useState('');
-    const navigate = useNavigate();
-    const { signupData = {}, loading } = useSelector((state) => state.auth);
+  const [otp, setOtp] = useState("");
+  const [cooldown, setCooldown] = useState(RESEND_AFTER);
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
+  const { signupData, loading } = useSelector((state) => state.auth);
 
-    useEffect(() => {
-        if (!signupData) {
-            navigate('/signup');
-        }
-    }, [signupData, navigate]);
+  useEffect(() => {
+    if (cooldown <= 0) return undefined;
+    const t = setTimeout(() => setCooldown((c) => c - 1), 1000);
+    return () => clearTimeout(t);
+  }, [cooldown]);
 
-    const { firstName, lastName, email, password, confirmPassword, accountType } = signupData;
+  // Opened directly, or after a refresh: there is nothing to verify yet
+  if (!signupData) return <Navigate to="/signup" replace />;
 
-    const dispatch = useDispatch();
+  const { firstName, lastName, email, password, confirmPassword, accountType } = signupData;
 
-    const handleOnSubmit = (e) => {
-        e.preventDefault();
-        dispatch(
-            signUp(firstName, lastName, email, password, confirmPassword, accountType, otp, navigate)
-        );
-    };
+  const onSubmit = (e) => {
+    e.preventDefault();
+    if (otp.length !== 6) return;
+    dispatch(signUp(firstName, lastName, email, password, confirmPassword, accountType, otp, navigate));
+  };
 
-    const handleResendOTP = () => {
-        dispatch(sendOtp(email, navigate));
-    };
+  const resend = () => {
+    setCooldown(RESEND_AFTER);
+    dispatch(sendOtp(email, navigate));
+  };
 
-    return (
-        <div className="w-full min-h-[90vh] flex flex-col items-center justify-center mt-6">
-            <div className="w-full max-w-md p-6 bg-richblack-800 rounded-[0.5rem] shadow-md">
-                <h1 className="text-richblack-5 text-2xl font-semibold mb-4">Verify Email</h1>
-                <p className="text-richblack-5 mb-4">
-                    A verification code has been sent to your email. Enter the code below to verify your account.
-                </p>
+  return (
+    <div className="mx-auto flex w-full max-w-md flex-1 flex-col justify-center px-6 py-14">
+      <h1 className="font-display text-3xl font-bold text-ink">Check your email</h1>
+      <p className="mt-3 text-lg text-muted">
+        We sent a 6-digit code to <strong className="font-semibold text-ink">{email}</strong>. It expires in 5 minutes.
+      </p>
 
-                <form onSubmit={handleOnSubmit} className="flex flex-col gap-y-4 font-inter text-white">
-                    <OTPInput
-                        value={otp}
-                        onChange={setOtp}
-                        numInputs={6}
-                        renderInput={(props) => (
-                            <input
-                                {...props}
-                                className="p-[12px] px-6 bg-richblack-700 border-b border-b-richblack-500 rounded-[0.5rem] text-white font-bold shadow-sm w-full placeholder:text-gray-400"
-                                placeholder="-"
-                                required
-                            />
-                        )}
-                        inputStyle={{
-                            width: '40px',
-                            color: 'white',
-                            backgroundColor: '#333', // Optional for contrast
-                            borderRadius: '4px',
-                            padding: '8px',
-                            textAlign: 'center',
-                        }}
-                        containerStyle={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            gap: '15px',
-                            width: 'full',
-                        }} // Add gap between input boxes
-                    />
-                    <button
-                        type="submit"
-                        className="bg-yellow-50 py-[8px] px-[12px] rounded-[8px] font-bold text-richblack-900"
-                        disabled={loading}
-                    >
-                        Verify Email
-                    </button>
-                </form>
+      <form onSubmit={onSubmit} className="mt-8 flex flex-col gap-5">
+        <Field
+          label="Verification code"
+          name="otp"
+          inputMode="numeric"
+          autoComplete="one-time-code"
+          pattern="[0-9]{6}"
+          maxLength={6}
+          required
+          autoFocus
+          value={otp}
+          onChange={(e) => setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))}
+          inputClassName="text-center font-display text-2xl tracking-[0.5em]"
+          placeholder="••••••"
+        />
+        <Button type="submit" size="lg" loading={loading} loadingText="Verifying…" disabled={otp.length !== 6}>
+          Verify and create account
+        </Button>
+      </form>
 
-                <div className="flex justify-between items-baseline mt-4">
-                    <Link to="/login" className="text-white mb-2 flex gap-1 items-center">
-                        <IoArrowBack />
-                        Back to Login
-                    </Link>
-                    <button
-                        onClick={handleResendOTP}
-                        className="bg-transparent text-blue-200 underline flex items-center gap-1"
-                        disabled={loading}
-                    >
-                        <GiBackwardTime size={20} />
-                        Resend OTP
-                    </button>
-                </div>
-            </div>
-        </div>
-    );
+      <div className="mt-6 flex flex-wrap items-center justify-between gap-3">
+        <Link to="/signup" className="font-semibold text-muted hover:text-ink">
+          Use a different email
+        </Link>
+        <button
+          type="button"
+          onClick={resend}
+          disabled={loading || cooldown > 0}
+          className="font-semibold text-accent-text hover:underline disabled:cursor-not-allowed disabled:text-muted disabled:no-underline"
+        >
+          {cooldown > 0 ? `Resend code in ${cooldown}s` : "Resend code"}
+        </button>
+      </div>
+    </div>
+  );
 };
 
 export default VerifyEmail;
