@@ -64,7 +64,6 @@ export async function buyCourse(token, courses, userDetails, navigate, dispatch)
             throw new Error(orderResponse?.data?.message || "Failed to initiate payment order.");
         }
 
-        console.log("Order Response:", orderResponse);
 
         // Define Razorpay payment options (amount, currency, order_id, etc.)
         const options = {
@@ -82,7 +81,6 @@ export async function buyCourse(token, courses, userDetails, navigate, dispatch)
             // Payment success handler (to verify payment and enroll)
             handler: function (response) {
                 sendPaymentSuccessEmail(response, orderResponse.data.message.amount, token);
-                // console.log("The response for verify payment is ", response);
                 verifyPayment({ ...response, courses }, token, navigate, dispatch);
             },
         };

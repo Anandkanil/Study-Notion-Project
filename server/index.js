@@ -11,6 +11,8 @@ const connectDB=require('./config/database');
 const mongoose=require('mongoose');
 const cookieParser=require('cookie-parser');
 const cors=require('cors');
+const {securityHeaders,sanitizeInput}=require('./middlewares/security');
+const {rateLimit}=require('./middlewares/rateLimit');
 const {cloudinaryConnect}=require('./config/cloudinary');
 const fileUpload=require('express-fileupload');
 const dotenv=require('dotenv');
@@ -21,7 +23,11 @@ const PORT=process.env.PORT || 4000;
 
 connectDB();
 
-app.use(express.json());
+// Render sits behind one proxy: trust it so req.ip is the visitor's address
+app.set('trust proxy', 1);
+app.disable('x-powered-by');
+app.use(securityHeaders);
+app.use(express.json({ limit: '100kb' }));
 app.use(cookieParser());
 // Allowed front ends: the live site, its Netlify deploy previews, local dev,
 // plus any extra comma-separated origins in CORS_ORIGINS.
@@ -43,6 +49,9 @@ app.use(cors({
 }));
 
 app.use(fileUpload({useTempFiles:true,tempFileDir:"/temp"}))
+app.use(sanitizeInput);
+// Backstop for any single address hammering the API
+app.use('/api', rateLimit({ name: 'api', windowMs: 60 * 1000, max: 300 }));
 
 cloudinaryConnect();
 
