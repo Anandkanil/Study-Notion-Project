@@ -133,13 +133,13 @@ const categoryPageDetails = async (req, res) => {
             .populate({
                 path: "courses",
                 match: { status: "Published" },
-                populate: { path: "instructor" },
+                populate: { path: "instructor", select: "firstName lastName image" },
             })
             .exec();
 
         const allCourses = allCategories.flatMap((category) => category.courses);
         const mostSellingCourses = allCourses
-            .sort((a, b) => b.sold - a.sold)
+            .sort((a, b) => (b.studentsEnrolled?.length || 0) - (a.studentsEnrolled?.length || 0))
             .slice(0, 10);
 
         return res.status(200).json({

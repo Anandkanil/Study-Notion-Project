@@ -68,6 +68,12 @@ exports.signUp = async function (req, res) {
         return res.status(400).json({ success: false, message: "Passwords do not match" });
     }
 
+    // Admin accounts can never be created through public sign-up
+    const SIGNUP_ROLES = ['Student', 'Instructor'];
+    if (accountType && !SIGNUP_ROLES.includes(accountType)) {
+        return res.status(400).json({ success: false, message: "Invalid account type" });
+    }
+
     try {
         // Fetch the latest OTP record for the user
         const latestOtpRecord = await OTP.findOne({ email }).sort({ createdAt: -1 }).limit(1);

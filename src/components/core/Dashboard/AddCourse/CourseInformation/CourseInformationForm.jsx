@@ -96,7 +96,7 @@ export default function CourseInformationForm() {
           formData.append("price", data.coursePrice)
         }
         if (currentValues.courseTags.toString() !== course.tags.toString()) {
-          formData.append("tag", JSON.stringify(data.courseTags))
+          formData.append("tags", JSON.stringify(data.courseTags))
         }
         if (currentValues.courseBenefits !== course.whatYouWillLearn) {
           formData.append("whatYouWillLearn", data.courseBenefits)

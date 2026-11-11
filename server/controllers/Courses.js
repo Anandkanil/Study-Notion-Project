@@ -178,19 +178,24 @@ const getCourseDetails = async (req, res) => {
         const courseDetails = await Course.findById(courseId)
             .populate({
               path: 'instructor',
+              select: 'firstName lastName image additionalDetails',
               populate:{
-                path:'additionalDetails'
+                path:'additionalDetails',
+                select: 'about'
               }
             })
             .populate({
                 path: 'courseContent',
                 populate: {
                     path: 'subSection',
+                    // Public page: lecture titles and durations only, never the video URLs
+                    select: 'title timeDuration description',
                 }
             })
             .populate('ratingAndReviews')
             .populate('category')
-            .populate('studentsEnrolled');
+            // Only ids: the page just needs to know whether the viewer is enrolled
+            .populate('studentsEnrolled', '_id');
 
         if (!courseDetails) {
             return res.status(404).json({ success: false, message: "No course found with the provided ID." });
@@ -341,6 +346,13 @@ const deleteCourse = async (req, res) => {
       await Section.findByIdAndDelete(sectionId)
     }
 
+    // Remove references so no page points at a deleted course
+    await User.findByIdAndUpdate(course.instructor, { $pull: { courses: courseId } })
+    if (course.category) {
+      await Category.findByIdAndUpdate(course.category, { $pull: { courses: courseId } })
+    }
+    await CourseProgress.deleteMany({ courseID: courseId })
+
     // Delete the course
     await Course.findByIdAndDelete(courseId)
 
@@ -380,20 +392,27 @@ const getFullCourseDetails = async (req, res) => {
       })
       .exec()
 
-    let courseProgressCount = await CourseProgress.findOne({
-      courseID: courseId,
-      userId: userId,
-    })
-    // let courseProgressCount=1;
-
-    console.log("courseProgressCount : ", courseProgressCount)
-
     if (!courseDetails) {
-      return res.status(400).json({
+      return res.status(404).json({
         success: false,
         message: `Could not find course with id: ${courseId}`,
       })
     }
+
+    // Full content (video URLs) only for the course owner or an enrolled student
+    const isOwner = String(courseDetails.instructor?._id) === String(userId)
+    const isEnrolled = courseDetails.studentsEnrolled.some((id) => String(id) === String(userId))
+    if (!isOwner && !isEnrolled) {
+      return res.status(403).json({
+        success: false,
+        message: "Enrol in this course to access its lectures.",
+      })
+    }
+
+    let courseProgressCount = await CourseProgress.findOne({
+      courseID: courseId,
+      userId: userId,
+    })
 
     // if (courseDetails.status === "Draft") {
     //   return res.status(403).json({
@@ -513,25 +532,34 @@ const editCourse = async (req, res) => {
     }
 
     // If Thumbnail Image is found, update it
-    if (req.files) {
-      console.log("thumbnail update")
-      const thumbnail = req.files.thumbnailImage
+    if (req.files?.thumbnailImage) {
       const thumbnailImage = await uploadImageToCloudinary(
-        thumbnail,
+        req.files.thumbnailImage,
         process.env.FOLDER_NAME
       )
-      course.thumbnail = thumbnailImage.url
+      if (thumbnailImage.success) course.thumbnail = thumbnailImage.url
     }
 
-    // Update only the fields that are present in the request body
-    for (const key in updates) {
-      if (updates.hasOwnProperty(key)) {
-        if (key === "tags" || key === "instructions") {
-          course[key] = JSON.parse(updates[key])
-        } else {
-          course[key] = updates[key]
-        }
+    // Only these fields may be edited. Owner, enrolled students, reviews and
+    // content are never taken from the request.
+    const EDITABLE = ["courseName", "courseDescription", "whatYouWillLearn", "price", "tags", "instructions", "status"]
+    const JSON_FIELDS = ["tags", "instructions"]
+    for (const key of EDITABLE) {
+      if (updates[key] === undefined) continue
+      course[key] = JSON_FIELDS.includes(key) ? JSON.parse(updates[key]) : updates[key]
+    }
+
+    // Moving to another category: keep both category lists in sync
+    if (updates.category && String(updates.category) !== String(course.category)) {
+      const newCategory = await Category.findById(updates.category)
+      if (!newCategory) {
+        return res.status(404).json({ success: false, message: "Category not found" })
       }
+      if (course.category) {
+        await Category.findByIdAndUpdate(course.category, { $pull: { courses: course._id } })
+      }
+      await Category.findByIdAndUpdate(newCategory._id, { $addToSet: { courses: course._id } })
+      course.category = newCategory._id
     }
 
     await course.save()
