@@ -10,7 +10,7 @@ import { Button, EmptyState, buttonClass } from "../components/ui";
 import { buyCourse } from "../services/operations/studentFeaturesAPI";
 import { apiConnector } from "../services/apiconnector";
 import { courseEndpoints } from "../services/apis";
-import { formatDate } from "../services/formatDate";
+import { formattedDate } from "../utils/dateFormatter";
 import GetAvgRating from "../utils/avgRating";
 import { ACCOUNT_TYPE } from "../utils/constants";
 import { formatINR } from "../utils/formatINR";
@@ -235,7 +235,7 @@ const CourseDetails = () => {
               </span>
             </div>
             <p className="text-muted">
-              Created by <span className="font-semibold text-ink">{instructorName}</span> · Updated {formatDate(course.updatedAt || course.createdAt)} · English
+              Created by <span className="font-semibold text-ink">{instructorName}</span> · Updated {formattedDate(course.updatedAt || course.createdAt)} · English
             </p>
           </div>
           <div className="lg:hidden">{purchaseCard}</div>
