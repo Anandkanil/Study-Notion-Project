@@ -43,7 +43,6 @@ export default function CourseInformationForm() {
     }
     // if form is in edit mode
     if (editCourse) {
-      // console.log("data populated", editCourse)
       setValue("courseTitle", course.courseName)
       setValue("courseShortDesc", course.courseDescription)
       setValue("coursePrice", course.price)
@@ -60,7 +59,6 @@ export default function CourseInformationForm() {
 
   const isFormUpdated = () => {
     const currentValues = getValues()
-    // console.log("changes after editing form values:", currentValues)
     if (
       currentValues.courseTitle !== course.courseName ||
       currentValues.courseShortDesc !== course.courseDescription ||
@@ -84,7 +82,6 @@ export default function CourseInformationForm() {
       if (isFormUpdated()) {
         const currentValues = getValues()
         const formData = new FormData()
-        // console.log(data)
         formData.append("courseId", course._id)
         if (currentValues.courseTitle !== course.courseName) {
           formData.append("courseName", data.courseTitle)
@@ -116,7 +113,6 @@ export default function CourseInformationForm() {
         if (currentValues.thumbnailImage !== course.thumbnail) {
           formData.append("thumbnailImage", data.thumbnailImage)
         }
-        // console.log("Edit Form data: ", formData)
         setLoading(true)
         const result = await editCourseDetails(formData, token)
         setLoading(false)
@@ -142,7 +138,6 @@ export default function CourseInformationForm() {
     formData.append("thumbnailImage", data.thumbnailImage)
     setLoading(true)
     const result = await addCourseDetails(formData, token)
-    console.log("Edit SetCourse data: ", result)
     if (result) {
       dispatch(setStep(2))
       dispatch(setCourse(result))

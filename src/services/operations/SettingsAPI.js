@@ -29,7 +29,6 @@ export function updateDisplayPicture(token, formData) {
         }
       );
 
-      console.log("API Response for updating display picture:", response);
 
       // Check if the response indicates a failure
       if (!response.data?.success) {
@@ -38,7 +37,6 @@ export function updateDisplayPicture(token, formData) {
 
       // Extract updated user data from the response
       const updatedUser = response.data.data;
-      console.log("Updated user data:", updatedUser);
 
       // Show a success toast
       toast.success("Profile photo updated");
@@ -75,7 +73,6 @@ export function updateProfile(token, formData) {
         Authorization: `Bearer ${token}`,
       });
 
-      console.log("UPDATE_PROFILE_API response:", response);
 
       // Handle unsuccessful responses
       if (!response.data?.success) {
@@ -84,7 +81,6 @@ export function updateProfile(token, formData) {
 
       // Construct user image (default or custom)
       const updatedUser = response.data.data;
-      console.log("The response of Updated profile",response)
       // eslint-disable-next-line
       const userImage = updatedUser.image
         ? updatedUser.image
@@ -120,7 +116,6 @@ export async function changePassword(token, formData) {
       Authorization: `Bearer ${token}`,
     });
 
-    // console.log("CHANGE_PASSWORD_API response:", response);
 
     // Handle unsuccessful responses
     if (!response.data?.success) {
@@ -154,7 +149,6 @@ export function deleteProfile(token, navigate) {
         Authorization: `Bearer ${token}`,
       });
 
-      console.log("DELETE_PROFILE_API response:", response);
 
       // Handle unsuccessful responses
       if (!response.data?.success) {
