@@ -8,6 +8,7 @@ const userRoute=require('./routes/User');
 const contactRoute=require('./routes/Contact');
 
 const connectDB=require('./config/database');
+const mongoose=require('mongoose');
 const cookieParser=require('cookie-parser');
 const cors=require('cors');
 const {cloudinaryConnect}=require('./config/cloudinary');
@@ -51,6 +52,12 @@ app.use('/api/v1/course',courseRoute);
 app.use('/api/v1/payment',paymentRoute);
 app.use('/api/v1/reach',contactRoute);
 
-app.get('/',(req,res)=>{res.send(`<h1>Welcomr to Study Notion Home page</h1>`)});
+app.get('/',(req,res)=>{res.send(`<h1>Welcome to the StudyNotion API</h1>`)});
+
+// Lightweight health check, used by the keep-awake ping and for monitoring.
+app.get('/api/v1/health',(req,res)=>{
+  const dbStates=['disconnected','connected','connecting','disconnecting'];
+  res.set('Cache-Control','no-store').json({ok:true,uptimeSeconds:Math.round(process.uptime()),database:dbStates[mongoose.connection.readyState]||'unknown'});
+});
 
 app.listen(PORT,()=>console.log(`Application is up and running at ${PORT}`))
