@@ -125,7 +125,7 @@ export default function CourseInformationForm() {
           dispatch(setStep(2))
         }
       } else {
-        toast.error("No changes made to the form")
+        toast("Nothing to save — you haven't changed anything")
       }
       return
     }

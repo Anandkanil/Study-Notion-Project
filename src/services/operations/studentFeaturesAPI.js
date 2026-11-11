@@ -31,7 +31,7 @@ function loadScript(src) {
 
 // Main function to handle course purchase
 export async function buyCourse(token, courses, userDetails, navigate, dispatch) {
-    const toastId = toast.loading("Loading..."); // Show loading toast during the payment process
+    const toastId = toast.loading("Opening secure checkout…");
     
     try {
         // Load Razorpay SDK dynamically
@@ -39,13 +39,13 @@ export async function buyCourse(token, courses, userDetails, navigate, dispatch)
 
         // Check if Razorpay SDK loaded successfully
         if (!res) {
-            toast.error("Razorpay SDK failed to load. Please check your network connection.");
+            toast.error("Checkout couldn't open. Check your internet connection and try again.");
             return;
         }
 
         // Check if Razorpay Key is provided in environment variables
         if (!RAZORPAY_KEY_ID) {
-            toast.error("Razorpay Key is not defined in the environment variables.");
+            toast.error("Payments are temporarily unavailable. Please try again later.");
             return;
         }
 
@@ -73,7 +73,7 @@ export async function buyCourse(token, courses, userDetails, navigate, dispatch)
             amount: `${orderResponse.data.message.amount}`,
             order_id: orderResponse.data.message.id,
             name: "StudyNotion", // Payment description (e.g., course name)
-            description: "Thank You for Purchasing the Course",
+            description: courses.length > 1 ? `${courses.length} courses` : "Course purchase",
             image: rzpLogo, // Logo to be displayed during payment
             prefill: {
                 name: `${userDetails.firstName}`,
@@ -93,7 +93,7 @@ export async function buyCourse(token, courses, userDetails, navigate, dispatch)
 
         // Payment failure handler (toast error message)
         paymentObject.on("payment.failed", function (response) {
-            toast.error("Oops, payment failed.");
+            toast.error(response?.error?.description ? `Payment failed: ${response.error.description}` : "Payment failed. You haven't been charged — please try again.");
             console.error("Payment Failed:", response.error);
         });
     } catch (error) {
@@ -126,30 +126,32 @@ async function sendPaymentSuccessEmail(response, amount, token) {
 
 // Function to verify the payment and enroll the student in the course
 async function verifyPayment(bodyData, token, navigate, dispatch) {
-    const toastId = toast.loading("Verifying Payment..."); // Show loading toast while verifying payment
-    dispatch(setPaymentLoading(true)); // Set loading state for payment process
+    // Razorpay only calls this after a successful payment
+    const toastId = toast.loading("Payment received. Setting up your course…");
+    dispatch(setPaymentLoading(true));
     try {
-        // Call backend API to verify the payment
         const response = await apiConnector("POST", COURSE_VERIFY_API, bodyData, {
             Authorization: `Bearer ${token}`,
         });
-
-        // Handle errors in payment verification
-        if (!response || !response.data.success) {
+        if (!response?.data?.success) {
             throw new Error(response?.data?.message || "Payment verification failed.");
         }
-
-        // On success, show success toast and navigate to enrolled courses page
-        toast.success("Payment successful! You are now enrolled in the course.");
-        navigate("/dashboard/enrolled-courses");
-
-        // Reset the cart after successful enrollment
+        toast.success("You're enrolled! Your course is ready in My learning.", { duration: 6000 });
         dispatch(resetCart());
+        navigate("/dashboard/enrolled-courses");
     } catch (error) {
         console.error("Payment Verification Error:", error);
-        toast.error(error.response?.data?.message || error.message || "Could not verify the payment.");
+        const status = error?.response?.status;
+        if (!status || status >= 500) {
+            // Timed out or server error: the payment went through, enrolment usually completes anyway
+            toast("We received your payment. If the course isn't in My learning yet, refresh in a minute — contact us if it still doesn't appear.", { duration: 9000 });
+            dispatch(resetCart());
+            navigate("/dashboard/enrolled-courses");
+        } else {
+            toast.error(error.response?.data?.message || "We couldn't confirm the payment. Contact us with your payment ID if you were charged.", { duration: 9000 });
+        }
     } finally {
-        toast.dismiss(toastId); // Dismiss loading toast after verification
-        dispatch(setPaymentLoading(false)); // Reset loading state
+        toast.dismiss(toastId);
+        dispatch(setPaymentLoading(false));
     }
 }

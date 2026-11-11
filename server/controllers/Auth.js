@@ -6,6 +6,7 @@ const Profile = require('../models/Profile')
 const otpGenerator = require('otp-generator');
 const mailSender = require('../utils/mailSender');
 const  {passwordUpdated}  = require('../mail/templates/passwordUpdate');
+const emailVerificationTemplate = require('../mail/templates/emailVerificationTemplate');
 require('dotenv').config()
 
 exports.sendOTP = async function (req, res) {
@@ -35,14 +36,20 @@ exports.sendOTP = async function (req, res) {
             return res.status(500).json({ success: false, message: 'Failed to generate a unique OTP, please try again later.' });
         }
 
-        // Save OTP to the database
-        const newOTP = { email, otp };
-        await OTP.create(newOTP);
+        // Save the code, then email it; if the email can't be sent, say so instead of pretending
+        const saved = await OTP.create({ email, otp });
+        const sent = await mailSender(email, "Your StudyNotion verification code", emailVerificationTemplate(otp));
+        if (!sent) {
+            await OTP.deleteOne({ _id: saved._id });
+            return res.status(503).json({
+                success: false,
+                message: "We couldn't send the verification email right now. Please try again in a few minutes."
+            });
+        }
 
-        console.log("OTP generated and sent successfully.");
         return res.status(201).json({
             success: true,
-            message: 'OTP generated and sent successfully'
+            message: 'Verification code sent. Check your inbox.'
         });
 
     } catch (error) {
@@ -276,8 +283,7 @@ exports.changePassword = async function (req, res) {
             try {
                 const body = "Your account password has been successfully changed. If you did not request this change, please contact support immediately.";
                 const emailContent=passwordUpdated(email,user.firstName)
-                const mailResponse = await mailSender(email, "Password Changed - Study Notion", emailContent);
-                console.log("Password change confirmation email sent successfully:", mailResponse);
+                mailSender.inBackground(email, "Password Changed - Study Notion", emailContent);
             } catch (error) {
                 console.error("Error occurred while sending password change email:", error);
             }

@@ -82,13 +82,13 @@ export default function CourseBuilderForm() {
 
   const goToNext = () => {
     if (course.courseContent.length === 0) {
-      toast.error("Please add atleast one section")
+      toast.error("Add at least one section to continue")
       return
     }
     if (
       course.courseContent.some((section) => section.subSection.length === 0)
     ) {
-      toast.error("Please add atleast one lecture in each section")
+      toast.error("Each section needs at least one lesson")
       return
     }
     dispatch(setStep(3))

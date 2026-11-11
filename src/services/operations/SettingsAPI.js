@@ -15,7 +15,7 @@ const {
 export function updateDisplayPicture(token, formData) {
   return async (dispatch) => {
     // Display a loading toast
-    const toastId = toast.loading("Updating profile picture...");
+    const toastId = toast.loading("Uploading photo…");
 
     try {
       // Make an API call to update the display picture
@@ -41,7 +41,7 @@ export function updateDisplayPicture(token, formData) {
       console.log("Updated user data:", updatedUser);
 
       // Show a success toast
-      toast.success("Display picture updated successfully!");
+      toast.success("Profile photo updated");
 
       // Update the user in the Redux store
       dispatch(setUser(updatedUser));
@@ -67,7 +67,7 @@ export function updateDisplayPicture(token, formData) {
 export function updateProfile(token, formData) {
   return async (dispatch) => {
     // Show loading toast
-    const toastId = toast.loading("Updating profile...");
+    const toastId = toast.loading("Saving your details…");
 
     try {
       // API call to update profile
@@ -96,7 +96,7 @@ export function updateProfile(token, formData) {
       localStorage.setItem("user", JSON.stringify(updatedUser));
 
       // Show success message
-      toast.success("Profile updated successfully!");
+      toast.success("Profile updated");
     } catch (error) {
       console.error("Error updating profile:", error);
       const errorMessage =
@@ -112,7 +112,7 @@ export function updateProfile(token, formData) {
 // Function to change the user's password
 export async function changePassword(token, formData) {
   // Show loading toast
-  const toastId = toast.loading("Changing password...");
+  const toastId = toast.loading("Updating password…");
 
   try {
     // API call to change password
@@ -128,7 +128,7 @@ export async function changePassword(token, formData) {
     }
 
     // Show success message
-    toast.success("Password changed successfully!");
+    toast.success("Password updated");
     return true;
   } catch (error) {
     console.error("Error changing password:", error);
@@ -146,7 +146,7 @@ export async function changePassword(token, formData) {
 export function deleteProfile(token, navigate) {
   return async (dispatch) => {
     // Show loading toast
-    const toastId = toast.loading("Deleting profile...");
+    const toastId = toast.loading("Deleting your account…");
 
     try {
       // API call to delete profile
@@ -162,7 +162,7 @@ export function deleteProfile(token, navigate) {
       }
 
       // Clear Redux state and localStorage, navigate to login
-      toast.success("Your account has been deleted.");
+      toast.success("Your account has been deleted");
       return true;
     } catch (error) {
       console.error("Error deleting profile:", error);
