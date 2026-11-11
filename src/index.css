@@ -123,14 +123,18 @@
   *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; scroll-behavior: auto !important; }
 }
 
-/* Certificate printing: only the certificate, landscape A4, no browser margins */
+/* Printing a certificate or receipt: only that element, no browser margins */
 @media print {
-  @page { size: A4 landscape; margin: 0; }
+  @page { margin: 0; }
   html, body { background: #fff !important; }
   body * { visibility: hidden; }
-  #certificate, #certificate * { visibility: visible; }
-  #certificate {
-    position: fixed; inset: 0; width: 100vw; height: 100vh; max-width: none; aspect-ratio: auto;
+  #certificate, #certificate *, #printable, #printable * { visibility: visible; }
+  #certificate, #printable {
+    position: absolute; left: 0; top: 0; width: 100%; max-width: none;
     -webkit-print-color-adjust: exact; print-color-adjust: exact;
   }
+  #certificate { position: fixed; inset: 0; height: 100vh; aspect-ratio: auto; }
 }
+/* The certificate prints landscape; receipts use the default portrait page */
+@page certificate { size: A4 landscape; }
+#certificate { page: certificate; }
