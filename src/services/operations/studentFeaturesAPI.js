@@ -6,7 +6,7 @@ import { setPaymentLoading } from "../../slices/courseSlice";
 import { resetCart } from "../../slices/cartSlice";
 
 // Define Razorpay Key ID from environment variables
-const RAZORPAY_KEY_ID = process.env.REACT_APP_RAZORPAY;
+const RAZORPAY_KEY_ID = import.meta.env.REACT_APP_RAZORPAY;
 
 // Endpoints for API requests
 const {
