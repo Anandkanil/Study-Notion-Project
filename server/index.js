@@ -13,6 +13,7 @@ const cookieParser=require('cookie-parser');
 const cors=require('cors');
 const {securityHeaders,sanitizeInput}=require('./middlewares/security');
 const {rateLimit}=require('./middlewares/rateLimit');
+const {alertOnServerErrors,watchProcess}=require('./utils/alerts');
 const {cloudinaryConnect}=require('./config/cloudinary');
 const fileUpload=require('express-fileupload');
 const dotenv=require('dotenv');
@@ -50,6 +51,9 @@ app.use(cors({
 
 app.use(fileUpload({useTempFiles:true,tempFileDir:"/temp"}))
 app.use(sanitizeInput);
+// Email ALERT_EMAIL when something breaks (throttled)
+app.use(alertOnServerErrors);
+watchProcess();
 // Backstop for any single address hammering the API
 app.use('/api', rateLimit({ name: 'api', windowMs: 60 * 1000, max: 300 }));
 

@@ -1,0 +1,59 @@
+name: Weekly database backup
+
+# Every Monday 03:15 India time (Sunday 21:45 UTC), and on demand from the Actions tab.
+# Dumps the whole MongoDB database, ENCRYPTS it, and keeps it as a workflow artifact
+# for 90 days. The repo is public, so the file is only ever stored encrypted.
+#
+# Needs two repository secrets (Settings > Secrets and variables > Actions):
+#   MONGODB_URL        the same connection string Render uses
+#   BACKUP_PASSPHRASE  a long passphrase; keep a copy somewhere safe, it's needed to restore
+# Restore steps: docs/BACKUPS.md
+on:
+  schedule:
+    - cron: "45 21 * * 0"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Check secrets are set
+        env:
+          MONGODB_URL: ${{ secrets.MONGODB_URL }}
+          BACKUP_PASSPHRASE: ${{ secrets.BACKUP_PASSPHRASE }}
+        run: |
+          if [ -z "$MONGODB_URL" ] || [ -z "$BACKUP_PASSPHRASE" ]; then
+            echo "::error::Add the MONGODB_URL and BACKUP_PASSPHRASE repository secrets to enable backups."
+            exit 1
+          fi
+
+      - name: Dump the database
+        env:
+          MONGODB_URL: ${{ secrets.MONGODB_URL }}
+        run: |
+          mkdir -p out
+          docker run --rm -e MONGODB_URL -v "$PWD/out:/out" mongo:7 \
+            sh -c 'mongodump --uri "$MONGODB_URL" --archive=/out/db.archive --gzip --quiet'
+          ls -lh out/db.archive
+
+      - name: Encrypt the dump
+        env:
+          BACKUP_PASSPHRASE: ${{ secrets.BACKUP_PASSPHRASE }}
+        run: |
+          STAMP=$(date -u +%Y-%m-%d)
+          openssl enc -aes-256-cbc -pbkdf2 -iter 200000 -salt \
+            -in out/db.archive -out "out/studynotion-$STAMP.archive.gz.enc" -pass env:BACKUP_PASSPHRASE
+          rm out/db.archive
+          echo "STAMP=$STAMP" >> "$GITHUB_ENV"
+
+      - name: Keep the encrypted backup for 90 days
+        uses: actions/upload-artifact@v4
+        with:
+          name: studynotion-db-${{ env.STAMP }}
+          path: out/*.enc
+          retention-days: 90
+          if-no-files-found: error
