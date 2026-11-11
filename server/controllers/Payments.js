@@ -7,6 +7,7 @@ const { paymentSuccessEmail } = require("../mail/templates/paymentSuccessEmail")
 const crypto = require("crypto");
 const mongoose = require("mongoose");
 const CourseProgress = require("../models/CourseProgress");
+const Purchase = require("../models/Purchase");
 
 // Razorpay allows 15 note keys per order: one for the buyer, the rest for course ids.
 const MAX_COURSES_PER_ORDER = 14;
@@ -108,7 +109,46 @@ exports.verifyPayment = async (req, res) => {
   if (!result.success) {
     return res.status(500).json({ success: false, message: result.message });
   }
+  await recordPurchase({ order, paymentId: razorpay_payment_id, userId, courses });
   return res.status(200).json({ success: true, message: "Payment Verified" });
+};
+
+// Saves the purchase for the Purchases page. Once per order; never blocks enrolment.
+const recordPurchase = async ({ order, paymentId, userId, courses }) => {
+  try {
+    const found = await Course.find({ _id: { $in: courses } }).select("courseName price").lean();
+    const byId = new Map(found.map((c) => [String(c._id), c]));
+    await Purchase.updateOne(
+      { orderId: order.id },
+      {
+        $setOnInsert: {
+          user: userId,
+          courses: courses.map((id) => ({ course: id, courseName: byId.get(String(id))?.courseName || "Course", price: byId.get(String(id))?.price ?? null })),
+          amount: Math.round(Number(order.amount || 0)) / 100,
+          currency: order.currency || "INR",
+          orderId: order.id,
+          paymentId,
+        },
+      },
+      { upsert: true }
+    );
+  } catch (error) {
+    console.error("Could not record purchase:", error.message);
+  }
+};
+
+// The signed-in student's purchases, newest first
+exports.getPurchases = async (req, res) => {
+  try {
+    const purchases = await Purchase.find({ user: req.user.userId })
+      .select("courses amount currency orderId paymentId createdAt")
+      .sort({ createdAt: -1 })
+      .lean();
+    return res.status(200).json({ success: true, data: purchases });
+  } catch (error) {
+    console.error("getPurchases:", error.message);
+    return res.status(500).json({ success: false, message: "Your purchases couldn't load. Please try again." });
+  }
 };
 
 // Enrols the user in each course. Safe to call twice for the same order.
@@ -166,10 +206,14 @@ exports.sendPaymentSuccessEmail = async (req, res) => {
       return res.status(404).json({ success: false, message: "User not found" });
     }
 
+    // Use the amount we recorded from Razorpay when there is one, not the one the browser sent
+    const purchase = await Purchase.findOne({ orderId: String(orderId), user: userId }).select("amount").lean();
+    const paid = purchase ? purchase.amount : amount / 100;
+
     mailSender.inBackground(
       enrolledStudent.email,
       "Payment Received",
-      paymentSuccessEmail(enrolledStudent.firstName, amount / 100, orderId, paymentId)
+      paymentSuccessEmail(enrolledStudent.firstName, paid, orderId, paymentId)
     );
 
     return res.status(200).json({ success: true, message: "Payment receipt is on its way" });
