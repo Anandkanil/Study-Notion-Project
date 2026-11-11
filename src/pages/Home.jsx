@@ -56,7 +56,7 @@ function ContinueLearning() {
       <Link to={href} className="flex items-center gap-4 rounded-2xl border border-line bg-surface p-3 pr-5 transition-colors hover:bg-raised">
         {last.thumbnail && <img src={last.thumbnail} alt="" className="hidden aspect-video w-32 rounded-xl object-cover sm:block" />}
         <span className="flex min-w-0 flex-1 flex-col">
-          <span className="text-sm font-semibold text-muted">Continue learning{position > 5 ? ` · ${formatClock(position)} in` : ""}</span>
+          <span className="text-sm font-semibold text-muted">Continue learning{position >= 3 ? ` · ${formatClock(position)} in` : ""}</span>
           <span className="truncate font-bold text-ink">{last.lessonTitle}</span>
           {last.courseName && <span className="truncate text-sm text-muted">{last.courseName}</span>}
         </span>

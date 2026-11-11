@@ -8,6 +8,9 @@ import { updateCompletedLectures } from "../../../slices/viewCourseSlice";
 import { Button, buttonClass } from "../../ui";
 import { formatClock, getPosition, setLastLesson, setPosition } from "../../../utils/learningMemory";
 
+// The last stretch of a video counts as watched: 10 s, or 15% of a short clip
+const endMargin = (duration) => Math.min(10, duration * 0.15);
+
 const VideoDetails = () => {
   const { courseId, sectionId, subSectionId } = useParams();
   const navigate = useNavigate();
@@ -53,17 +56,17 @@ const VideoDetails = () => {
   const savePosition = (force = false) => {
     const v = videoRef.current;
     if (!v || !user?._id) return;
-    if (!force && Math.abs(v.currentTime - lastSaved.current) < 5) return;
+    if (!force && Math.abs(v.currentTime - lastSaved.current) < 2) return;
     lastSaved.current = v.currentTime;
     // Near the end counts as watched: start from the beginning next time
-    setPosition(user._id, subSectionId, v.duration && v.currentTime > v.duration - 10 ? 0 : v.currentTime);
+    setPosition(user._id, subSectionId, v.duration && v.currentTime > v.duration - endMargin(v.duration) ? 0 : v.currentTime);
   };
 
   const restoreAndMaybeResume = () => {
     const v = videoRef.current;
     if (!v || !user?._id) return;
     const saved = getPosition(user._id, subSectionId);
-    if (saved > 5 && (!v.duration || saved < v.duration - 10)) {
+    if (saved >= 3 && (!v.duration || saved < v.duration - endMargin(v.duration))) {
       v.currentTime = saved;
       lastSaved.current = saved;
       setResumedAt(saved);

@@ -113,7 +113,7 @@ export default function EnrolledCourses() {
                 <p className="font-display text-xl font-medium text-ink">{resume.ref?.sub?.title || resume.course.courseName}</p>
                 <p className="text-muted">
                   {resume.course.courseName} · {Math.round(resume.course.progressPercentage || 0)}% complete
-                  {resume.position > 5 && <> · Resume at {formatClock(resume.position)}</>}
+                  {resume.position >= 3 && <> · Resume at {formatClock(resume.position)}</>}
                 </p>
                 <Progress value={resume.course.progressPercentage} label={`${resume.course.courseName} progress`} />
               </div>
