@@ -66,6 +66,13 @@ function useRouteTitle(pathname) {
   }, [pathname]);
 }
 
+/** Signed-in route for one account type; other types go to their own dashboard. */
+function RequireRole({ role, children, fallback }) {
+  const { user } = useSelector((state) => state.profile);
+  if (!user) return <Navigate to="/login" replace />;
+  return user.accountType === role ? children : <Navigate to={fallback} replace />;
+}
+
 function App() {
   const { user } = useSelector((state) => state.profile);
   const location = useLocation();
@@ -131,21 +138,12 @@ function App() {
                 <Route path="/dashboard/my-profile" element={<MyProfile />} />
                 <Route path="/dashboard/settings" element={<Settings />} />
 
-                {user?.accountType === ACCOUNT_TYPE.STUDENT && (
-                  <>
-                    <Route path="/dashboard/cart" element={<Cart />} />
-                    <Route path="/dashboard/enrolled-courses" element={<EnrolledCourses />} />
-                  </>
-                )}
-
-                {user?.accountType === ACCOUNT_TYPE.INSTRUCTOR && (
-                  <>
-                    <Route path="/dashboard/add-course" element={<AddCourse />} />
-                    <Route path="/dashboard/instructor" element={<Instructor />} />
-                    <Route path="/dashboard/my-courses" element={<MyCourses />} />
-                    <Route path="/dashboard/edit-course/:courseId" element={<EditCourse />} />
-                  </>
-                )}
+                <Route path="/dashboard/cart" element={<RequireRole role={ACCOUNT_TYPE.STUDENT} fallback={dashboardHome}><Cart /></RequireRole>} />
+                <Route path="/dashboard/enrolled-courses" element={<RequireRole role={ACCOUNT_TYPE.STUDENT} fallback={dashboardHome}><EnrolledCourses /></RequireRole>} />
+                <Route path="/dashboard/add-course" element={<RequireRole role={ACCOUNT_TYPE.INSTRUCTOR} fallback={dashboardHome}><AddCourse /></RequireRole>} />
+                <Route path="/dashboard/instructor" element={<RequireRole role={ACCOUNT_TYPE.INSTRUCTOR} fallback={dashboardHome}><Instructor /></RequireRole>} />
+                <Route path="/dashboard/my-courses" element={<RequireRole role={ACCOUNT_TYPE.INSTRUCTOR} fallback={dashboardHome}><MyCourses /></RequireRole>} />
+                <Route path="/dashboard/edit-course/:courseId" element={<RequireRole role={ACCOUNT_TYPE.INSTRUCTOR} fallback={dashboardHome}><EditCourse /></RequireRole>} />
               </Route>
 
               {/* Lesson player (students) */}
@@ -156,12 +154,10 @@ function App() {
                   </PrivateRoute>
                 }
               >
-                {user?.accountType === ACCOUNT_TYPE.STUDENT && (
-                  <Route
-                    path="/view-course/:courseId/section/:sectionId/sub-section/:subSectionId"
-                    element={<VideoDetails />}
-                  />
-                )}
+                <Route
+                  path="/view-course/:courseId/section/:sectionId/sub-section/:subSectionId"
+                  element={<RequireRole role={ACCOUNT_TYPE.STUDENT} fallback={dashboardHome}><VideoDetails /></RequireRole>}
+                />
               </Route>
 
               <Route path="*" element={<PageNotFound />} />

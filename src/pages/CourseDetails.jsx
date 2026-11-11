@@ -107,11 +107,11 @@ const CourseDetails = () => {
       <div className="flex flex-1 flex-col">
         <div className="mx-auto w-full max-w-3xl flex-1 px-6 py-16">
           {state.status === "notfound" ? (
-            <EmptyState title="This course isn't available" action={<Link to="/" className={buttonClass("primary")}>Browse courses</Link>}>
+            <EmptyState as="h1" title="This course isn't available" action={<Link to="/" className={buttonClass("primary")}>Browse courses</Link>}>
               It may have been removed by its instructor, or the link is incomplete.
             </EmptyState>
           ) : (
-            <EmptyState title="The course couldn't load" action={<Button variant="secondary" onClick={load}>Try again</Button>}>
+            <EmptyState as="h1" title="The course couldn't load" action={<Button variant="secondary" onClick={load}>Try again</Button>}>
               The server may still be waking up. This usually takes under a minute.
             </EmptyState>
           )}

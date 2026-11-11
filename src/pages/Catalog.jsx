@@ -87,7 +87,7 @@ const Catalog = () => {
     return (
       <div className="flex flex-1 flex-col">
         <div className="mx-auto w-full max-w-3xl flex-1 px-6 py-16">
-          <EmptyState title="We couldn't find that subject" action={<Link to="/" className={buttonClass("primary")}>See all subjects</Link>}>
+          <EmptyState as="h1" title="We couldn't find that subject" action={<Link to="/" className={buttonClass("primary")}>See all subjects</Link>}>
             The link may be out of date, or the subject was renamed.
           </EmptyState>
         </div>
@@ -118,6 +118,8 @@ const Catalog = () => {
               <h1 className="mt-3 font-display text-4xl font-bold text-ink">{state.category.name}</h1>
               {state.category.description && <p className="mt-3 max-w-2xl text-lg text-muted">{state.category.description}</p>}
             </>
+          ) : state.status === "error" ? (
+            <h1 className="mt-3 font-display text-4xl font-bold text-ink">Catalog</h1>
           ) : (
             <div className="mt-3 flex flex-col gap-3" aria-hidden="true">
               <div className="skeleton h-10 w-72" />

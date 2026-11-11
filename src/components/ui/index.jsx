@@ -144,9 +144,9 @@ export const PasswordField = forwardRef(function PasswordField(props, ref) {
 });
 
 /** Empty state: what's missing and what to do next. */
-export const EmptyState = ({ title, children, action }) => (
+export const EmptyState = ({ title, children, action, as: Heading = "h2" }) => (
   <div className="flex flex-col items-start gap-3 rounded-2xl border border-dashed border-richblack-600 bg-surface p-8">
-    <h2 className="font-display text-xl font-medium text-ink">{title}</h2>
+    <Heading className="font-display text-xl font-medium text-ink">{title}</Heading>
     {children && <div className="max-w-prose text-muted">{children}</div>}
     {action}
   </div>
