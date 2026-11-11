@@ -92,7 +92,7 @@ function Home() {
       ]);
       setCats((catRes.data?.data || []).filter((c) => c?.courses?.length > 0));
       const published = (courseRes.data?.courses || []).filter((c) => c.status === "Published");
-      published.sort((a, b) => (b.studentsEnrolled?.length || 0) - (a.studentsEnrolled?.length || 0));
+      published.sort((a, b) => (b.studentsCount ?? b.studentsEnrolled?.length ?? 0) - (a.studentsCount ?? a.studentsEnrolled?.length ?? 0));
       setPopular(published.slice(0, 4));
     } catch (error) {
       console.error("Home data error:", error);

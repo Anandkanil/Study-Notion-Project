@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import copy from "copy-to-clipboard";
@@ -15,6 +15,77 @@ import GetAvgRating from "../utils/avgRating";
 import { ACCOUNT_TYPE } from "../utils/constants";
 import { formatINR } from "../utils/formatINR";
 import { addToCart } from "../slices/cartSlice";
+
+const REVIEWS_SHOWN = 6;
+
+function Reviews({ reviews, average }) {
+  const [showAll, setShowAll] = useState(false);
+  const list = (reviews || []).filter((r) => r && r.rating);
+  const counts = [5, 4, 3, 2, 1].map((n) => [n, list.filter((r) => Math.round(r.rating) === n).length]);
+  const shown = showAll ? list : list.slice(0, REVIEWS_SHOWN);
+
+  return (
+    <section aria-labelledby="cd-reviews">
+      <h2 id="cd-reviews" className="font-display text-2xl font-medium text-ink">
+        Reviews
+      </h2>
+      {list.length === 0 ? (
+        <p className="mt-4 text-muted">No reviews yet. Learners can rate the course once they've started it.</p>
+      ) : (
+        <>
+          <div className="mt-5 flex flex-wrap items-center gap-8 rounded-2xl border border-line bg-surface p-5">
+            <div className="flex flex-col items-start gap-1">
+              <span className="font-display text-4xl font-semibold text-ink">{average.toFixed(1)}</span>
+              <Stars value={average} />
+              <span className="text-sm text-muted">
+                {list.length} {list.length === 1 ? "rating" : "ratings"}
+              </span>
+            </div>
+            <ul className="flex min-w-[200px] flex-1 flex-col gap-1.5" aria-label="Ratings by stars">
+              {counts.map(([n, c]) => (
+                <li key={n} className="flex items-center gap-3 text-sm text-muted">
+                  <span className="w-12 shrink-0">{n} {n === 1 ? "star" : "stars"}</span>
+                  <span className="h-2 flex-1 overflow-hidden rounded-full bg-line" aria-hidden="true">
+                    <span className="block h-full rounded-full bg-accent" style={{ width: `${(c / list.length) * 100}%` }} />
+                  </span>
+                  <span className="w-6 shrink-0 text-right tabular-nums">{c}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+          <ul className="mt-6 flex flex-col divide-y divide-line">
+            {shown.map((r) => {
+              const name = [r.user?.firstName, r.user?.lastName].filter(Boolean).join(" ") || "StudyNotion learner";
+              return (
+                <li key={r._id} className="flex gap-4 py-5 first:pt-0">
+                  <img
+                    src={r.user?.image || `https://api.dicebear.com/9.x/initials/svg?seed=${encodeURIComponent(name)}`}
+                    alt=""
+                    className="h-10 w-10 shrink-0 rounded-xl object-cover"
+                  />
+                  <div className="min-w-0">
+                    <p className="font-semibold text-ink">{name}</p>
+                    <p className="mt-0.5 flex flex-wrap items-center gap-2 text-sm text-muted">
+                      <span className="sr-only">Rated {r.rating} out of 5.</span>
+                      <Stars value={r.rating} size={14} />
+                      {r.createdAt && <span>{formattedDate(r.createdAt)}</span>}
+                    </p>
+                    {r.review && <p className="mt-2 max-w-prose whitespace-pre-line text-ink">{r.review}</p>}
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+          {list.length > REVIEWS_SHOWN && (
+            <Button variant="secondary" className="mt-2" onClick={() => setShowAll((v) => !v)}>
+              {showAll ? "Show fewer reviews" : `Show all ${list.length} reviews`}
+            </Button>
+          )}
+        </>
+      )}
+    </section>
+  );
+}
 
 const toLines = (value) =>
   (Array.isArray(value) ? value.join("\n") : value || "")
@@ -72,6 +143,18 @@ const CourseDetails = () => {
   }, [load]);
 
   const course = state.data?.courseDetails;
+
+  // Phones: once the price card scrolls away, keep price + main action in a bottom bar
+  const mobileCardRef = useRef(null);
+  const [showBar, setShowBar] = useState(false);
+  useEffect(() => {
+    const el = mobileCardRef.current;
+    if (!el || typeof IntersectionObserver === "undefined") return;
+    const io = new IntersectionObserver(([entry]) => setShowBar(!entry.isIntersecting && entry.boundingClientRect.top < 0));
+    io.observe(el);
+    return () => io.disconnect();
+  }, [state.status]);
+
   useEffect(() => {
     if (course?.courseName) document.title = `${course.courseName} · StudyNotion`;
   }, [course?.courseName]);
@@ -238,7 +321,9 @@ const CourseDetails = () => {
               Created by <span className="font-semibold text-ink">{instructorName}</span> · Updated {formattedDate(course.updatedAt || course.createdAt)} · English
             </p>
           </div>
-          <div className="lg:hidden">{purchaseCard}</div>
+          <div className="lg:hidden" ref={mobileCardRef}>
+            {purchaseCard}
+          </div>
         </div>
       </section>
 
@@ -334,6 +419,8 @@ const CourseDetails = () => {
             </section>
           )}
 
+          <Reviews reviews={course.ratingAndReviews} average={stats.rating} />
+
           <section aria-labelledby="cd-instructor">
             <h2 id="cd-instructor" className="font-display text-2xl font-medium text-ink">
               Your instructor
@@ -355,7 +442,33 @@ const CourseDetails = () => {
         <div className="hidden lg:block">{purchaseCard}</div>
       </div>
 
-      <Footer />
+      {showBar && (
+        <div className="fixed inset-x-0 bottom-0 z-30 border-t border-line bg-surface/95 px-4 py-3 backdrop-blur lg:hidden">
+          <div className="mx-auto flex max-w-6xl items-center gap-3">
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-sm text-muted">{course.courseName}</p>
+              <p className="font-display text-xl font-semibold text-ink">{formatINR(course.price)}</p>
+            </div>
+            {isEnrolled ? (
+              <Link to={startHref} className={buttonClass("primary")}>
+                Go to course
+              </Link>
+            ) : isOwner ? (
+              <Link to={`/dashboard/edit-course/${course._id}`} className={buttonClass("primary")}>
+                Edit course
+              </Link>
+            ) : (
+              <Button onClick={handleBuy} loading={buying} loadingText="Opening…">
+                Buy now
+              </Button>
+            )}
+          </div>
+        </div>
+      )}
+
+      <div className="pb-20 lg:pb-0">
+        <Footer />
+      </div>
     </div>
   );
 };
