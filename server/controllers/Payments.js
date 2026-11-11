@@ -137,7 +137,8 @@ const enrollStudents = async (courses, userId) => {
       );
 
       if (isNewEnrolment && enrolledStudent) {
-        await mailSender(
+        // Don't make the buyer wait for email delivery
+        mailSender.inBackground(
           enrolledStudent.email,
           `Successfully Enrolled into ${enrolledCourse.courseName}`,
           courseEnrollmentEmail(enrolledCourse.courseName, enrolledStudent.firstName, enrolledCourse.thumbnail)
@@ -165,13 +166,13 @@ exports.sendPaymentSuccessEmail = async (req, res) => {
       return res.status(404).json({ success: false, message: "User not found" });
     }
 
-    await mailSender(
+    mailSender.inBackground(
       enrolledStudent.email,
       "Payment Received",
       paymentSuccessEmail(enrolledStudent.firstName, amount / 100, orderId, paymentId)
     );
 
-    return res.status(200).json({ success: true, message: "Payment success email sent successfully" });
+    return res.status(200).json({ success: true, message: "Payment receipt is on its way" });
   } catch (error) {
     console.error("Error in sending email:", error.message);
     return res.status(500).json({ success: false, message: "Could not send email" });

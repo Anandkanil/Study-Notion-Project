@@ -16,7 +16,7 @@ const {
 // Function to send OTP
 export function sendOtp(email, navigate) {
   return async (dispatch) => {
-    const toastId = toast.loading("Loading..."); // Show loading toast
+    const toastId = toast.loading("Sending your code…"); // Show loading toast
     dispatch(setLoading(true)); // Set loading state to true
 
     try {
@@ -31,7 +31,7 @@ export function sendOtp(email, navigate) {
       }
 
       // Success: Notify and navigate to verify email
-      toast.success("OTP Sent Successfully");
+      toast.success("Code sent. Check your inbox (and spam folder).");
       navigate("/verify-email");
     } catch (error) {
       console.error("SENDOTP API ERROR:", error);
@@ -49,7 +49,7 @@ export function sendOtp(email, navigate) {
 // Function to handle signup
 export function signUp(firstName, lastName, email, password, confirmPassword, accountType, otp, navigate) {
   return async (dispatch) => {
-    const toastId = toast.loading("Loading...");
+    const toastId = toast.loading("Creating your account…");
     dispatch(setLoading(true));
 
     try {
@@ -68,7 +68,7 @@ export function signUp(firstName, lastName, email, password, confirmPassword, ac
       }
 
       // Success: Notify and navigate to login
-      toast.success("Signup Successful");
+      toast.success("Account created. Log in to start learning.");
       navigate("/login");
     } catch (error) {
       console.error("SIGNUP API ERROR:", error);
@@ -106,7 +106,7 @@ export function login(email, password, navigate, redirectTo = "/dashboard/my-pro
       localStorage.setItem("token", JSON.stringify(token));
 
       // Notify the user and redirect
-      toast.success("Login successful! Welcome back.");
+      toast.success(`Welcome back, ${user.firstName || "there"}!`);
       navigate(redirectTo, { replace: true });
 
     } catch (error) {
@@ -130,7 +130,7 @@ export function logout(navigate){
     // dispatch((resetCart()));
     localStorage.removeItem('token');
     localStorage.removeItem('user');
-    toast.success("Logged Out");
+    toast.success("You're logged out");
     navigate("/");
   }
 }
@@ -150,7 +150,7 @@ export function getPasswordResetToken(email, setEmailSent) {
       }
 
       // Success: Notify and update state
-      toast.success("Reset Email Sent");
+      toast.success("Check your inbox for the reset link");
       setEmailSent(true);
     } catch (error) {
       console.error("RESET PASSWORD TOKEN ERROR:", error);
@@ -180,7 +180,7 @@ export function resetPassword(password, confirmPassword, token,navigate) {
       }
 
       // Success: Notify user
-      toast.success("Password has been reset successfully");
+      toast.success("Password updated. Log in with your new password.");
       navigate('/login')
     } catch (error) {
       console.error("RESET PASSWORD ERROR:", error);

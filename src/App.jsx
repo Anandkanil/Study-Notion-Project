@@ -73,10 +73,18 @@ function RequireRole({ role, children, fallback }) {
   return user.accountType === role ? children : <Navigate to={fallback} replace />;
 }
 
+/** New page, start at the top (but keep in-page #anchors working). */
+function useScrollToTop(pathname) {
+  useEffect(() => {
+    if (!window.location.hash) window.scrollTo({ top: 0, left: 0, behavior: "instant" });
+  }, [pathname]);
+}
+
 function App() {
   const { user } = useSelector((state) => state.profile);
   const location = useLocation();
   useRouteTitle(location.pathname);
+  useScrollToTop(location.pathname);
 
   const dashboardHome =
     user?.accountType === ACCOUNT_TYPE.INSTRUCTOR ? "/dashboard/instructor" : "/dashboard/enrolled-courses";
@@ -92,6 +100,8 @@ function App() {
 
       <Toaster
         position="top-center"
+        gutter={10}
+        containerStyle={{ top: 76 }}
         toastOptions={{
           duration: 4000,
           style: {
@@ -100,10 +110,16 @@ function App() {
             border: "1px solid rgb(var(--line))",
             borderRadius: "14px",
             padding: "12px 16px",
+            maxWidth: "min(92vw, 440px)",
+            boxShadow: "0 18px 40px -18px rgb(8 10 24 / 0.55)",
             fontFamily: "Manrope, system-ui, sans-serif",
+            fontWeight: 600,
+            fontSize: "15px",
+            lineHeight: 1.45,
           },
           success: { iconTheme: { primary: "rgb(var(--success))", secondary: "rgb(var(--surface))" } },
-          error: { iconTheme: { primary: "rgb(var(--danger))", secondary: "rgb(var(--surface))" } },
+          error: { duration: 6000, iconTheme: { primary: "rgb(var(--danger))", secondary: "rgb(var(--surface))" } },
+          loading: { iconTheme: { primary: "rgb(var(--accent))", secondary: "rgb(var(--line))" } },
         }}
       />
       <ServerWakeNotice />

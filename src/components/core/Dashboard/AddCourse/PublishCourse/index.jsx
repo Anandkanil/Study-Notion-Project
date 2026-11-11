@@ -52,7 +52,13 @@ export default function PublishCourse() {
       : COURSE_STATUS.DRAFT
     formData.append("status", courseStatus)
     setLoading(true)
-    const result = await editCourseDetails(formData, token)
+    const result = await editCourseDetails(
+      formData,
+      token,
+      courseStatus === COURSE_STATUS.PUBLISHED
+        ? "Published! Your course is now in the catalog."
+        : "Saved as a draft. Only you can see it."
+    )
     if (result) {
       goToCourses()
     }

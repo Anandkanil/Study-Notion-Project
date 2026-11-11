@@ -3,7 +3,6 @@ import { apiConnector } from '../apiconnector';
 import { catalogData } from '../apis';
 
 const getCatalogPageData = async (categoryId) => {
-    const toastId = toast.loading('Loading...');
     let result = [];
     try {
         const response = await apiConnector("POST", catalogData.CATALOGPAGEDATA_API, { categoryId });
@@ -16,7 +15,6 @@ const getCatalogPageData = async (categoryId) => {
         toast.error(error?.response?.data?.message || "Failed to fetch the category data");
         result = error.response?.data; // Still assign `error.response?.data` for further debugging
     } finally {
-        toast.dismiss(toastId); // Dismiss the loading toast
         return result; // Return the result in all cases
     }
 };
