@@ -52,6 +52,11 @@ const createCourse = async (req, res) => {
         data:{courseName,courseDescription,whatYouWillLearn,price}
       })
     }
+    const priceNumber = Number(price)
+    if (!Number.isInteger(priceNumber) || priceNumber < 0) {
+      return res.status(400).json({ success: false, message: "Price must be a whole number of rupees, 0 or more." })
+    }
+    price = priceNumber
     if (!status || status === undefined) {
       status = "Draft"
     }
@@ -544,6 +549,12 @@ const editCourse = async (req, res) => {
     // content are never taken from the request.
     const EDITABLE = ["courseName", "courseDescription", "whatYouWillLearn", "price", "tags", "instructions", "status"]
     const JSON_FIELDS = ["tags", "instructions"]
+    if (updates.price !== undefined) {
+      const p = Number(updates.price)
+      if (!Number.isInteger(p) || p < 0) {
+        return res.status(400).json({ success: false, message: "Price must be a whole number of rupees, 0 or more." })
+      }
+    }
     for (const key of EDITABLE) {
       if (updates[key] === undefined) continue
       course[key] = JSON_FIELDS.includes(key) ? JSON.parse(updates[key]) : updates[key]

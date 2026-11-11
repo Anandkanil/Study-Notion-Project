@@ -12,10 +12,10 @@ exports.updateProfile = async (req, res) => {
   const {firstName,lastName, gender, dateOfBirth, about, contactNumber } = req.body;
   const userId = req.user.userId;
 
-  if (!contactNumber) {
+  if (contactNumber && !/^\+?[0-9]{10,13}$/.test(String(contactNumber))) {
     return res.status(400).json({
       success: false,
-      message: "Contact number is required.",
+      message: "Enter a valid phone number (10 to 13 digits).",
     });
   }
 
@@ -265,7 +265,8 @@ exports.getEnrolledCourses = async (req, res) => {
         courseID: userDetails.courses[i]._id,
         userId: userId,
       })
-      courseProgressCount = courseProgressCount?.completedVideos.length
+      userDetails.courses[i].completedVideos = (courseProgressCount?.completedVideos || []).map(String)
+      courseProgressCount = courseProgressCount?.completedVideos.length || 0
       if (SubsectionLength === 0) {
         userDetails.courses[i].progressPercentage = 100
       } else {

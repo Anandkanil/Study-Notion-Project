@@ -19,7 +19,7 @@ const StatsComponenet = () => {
                 <h1 className="text-[30px] font-bold text-richblack-5">
                   {data.count}
                 </h1>
-                <h2 className="font-semibold text-[16px] text-richblack-500">
+                <h2 className="font-semibold text-[16px] text-muted">
                   {data.label}
                 </h2>
               </div>

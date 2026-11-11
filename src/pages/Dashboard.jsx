@@ -1,24 +1,19 @@
-import React from 'react'
-import { useSelector } from 'react-redux'
-import { Outlet } from 'react-router-dom';
-import Sidebar from '../components/core/Dashboard/Sidebar';
+import React, { Suspense } from "react";
+import { Outlet } from "react-router-dom";
+import Sidebar from "../components/core/Dashboard/Sidebar";
+import PageSkeleton from "../components/common/PageSkeleton";
 
-const Dashboard = () => {
-    const {loading:authLoading}=useSelector((state)=>state.auth.loading); 
-    const {loading:profileLoading}=useSelector((state)=>state.profile.loading); 
-
-    if(profileLoading || authLoading)return(<div>Loading not completed</div>)
-  return (
-    <div className='relative flex h-[calc(100vh-4rem)]'>
-        <Sidebar />
-        <div className='min-h-[calc(100vh-4rem)] overflow-auto w-full'>
-            <div className='mx-auto w-11/12 max-w-[1000px] pt-10'>
-                <Outlet />
-            </div>
-        </div>
-
+const Dashboard = () => (
+  <div className="flex flex-1 flex-col lg:flex-row">
+    <Sidebar />
+    <div className="min-w-0 flex-1">
+      <div className="mx-auto w-full max-w-5xl px-5 py-8 sm:px-8 lg:py-10">
+        <Suspense fallback={<PageSkeleton />}>
+          <Outlet />
+        </Suspense>
+      </div>
     </div>
-  )
-}
+  </div>
+);
 
-export default Dashboard
+export default Dashboard;

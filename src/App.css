@@ -231,13 +231,13 @@ details > summary::-webkit-details-marker {
 /* Swiper CSS Ends */
 
 .blackButton {
-  @apply cursor-pointer rounded-md bg-richblack-800 px-[20px] py-[8px] font-semibold text-richblack-5;
+  @apply cursor-pointer rounded-xl border border-richblack-600 bg-surface px-5 py-2.5 font-semibold text-ink hover:bg-raised;
 }
 .lable-style {
-  @apply text-[14px] text-richblack-5;
+  @apply text-sm font-semibold text-ink;
 }
 .form-style {
-  @apply rounded-lg bg-richblack-700 p-3 text-[16px] leading-[24px] text-richblack-5 shadow-[0_1px_0_0] shadow-white/50 placeholder:text-richblack-400 focus:outline-none;
+  @apply w-full rounded-xl border border-line bg-surface px-4 py-3 text-base text-ink placeholder:text-richblack-400 focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/30;
 }
 .section_heading {
   @apply text-2xl font-bold text-richblack-5 lg:text-4xl;

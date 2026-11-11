@@ -197,21 +197,25 @@ export default function CourseInformationForm() {
         <div className="relative">
           <input
             id="coursePrice"
-            placeholder="Enter Course Price"
+            type="number"
+            inputMode="numeric"
+            min="0"
+            step="1"
+            placeholder="e.g. 999"
+            aria-invalid={errors.coursePrice ? true : undefined}
+            aria-describedby={errors.coursePrice ? "coursePrice-err" : undefined}
             {...register("coursePrice", {
-              required: true,
+              required: "Enter a price in rupees (0 for a free course).",
               valueAsNumber: true,
-              pattern: {
-                value: /^(0|[1-9]\d*)(\.\d+)?$/,
-              },
+              validate: (v) => (Number.isInteger(v) && v >= 0) || "Enter a whole number of rupees, 0 or more.",
             })}
             className="form-style w-full !pl-12"
           />
-          <HiOutlineCurrencyRupee className="absolute left-3 top-1/2 inline-block -translate-y-1/2 text-2xl text-richblack-400" />
+          <HiOutlineCurrencyRupee aria-hidden="true" className="absolute left-3 top-1/2 inline-block -translate-y-1/2 text-2xl text-richblack-400" />
         </div>
         {errors.coursePrice && (
-          <span className="ml-2 text-xs tracking-wide text-pink-200">
-            Course Price is required
+          <span id="coursePrice-err" className="ml-2 text-sm font-medium text-danger">
+            {errors.coursePrice.message || "Enter a valid price."}
           </span>
         )}
       </div>

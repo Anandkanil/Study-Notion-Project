@@ -113,9 +113,10 @@ export default function EditProfile() {
                 name="gender"
                 id="gender"
                 className="form-style"
-                {...register("gender", { required: true })}
-                defaultValue={user?.additionalDetails?.gender}
+                {...register("gender")}
+                defaultValue={user?.additionalDetails?.gender || ""}
               >
+                <option value="">Select…</option>
                 {genders.map((ele, i) => {
                   return (
                     <option key={i} value={ele}>
@@ -144,12 +145,7 @@ export default function EditProfile() {
                 placeholder="Enter Contact Number"
                 className="form-style"
                 {...register("contactNumber", {
-                  required: {
-                    value: true,
-                    message: "Please enter your Contact Number.",
-                  },
-                  maxLength: { value: 12, message: "Invalid Contact Number" },
-                  minLength: { value: 10, message: "Invalid Contact Number" },
+                  pattern: { value: /^\+?[0-9]{10,13}$/, message: "Enter 10 to 13 digits, optionally starting with +." },
                 })}
                 defaultValue={user?.additionalDetails?.contactNumber}
               />
