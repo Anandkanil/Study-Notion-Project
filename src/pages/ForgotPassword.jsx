@@ -1,76 +1,56 @@
-import React, { useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-import { Link } from 'react-router-dom';
-import { getPasswordResetToken } from '../services/operations/authAPI';
-import { IoArrowBack } from 'react-icons/io5';
+import React, { useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { Link } from "react-router-dom";
+import { getPasswordResetToken } from "../services/operations/authAPI";
+import { Button, Field } from "../components/ui";
 
 const ForgotPassword = () => {
-    const { loading } = useSelector((state) => state.auth);
-    const [emailSent, setEmailSent] = useState(false);
-    const [email, setEmail] = useState("");
-    const dispatch = useDispatch();
+  const { loading } = useSelector((state) => state.auth);
+  const [emailSent, setEmailSent] = useState(false);
+  const [email, setEmail] = useState("");
+  const dispatch = useDispatch();
 
-    const handleOnSubmit = (e) => {
-        e.preventDefault();
-        dispatch(getPasswordResetToken(email, setEmailSent));
-    };
+  const onSubmit = (e) => {
+    e.preventDefault();
+    dispatch(getPasswordResetToken(email.trim(), setEmailSent));
+  };
 
-    return (
-        <div className="w-full min-h-screen flex justify-center items-center bg-gray-800 py-6">
-            {
-                loading ? (
-                    <div className="text-white font-bold text-xl">Loading...</div>
-                ) : (
-                    <div className="w-full max-w-md p-8 bg-richblack-800 rounded-xl shadow-lg">
-                        <h1 className="text-richblack-5 text-3xl font-semibold mb-6">
-                            { !emailSent ? "Reset your Password" : "Check Your Email" }
-                        </h1>
+  return (
+    <div className="mx-auto flex w-full max-w-md flex-1 flex-col justify-center px-6 py-14">
+      <h1 className="font-display text-3xl font-bold text-ink">{emailSent ? "Check your email" : "Reset your password"}</h1>
+      <p className="mt-3 text-lg text-muted" role={emailSent ? "status" : undefined}>
+        {emailSent ? (
+          <>
+            If an account exists for <strong className="font-semibold text-ink">{email}</strong>, we've sent a link to reset the password. The link works once and expires in 15 minutes.
+          </>
+        ) : (
+          "Enter the email you signed up with and we'll send you a link to choose a new password."
+        )}
+      </p>
 
-                        <p className="text-richblack-5 mb-6">
-                            {
-                                !emailSent ? 
-                                "Have no fear. We'll email you instructions to reset your password. If you don't have access to your email, we can try account recovery." :
-                                `We have sent the reset email to ${email}`
-                            }
-                        </p>
+      <form onSubmit={onSubmit} className="mt-8 flex flex-col gap-5">
+        {!emailSent && (
+          <Field
+            label="Email address"
+            type="email"
+            name="email"
+            autoComplete="email"
+            required
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="you@example.com"
+          />
+        )}
+        <Button type="submit" size="lg" variant={emailSent ? "secondary" : "primary"} loading={loading} loadingText="Sending…">
+          {emailSent ? "Send the link again" : "Send reset link"}
+        </Button>
+      </form>
 
-                        <form onSubmit={handleOnSubmit} className="flex flex-col gap-6 font-inter text-white">
-                            {
-                                !emailSent && (
-                                    <label className="text-sm font-medium">
-                                        <p>Email Address <span className='text-red'>*</span></p>
-                                        <input
-                                            required
-                                            type="email"
-                                            name="email"
-                                            value={email}
-                                            onChange={(e) => setEmail(e.target.value)}
-                                            placeholder="Enter Your Email Address"
-                                            className="p-3 px-6 bg-richblack-700 border-b mt-3 border-b-richblack-500 rounded-md text-white font-semibold shadow-sm w-full placeholder:text-gray-400 focus:ring-2 focus:ring-yellow-500"
-                                        />
-                                    </label>
-                                )
-                            }
-
-                            <button
-                                type="submit"
-                                className="bg-yellow-50 mt-4 py-3 px-8 rounded-[8px] font-bold text-richblack-900 shadow-md hover:bg-yellow-300 transition"
-                            >
-                                { !emailSent ? "Reset Password" : "Resend Email" }
-                            </button>
-                        </form>
-
-                        <div className="flex justify-between items-center mt-6">
-                            <Link to="/login" className="text-white flex gap-2 items-center">
-                            <IoArrowBack />
-                                <p>Back to Login</p>
-                            </Link>
-                        </div>
-                    </div>
-                )
-            }
-        </div>
-    );
+      <Link to="/login" className="mt-6 font-semibold text-muted hover:text-ink">
+        Back to log in
+      </Link>
+    </div>
+  );
 };
 
 export default ForgotPassword;

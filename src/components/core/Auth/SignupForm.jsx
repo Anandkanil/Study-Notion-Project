@@ -1,219 +1,117 @@
-import React, { useState } from 'react';
-// import toast from 'react-hot-toast';
-// import { useNavigate } from 'react-router-dom';
-// import { AiOutlineEyeInvisible, AiOutlineEye } from "react-icons/ai";
-// import { useDispatch, useSelector } from 'react-redux';
-// import { setSignupData } from '../../../slices/authSlice';
-// import { sendOtp } from '../../../services/operations/authAPI';
+import React, { useMemo, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 
+import { sendOtp } from "../../../services/operations/authAPI";
+import { setSignupData } from "../../../slices/authSlice";
+import { ACCOUNT_TYPE } from "../../../utils/constants";
+import { Button, Field, PasswordField } from "../../ui";
 
-import { toast } from "react-hot-toast"
-import { AiOutlineEye, AiOutlineEyeInvisible } from "react-icons/ai"
-import { useDispatch } from "react-redux"
-import { useNavigate } from "react-router-dom"
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-import { sendOtp } from "../../../services/operations/authAPI"
-import { setSignupData } from "../../../slices/authSlice"
-import { ACCOUNT_TYPE } from "../../../utils/constants"
-import Tab from "../../common/Tab"
+const validate = ({ firstName, lastName, email, password, confirmPassword }) => {
+  const e = {};
+  if (!firstName.trim()) e.firstName = "Enter your first name.";
+  if (!lastName.trim()) e.lastName = "Enter your last name.";
+  if (!EMAIL_RE.test(email.trim())) e.email = "Enter a valid email address, like name@example.com.";
+  if (password.length < 8) e.password = "Use at least 8 characters.";
+  if (confirmPassword !== password) e.confirmPassword = "Passwords don't match.";
+  return e;
+};
 
 export default function SignupForm() {
-    
-  const navigate = useNavigate()
-  const dispatch = useDispatch()
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
+  const { loading } = useSelector((state) => state.auth);
+  const [params] = useSearchParams();
 
-  // student or instructor
-  const [accountType, setAccountType] = useState(ACCOUNT_TYPE.STUDENT)
+  const [accountType, setAccountType] = useState(
+    params.get("role") === "instructor" ? ACCOUNT_TYPE.INSTRUCTOR : ACCOUNT_TYPE.STUDENT
+  );
+  const [formData, setFormData] = useState({ firstName: "", lastName: "", email: "", password: "", confirmPassword: "" });
+  const [touched, setTouched] = useState({});
+  const [submitted, setSubmitted] = useState(false);
 
-  const [formData, setFormData] = useState({
-    firstName: "",
-    lastName: "",
-    email: "",
-    password: "",
-    confirmPassword: "",
-  })
+  const errors = useMemo(() => validate(formData), [formData]);
+  const show = (name) => (submitted || touched[name]) && errors[name];
 
-  const [showPassword, setShowPassword] = useState(false)
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
+  const onChange = (e) => setFormData((d) => ({ ...d, [e.target.name]: e.target.value }));
+  const onBlur = (e) => setTouched((t) => ({ ...t, [e.target.name]: true }));
 
-  const { firstName, lastName, email, password, confirmPassword } = formData
-
-  // Handle input fields, when some value changes
-  const handleOnChange = (e) => {
-    setFormData((prevData) => ({
-      ...prevData,
-      [e.target.name]: e.target.value,
-    }))
-  }
-
-  // Handle Form Submission
-  const handleOnSubmit = (e) => {
-    e.preventDefault()
-
-    if (password !== confirmPassword) {
-      toast.error("Passwords Do Not Match")
-      return
+  const onSubmit = (e) => {
+    e.preventDefault();
+    setSubmitted(true);
+    if (Object.keys(errors).length) {
+      const first = document.querySelector('[aria-invalid="true"]');
+      first?.focus();
+      return;
     }
-    const signupData = {
-      ...formData,
-      accountType,
-    }
+    const data = { ...formData, email: formData.email.trim(), accountType };
+    dispatch(setSignupData(data));
+    dispatch(sendOtp(data.email, navigate));
+  };
 
-    // Setting signup data to state
-    // To be used after otp verification
-    dispatch(setSignupData(signupData))
-    // Send OTP to user for verification
-    // dispatch(sendOtp(formData.email, navigate))
-    dispatch(sendOtp(formData.email,navigate))
-
-    // Reset
-    setFormData({
-      firstName: "",
-      lastName: "",
-      email: "",
-      password: "",
-      confirmPassword: "",
-    })
-    setAccountType(ACCOUNT_TYPE.STUDENT)
-  }
-
-  // data to pass to Tab component
-  const tabData = [
-    {
-      id: 1,
-      tabName: "Student",
-      type: ACCOUNT_TYPE.STUDENT,
-    },
-    {
-      id: 2,
-      tabName: "Instructor",
-      type: ACCOUNT_TYPE.INSTRUCTOR,
-    },
-  ]
+  const roles = [
+    [ACCOUNT_TYPE.STUDENT, "I want to learn"],
+    [ACCOUNT_TYPE.INSTRUCTOR, "I want to teach"],
+  ];
 
   return (
-    <div>
-      {/* Tab */}
-      <Tab tabData={tabData} field={accountType} setField={setAccountType} />
-      {/* Form */}
-      <form onSubmit={handleOnSubmit} className="flex w-full flex-col gap-y-4">
-        <div className="flex gap-x-4">
-          <label>
-            <p className="mb-1 text-[0.875rem] leading-[1.375rem] text-richblack-5">
-              First Name <sup className="text-pink-200">*</sup>
-            </p>
-            <input
-              required
-              type="text"
-              name="firstName"
-              value={firstName}
-              onChange={handleOnChange}
-              placeholder="Enter first name"
-              style={{
-                boxShadow: "inset 0px -1px 0px rgba(255, 255, 255, 0.18)",
-              }}
-              className="w-full rounded-[0.5rem] bg-richblack-800 p-[12px] text-richblack-5"
-            />
-          </label>
-          <label>
-            <p className="mb-1 text-[0.875rem] leading-[1.375rem] text-richblack-5">
-              Last Name <sup className="text-pink-200">*</sup>
-            </p>
-            <input
-              required
-              type="text"
-              name="lastName"
-              value={lastName}
-              onChange={handleOnChange}
-              placeholder="Enter last name"
-              style={{
-                boxShadow: "inset 0px -1px 0px rgba(255, 255, 255, 0.18)",
-              }}
-              className="w-full rounded-[0.5rem] bg-richblack-800 p-[12px] text-richblack-5"
-            />
-          </label>
-        </div>
-        <label className="w-full">
-          <p className="mb-1 text-[0.875rem] leading-[1.375rem] text-richblack-5">
-            Email Address <sup className="text-pink-200">*</sup>
-          </p>
-          <input
-            required
-            type="text"
-            name="email"
-            value={email}
-            onChange={handleOnChange}
-            placeholder="Enter email address"
-            style={{
-              boxShadow: "inset 0px -1px 0px rgba(255, 255, 255, 0.18)",
-            }}
-            className="w-full rounded-[0.5rem] bg-richblack-800 p-[12px] text-richblack-5"
-          />
-        </label>
-        <div className="flex gap-x-4">
-          <label className="relative">
-            <p className="mb-1 text-[0.875rem] leading-[1.375rem] text-richblack-5">
-              Create Password <sup className="text-pink-200">*</sup>
-            </p>
-            <input
-              required
-              type={showPassword ? "text" : "password"}
-              name="password"
-              value={password}
-              onChange={handleOnChange}
-              placeholder="Enter Password"
-              style={{
-                boxShadow: "inset 0px -1px 0px rgba(255, 255, 255, 0.18)",
-              }}
-              className="w-full rounded-[0.5rem] bg-richblack-800 p-[12px] pr-10 text-richblack-5"
-            />
-            <span
-              onClick={() => setShowPassword((prev) => !prev)}
-              className="absolute right-3 top-[38px] z-[10] cursor-pointer"
+    <form onSubmit={onSubmit} className="flex flex-col gap-5" noValidate>
+      <fieldset className="m-0 border-0 p-0">
+        <legend className="mb-2 text-sm font-semibold text-ink">Account type</legend>
+        <div className="grid grid-cols-2 gap-1 rounded-xl border border-line bg-surface p-1">
+          {roles.map(([type, label]) => (
+            <label
+              key={type}
+              className={`cursor-pointer rounded-lg px-3 py-2.5 text-center font-semibold transition-colors has-[:focus-visible]:outline has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-accent ${
+                accountType === type ? "bg-accent text-on-accent" : "text-muted hover:text-ink"
+              }`}
             >
-              {showPassword ? (
-                <AiOutlineEyeInvisible fontSize={24} fill="#AFB2BF" />
-              ) : (
-                <AiOutlineEye fontSize={24} fill="#AFB2BF" />
-              )}
-            </span>
-          </label>
-          <label className="relative">
-            <p className="mb-1 text-[0.875rem] leading-[1.375rem] text-richblack-5">
-              Confirm Password <sup className="text-pink-200">*</sup>
-            </p>
-            <input
-              required
-              type={showConfirmPassword ? "text" : "password"}
-              name="confirmPassword"
-              value={confirmPassword}
-              onChange={handleOnChange}
-              placeholder="Confirm Password"
-              style={{
-                boxShadow: "inset 0px -1px 0px rgba(255, 255, 255, 0.18)",
-              }}
-              className="w-full rounded-[0.5rem] bg-richblack-800 p-[12px] pr-10 text-richblack-5"
-            />
-            <span
-              onClick={() => setShowConfirmPassword((prev) => !prev)}
-              className="absolute right-3 top-[38px] z-[10] cursor-pointer"
-            >
-              {showConfirmPassword ? (
-                <AiOutlineEyeInvisible fontSize={24} fill="#AFB2BF" />
-              ) : (
-                <AiOutlineEye fontSize={24} fill="#AFB2BF" />
-              )}
-            </span>
-          </label>
+              <input
+                type="radio"
+                name="accountType"
+                value={type}
+                checked={accountType === type}
+                onChange={() => setAccountType(type)}
+                className="sr-only"
+              />
+              {label}
+            </label>
+          ))}
         </div>
-        <button
-          type="submit"
-          className="mt-6 rounded-[8px] bg-yellow-50 py-[8px] px-[12px] font-medium text-richblack-900"
-        >
-          Create Account
-        </button>
-      </form>
-    </div>
-  )
-    
+      </fieldset>
+
+      <div className="grid gap-5 sm:grid-cols-2">
+        <Field label="First name" name="firstName" autoComplete="given-name" required value={formData.firstName} onChange={onChange} onBlur={onBlur} error={show("firstName")} />
+        <Field label="Last name" name="lastName" autoComplete="family-name" required value={formData.lastName} onChange={onChange} onBlur={onBlur} error={show("lastName")} />
+      </div>
+      <Field
+        label="Email address"
+        type="email"
+        name="email"
+        autoComplete="email"
+        required
+        value={formData.email}
+        onChange={onChange}
+        onBlur={onBlur}
+        error={show("email")}
+        hint="We'll send a 6-digit code to confirm it."
+      />
+      <div className="grid gap-5 sm:grid-cols-2">
+        <PasswordField label="Password" name="password" autoComplete="new-password" required value={formData.password} onChange={onChange} onBlur={onBlur} error={show("password")} hint="At least 8 characters." />
+        <PasswordField label="Confirm password" name="confirmPassword" autoComplete="new-password" required value={formData.confirmPassword} onChange={onChange} onBlur={onBlur} error={show("confirmPassword")} />
+      </div>
+
+      <Button type="submit" size="lg" loading={loading} loadingText="Sending code…">
+        Create account
+      </Button>
+      <p className="text-center text-muted">
+        Already have an account?{" "}
+        <Link to="/login" className="font-semibold text-accent-text hover:underline">
+          Log in
+        </Link>
+      </p>
+    </form>
+  );
 }

@@ -101,7 +101,8 @@ function Home() {
         <PlayerPreview />
       </section>
 
-      {/* Subjects */}
+      {/* Subjects (hidden if they failed to load; the retry below covers it) */}
+      {(cats === null || cats.length > 0) && (
       <section aria-labelledby="home-subjects" className="mx-auto w-full max-w-6xl px-6 py-8">
         <h2 id="home-subjects" className="font-display text-2xl font-medium text-ink">
           Pick a subject
@@ -123,6 +124,7 @@ function Home() {
               ))}
         </div>
       </section>
+      )}
 
       {/* Most enrolled */}
       <section aria-labelledby="home-popular" className="mx-auto w-full max-w-6xl px-6 py-10">

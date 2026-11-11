@@ -1,43 +1,59 @@
-import React from 'react'
-import frameImage from '../../../assets/Images/frame.png'
-import LoginForm from './LoginForm';
-import SignupForm from './SignupForm';
-// import { FcGoogle } from "react-icons/fc";
-const Template= ({title,desc1,desc2,image,formType,setIsLoggedIn})=> {
+import React from "react";
+import LoginForm from "./LoginForm";
+import SignupForm from "./SignupForm";
+
+const POINTS = [
+  "Courses in web development, cloud, machine learning, UI/UX and security",
+  "Pay once with UPI, card or net banking — no subscription",
+  "Your progress saves after every lesson, on any device",
+];
+
+/** Two-column layout shared by Log in and Sign up. */
+export function AuthLayout({ title, subtitle, children }) {
   return (
-    <div className='flex justify-between w-11/12 max-w-[1160px] mx-auto py-12 flex-col-reverse gap-y-12 md:gap-y-0 md:gap-x-12 md:flex-row mt-12'>
-    {/* left part div */}
-        <div className='w-11/12 max-w-[450px] mx-auto '>
-            <h1 className='text-richblack-5 font-semibold text-[1.875rem] leading-[2.375rem]'>{title}</h1>
-            <p className='text-[1.125rem] leading-[1.625rem] mt-4'>
-            <span className='text-richblack-100'>{desc1}</span>
-            <br></br>
-            <span className='text-blue-100 italic'>{desc2}</span>
-            </p>
-          {
-            formType==="signup"?<SignupForm setIsLoggedIn={setIsLoggedIn}/>:<LoginForm setIsLoggedIn={setIsLoggedIn}/>
-          }
-          {/* <div className='w-full flex items-center gap-x-2 my-4'>
-            <div className='flex-1 h-[1px] bg-richblack-700'></div>
-            <p className='text-white'>OR</p>
-            <div className='flex-1 h-[1px] bg-richblack-700'></div>
-          </div>
-          <button className='w-full flex justify-center items-center gap-x-2 py-[8px] px-[12px] rounded-[8px] mt-6 font-medium text-richblack-100 border border-richblack-700'>
-            <FcGoogle></FcGoogle>
-            <p>Sign In with Google</p>
-          </button>   */}
+    <div className="mx-auto grid w-full max-w-6xl flex-1 items-start gap-12 px-6 py-12 md:grid-cols-[minmax(0,460px)_1fr] md:py-16">
+      <div className="flex flex-col gap-2">
+        <h1 className="font-display text-3xl font-bold text-ink sm:text-[2.1rem]">{title}</h1>
+        {subtitle && <p className="text-lg text-muted">{subtitle}</p>}
+        <div className="mt-6">{children}</div>
+      </div>
 
-        </div>
-
-{/* right part div  */}
-        <div className='p-7'>
-            <div className='relative  border-red-600'>
-            <img className='relative top-0 left-0 z-5 ' src={frameImage} width={558} height={504} loading='lazy' alt='Pattern' />
-            <img className='absolute md:bottom-5 md:right-5 lg:bottom-5 lg:right-5 z-10 bottom-0 right-0' src={image} width={558} height={490} loading='lazy' alt='Students' />
+      <aside aria-label="Why StudyNotion" className="hidden rounded-3xl border border-line bg-surface p-8 md:block">
+        <div className="rounded-2xl bg-[rgb(14_17_40)] p-6" aria-hidden="true">
+          <div className="flex items-center gap-3">
+            <span className="grid h-12 w-12 place-items-center rounded-full bg-accent">
+              <svg width="18" height="18" viewBox="0 0 24 24">
+                <path d="M8 5l12 7-12 7z" fill="rgb(20 24 51)" />
+              </svg>
+            </span>
+            <div className="min-w-0 flex-1">
+              <p className="truncate font-semibold text-[#ECEAF7]">Resume at 12:40</p>
+              <div className="mt-2 h-1.5 rounded bg-[#2E3566]">
+                <div className="h-full w-[58%] rounded bg-accent" />
+              </div>
             </div>
+          </div>
         </div>
+        <ul className="mt-8 flex flex-col gap-4">
+          {POINTS.map((p) => (
+            <li key={p} className="flex gap-3 text-ink">
+              <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true" className="mt-0.5 shrink-0">
+                <circle cx="12" cy="12" r="11" className="fill-accent/20" />
+                <path d="M7 12.5l3.2 3.2L17 9" fill="none" className="stroke-accent-text" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+              {p}
+            </li>
+          ))}
+        </ul>
+      </aside>
     </div>
-  )
+  );
 }
+
+const Template = ({ title, desc1, formType }) => (
+  <AuthLayout title={title} subtitle={desc1}>
+    {formType === "signup" ? <SignupForm /> : <LoginForm />}
+  </AuthLayout>
+);
 
 export default Template;

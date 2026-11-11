@@ -68,6 +68,10 @@ exports.signUp = async function (req, res) {
         return res.status(400).json({ success: false, message: "Passwords do not match" });
     }
 
+    if (password.length < 8) {
+        return res.status(400).json({ success: false, message: "Password must be at least 8 characters" });
+    }
+
     // Admin accounts can never be created through public sign-up
     const SIGNUP_ROLES = ['Student', 'Instructor'];
     if (accountType && !SIGNUP_ROLES.includes(accountType)) {

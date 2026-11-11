@@ -1,102 +1,68 @@
 import React, { useState } from "react";
-import { AiOutlineEyeInvisible, AiOutlineEye } from "react-icons/ai";
 import { Link, useLocation, useNavigate } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
 import { login } from "../../../services/operations/authAPI";
-import { useDispatch } from "react-redux";
+import { Button, Field, PasswordField } from "../../ui";
 
 export default function LoginForm() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const location = useLocation();
+  const { loading } = useSelector((state) => state.auth);
+
   // Only same-site paths, so a crafted link can't redirect elsewhere
   const from = location.state?.from;
   const redirectTo = typeof from === "string" && from.startsWith("/") && !from.startsWith("//") ? from : undefined;
 
-  // State for form data
-  const [formData, setFormData] = useState({
-    email: "",
-    password: "",
-  });
+  const [formData, setFormData] = useState({ email: "", password: "" });
+  const onChange = (e) => setFormData((d) => ({ ...d, [e.target.name]: e.target.value }));
 
-  // State to toggle password visibility
-  const [showPassword, setShowPassword] = useState(false);
-
-  // Handler to update form data on input change
-  function changeHandler(e) {
-    const { name, value } = e.target;
-    setFormData({
-      ...formData,
-      [name]: value,
-    });
-  }
-
-  // Handler for form submission
-  function submitHandler(e) {
+  const onSubmit = (e) => {
     e.preventDefault();
-
-    if (formData.email.trim() && formData.password.trim()) {
-      dispatch(login(formData.email, formData.password, navigate, redirectTo));
+    if (formData.email.trim() && formData.password) {
+      dispatch(login(formData.email.trim(), formData.password, navigate, redirectTo));
     }
-  }
+  };
 
   return (
-    <form onSubmit={submitHandler} className="w-full flex flex-col gap-y-4 mt-6">
-      {/* Email Input */}
-      <label className="w-full flex flex-col gap-1">
-        <p className="text-[0.875rem] leading-[1.375rem] text-richblack-5 mb-1">
-          Email Address<span className="text-pink-200"> *</span>
+    <form onSubmit={onSubmit} className="flex flex-col gap-5" noValidate={false}>
+      {redirectTo && (
+        <p role="status" className="rounded-xl border border-line bg-surface px-4 py-3 text-sm text-muted">
+          Log in to continue to that page.
         </p>
-        <input
-          className="p-[12px] bg-richblack-800 rounded-[0.5rem] text-richblack-5 w-full"
-          name="email"
-          value={formData.email}
-          onChange={changeHandler}
-          type="email"
-          placeholder="Enter email address"
-          required
-        />
-      </label>
-
-      {/* Password Input */}
-      <label className="relative flex flex-col gap-1">
-        <p className="text-[0.875rem] leading-[1.375rem] text-richblack-5 mb-1">
-          Password<span className="text-pink-200"> *</span>
-        </p>
-        <input
+      )}
+      <Field
+        label="Email address"
+        type="email"
+        name="email"
+        autoComplete="email"
+        required
+        value={formData.email}
+        onChange={onChange}
+        placeholder="you@example.com"
+      />
+      <div className="flex flex-col gap-2">
+        <PasswordField
+          label="Password"
           name="password"
-          className="p-[12px] bg-richblack-800 rounded-[0.5rem] text-richblack-5 w-full"
-          value={formData.password}
-          onChange={changeHandler}
-          type={showPassword ? "text" : "password"}
-          placeholder="Enter password"
+          autoComplete="current-password"
           required
+          value={formData.password}
+          onChange={onChange}
         />
-        {/* Toggle Password Visibility */}
-        <span
-          className="absolute right-3 top-[38px] z-[10] cursor-pointer"
-          onClick={() => setShowPassword(!showPassword)}
-        >
-          {showPassword ? (
-            <AiOutlineEyeInvisible color="white" fontSize="24" />
-          ) : (
-            <AiOutlineEye color="white" fontSize="24" />
-          )}
-        </span>
-        {/* Forgot Password Link */}
-        <Link to="/forgot-password">
-          <p className="text-xs mt-1 text-blue-100 max-w-max ml-auto">
-            Forgot Password?
-          </p>
+        <Link to="/forgot-password" className="self-end text-sm font-semibold text-accent-text hover:underline">
+          Forgot password?
         </Link>
-      </label>
-
-      {/* Submit Button */}
-      <button
-        className="bg-yellow-50 font-semibold py-[8px] px-[12px] rounded-[8px] mt-6 text-richblack-900"
-        type="submit"
-      >
-        Sign In
-      </button>
+      </div>
+      <Button type="submit" loading={loading} loadingText="Logging in…" size="lg">
+        Log in
+      </Button>
+      <p className="text-center text-muted">
+        New to StudyNotion?{" "}
+        <Link to="/signup" className="font-semibold text-accent-text hover:underline">
+          Create an account
+        </Link>
+      </p>
     </form>
   );
 }
