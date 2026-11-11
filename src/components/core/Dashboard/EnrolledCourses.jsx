@@ -5,6 +5,7 @@ import { Link } from "react-router-dom";
 import { apiConnector } from "../../../services/apiconnector";
 import { profileEndpoints } from "../../../services/apis";
 import { Button, EmptyState, buttonClass } from "../../ui";
+import { formatClock, getLastLesson, getPosition } from "../../../utils/learningMemory";
 
 /** First lesson not yet completed (or the first lesson, for a finished course). */
 const nextLesson = (course) => {
@@ -56,13 +57,26 @@ export default function EnrolledCourses() {
     load();
   }, [load]);
 
-  // The course to resume: the most progressed one that isn't finished
+  // The lesson to resume: the one last opened on this device, if that course is
+  // still in progress; otherwise the next lesson of the most progressed course.
   const resume = useMemo(() => {
-    const inProgress = (courses || []).filter((c) => (c.progressPercentage || 0) < 100 && countLessons(c) > 0);
+    const list = courses || [];
+    const last = getLastLesson(user?._id);
+    if (last) {
+      const course = list.find((c) => String(c._id) === String(last.courseId));
+      const section = course?.courseContent?.find((s) => String(s._id) === String(last.sectionId));
+      const sub = section?.subSection?.find((x) => String(x._id) === String(last.subSectionId));
+      if (course && sub && (course.progressPercentage || 0) < 100) {
+        return { course, ref: { section, sub }, position: getPosition(user?._id, sub._id) };
+      }
+    }
+    const inProgress = list.filter((c) => (c.progressPercentage || 0) < 100 && countLessons(c) > 0);
     inProgress.sort((a, b) => (b.progressPercentage || 0) - (a.progressPercentage || 0));
     const course = inProgress[0];
-    return course ? { course, ref: nextLesson(course) } : null;
-  }, [courses]);
+    if (!course) return null;
+    const ref = nextLesson(course);
+    return { course, ref, position: ref ? getPosition(user?._id, ref.sub._id) : 0 };
+  }, [courses, user?._id]);
 
   return (
     <div className="flex flex-col gap-8">
@@ -99,6 +113,7 @@ export default function EnrolledCourses() {
                 <p className="font-display text-xl font-medium text-ink">{resume.ref?.sub?.title || resume.course.courseName}</p>
                 <p className="text-muted">
                   {resume.course.courseName} · {Math.round(resume.course.progressPercentage || 0)}% complete
+                  {resume.position > 5 && <> · Resume at {formatClock(resume.position)}</>}
                 </p>
                 <Progress value={resume.course.progressPercentage} label={`${resume.course.courseName} progress`} />
               </div>
@@ -131,13 +146,18 @@ export default function EnrolledCourses() {
                   </>
                 );
                 return (
-                  <li key={course._id}>
+                  <li key={course._id} className="flex flex-col gap-2">
                     {href ? (
                       <Link to={href} className="flex h-full flex-col gap-3 rounded-2xl border border-line bg-surface p-4 transition-colors hover:bg-raised">
                         {body}
                       </Link>
                     ) : (
                       <div className="flex h-full flex-col gap-3 rounded-2xl border border-line bg-surface p-4">{body}</div>
+                    )}
+                    {pct >= 100 && lessons > 0 && (
+                      <Link to={`/dashboard/certificate/${course._id}`} className={buttonClass("secondary", "sm")}>
+                        View certificate
+                      </Link>
                     )}
                   </li>
                 );

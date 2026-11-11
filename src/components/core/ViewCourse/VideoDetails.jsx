@@ -1,16 +1,22 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import toast from "react-hot-toast";
 import { Link, useNavigate, useParams } from "react-router-dom";
 
 import { markLectureAsComplete } from "../../../services/operations/courseDetailsAPI";
 import { updateCompletedLectures } from "../../../slices/viewCourseSlice";
 import { Button, buttonClass } from "../../ui";
+import { formatClock, getPosition, setLastLesson, setPosition } from "../../../utils/learningMemory";
 
 const VideoDetails = () => {
   const { courseId, sectionId, subSectionId } = useParams();
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const { token } = useSelector((state) => state.auth);
+  const { user } = useSelector((state) => state.profile);
+  const videoRef = useRef(null);
+  const lastSaved = useRef(0);
+  const [resumedAt, setResumedAt] = useState(0);
   const { courseSectionData, courseEntireData, completedLectures } = useSelector((state) => state.viewCourse);
   const [saving, setSaving] = useState(false);
   const [ended, setEnded] = useState(false);
@@ -25,13 +31,63 @@ const VideoDetails = () => {
   const prev = index > 0 ? lessons[index - 1] : null;
   const next = index >= 0 && index < lessons.length - 1 ? lessons[index + 1] : null;
   const href = (l) => `/view-course/${courseId}/section/${l.sectionId}/sub-section/${l.sub._id}`;
-  const isDone = (completedLectures || []).map(String).includes(String(subSectionId));
+  const doneIds = (completedLectures || []).map(String);
+  const isDone = doneIds.includes(String(subSectionId));
+  const courseFinished = lessons.length > 0 && lessons.every((l) => doneIds.includes(String(l.sub._id)));
+
+  // Remember this lesson so "Resume" brings the learner straight back here
+  useEffect(() => {
+    if (!current || !user?._id) return;
+    setResumedAt(0);
+    lastSaved.current = 0;
+    setLastLesson(user._id, {
+      courseId,
+      sectionId,
+      subSectionId,
+      lessonTitle: current.sub.title,
+      courseName: courseEntireData?.courseName,
+      thumbnail: courseEntireData?.thumbnail,
+    });
+  }, [current, user?._id, courseId, sectionId, subSectionId, courseEntireData?.courseName, courseEntireData?.thumbnail]);
+
+  const savePosition = (force = false) => {
+    const v = videoRef.current;
+    if (!v || !user?._id) return;
+    if (!force && Math.abs(v.currentTime - lastSaved.current) < 5) return;
+    lastSaved.current = v.currentTime;
+    // Near the end counts as watched: start from the beginning next time
+    setPosition(user._id, subSectionId, v.duration && v.currentTime > v.duration - 10 ? 0 : v.currentTime);
+  };
+
+  const restoreAndMaybeResume = () => {
+    const v = videoRef.current;
+    if (!v || !user?._id) return;
+    const saved = getPosition(user._id, subSectionId);
+    if (saved > 5 && (!v.duration || saved < v.duration - 10)) {
+      v.currentTime = saved;
+      lastSaved.current = saved;
+      setResumedAt(saved);
+    }
+  };
+
+  const startOver = () => {
+    const v = videoRef.current;
+    if (v) v.currentTime = 0;
+    setResumedAt(0);
+    if (user?._id) setPosition(user._id, subSectionId, 0);
+  };
 
   const markComplete = async () => {
     if (isDone) return true;
     setSaving(true);
     const ok = await markLectureAsComplete({ courseId, subsectionId: subSectionId }, token);
-    if (ok) dispatch(updateCompletedLectures(subSectionId));
+    if (ok) {
+      dispatch(updateCompletedLectures(subSectionId));
+      const nowDone = new Set([...doneIds, String(subSectionId)]);
+      if (lessons.length && lessons.every((l) => nowDone.has(String(l.sub._id)))) {
+        toast.success("Course complete! Your certificate is ready.", { id: "course-complete" });
+      }
+    }
     setSaving(false);
     return ok;
   };
@@ -60,13 +116,18 @@ const VideoDetails = () => {
       <div className="relative overflow-hidden rounded-2xl border border-line bg-[rgb(8_10_24)]">
         <video
           key={current.sub._id}
+          ref={videoRef}
           src={current.sub.videoUrl}
           poster={courseEntireData?.thumbnail}
           controls
           playsInline
           preload="metadata"
+          onLoadedMetadata={restoreAndMaybeResume}
+          onTimeUpdate={() => savePosition()}
+          onPause={() => savePosition(true)}
           onEnded={() => {
             setEnded(true);
+            if (user?._id) setPosition(user._id, subSectionId, 0);
             markComplete();
           }}
           onPlay={() => setEnded(false)}
@@ -91,6 +152,15 @@ const VideoDetails = () => {
           </div>
         )}
       </div>
+
+      {resumedAt > 0 && (
+        <p role="status" className="-mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-muted">
+          <span>Resumed at {formatClock(resumedAt)}, where you stopped last time.</span>
+          <button type="button" onClick={startOver} className="font-semibold text-accent-text underline-offset-4 hover:underline">
+            Start from the beginning
+          </button>
+        </p>
+      )}
 
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div className="min-w-0">
@@ -128,10 +198,18 @@ const VideoDetails = () => {
             {isDone ? "Next lesson →" : "Complete and continue →"}
           </Button>
         ) : (
-          !isDone && (
+          !isDone ? (
             <Button onClick={markComplete} loading={saving} loadingText="Saving…">
               Finish the course
             </Button>
+          ) : courseFinished ? (
+            <Link to={`/dashboard/certificate/${courseId}`} className={buttonClass("primary")}>
+              Get your certificate
+            </Link>
+          ) : (
+            <Link to="/dashboard/enrolled-courses" className={buttonClass("secondary")}>
+              Back to My learning
+            </Link>
           )
         )}
       </nav>
