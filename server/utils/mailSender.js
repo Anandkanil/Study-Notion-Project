@@ -9,15 +9,28 @@ const nodemailer = require('nodemailer');
  */
 const SEND_TIMEOUT_MS = 10000;
 
+// Values pasted into a hosting dashboard often pick up quotes, spaces or a line break.
+const clean = (value) => (value || '').trim().replace(/^['"]+|['"]+$/g, '').trim();
+const BREVO_API_KEY = clean(process.env.BREVO_API_KEY);
+const MAIL_FROM = clean(process.env.MAIL_FROM) || clean(process.env.EMAIL_USER);
+
+// Safe diagnostic: shows the key's type and length, never the key itself.
+if (BREVO_API_KEY) {
+  const kind = BREVO_API_KEY.startsWith('xkeysib-') ? 'API key (correct type)'
+    : BREVO_API_KEY.startsWith('xsmtpsib-') ? 'SMTP key (wrong type: create an API key instead)'
+    : 'unrecognised format';
+  console.log(`Brevo email: ${kind}, ${BREVO_API_KEY.length} characters; sender ${MAIL_FROM || '(missing MAIL_FROM)'}`);
+}
+
 async function sendWithBrevo(to, subject, html) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), SEND_TIMEOUT_MS);
   try {
     const res = await fetch('https://api.brevo.com/v3/smtp/email', {
       method: 'POST',
-      headers: { 'api-key': process.env.BREVO_API_KEY, 'Content-Type': 'application/json', Accept: 'application/json' },
+      headers: { 'api-key': BREVO_API_KEY, 'Content-Type': 'application/json', Accept: 'application/json' },
       body: JSON.stringify({
-        sender: { name: process.env.MAIL_FROM_NAME || 'StudyNotion', email: process.env.MAIL_FROM || process.env.EMAIL_USER },
+        sender: { name: process.env.MAIL_FROM_NAME || 'StudyNotion', email: MAIL_FROM },
         to: [{ email: to }],
         subject,
         htmlContent: html,
@@ -48,7 +61,7 @@ async function sendWithSmtp(to, subject, html) {
 
 const mailSender = async (email, title, body) => {
   try {
-    if (process.env.BREVO_API_KEY) return await sendWithBrevo(email, title, body);
+    if (BREVO_API_KEY) return await sendWithBrevo(email, title, body);
     return await sendWithSmtp(email, title, body);
   } catch (error) {
     console.error('Error sending email:', error.name === 'AbortError' ? 'timed out' : error.message);
