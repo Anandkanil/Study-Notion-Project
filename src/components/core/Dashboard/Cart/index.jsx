@@ -2,7 +2,9 @@ import React, { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Link, useNavigate } from "react-router-dom";
 
-import { removeFromCart } from "../../../../slices/cartSlice";
+import toast from "react-hot-toast";
+
+import { addToCart, removeFromCart } from "../../../../slices/cartSlice";
 import { buyCourse } from "../../../../services/operations/studentFeaturesAPI";
 import GetAvgRating from "../../../../utils/avgRating";
 import { formatINR } from "../../../../utils/formatINR";
@@ -60,7 +62,27 @@ export default function Cart() {
                     <p className="text-lg font-bold text-ink">{formatINR(course.price)}</p>
                     <button
                       type="button"
-                      onClick={() => dispatch(removeFromCart(course._id))}
+                      onClick={() => {
+                        dispatch(removeFromCart(course._id));
+                        toast.success(
+                          (t) => (
+                            <span className="flex items-center gap-3">
+                              Removed from cart
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  toast.dismiss(t.id);
+                                  dispatch(addToCart(course));
+                                }}
+                                className="rounded-lg px-2 py-1 font-bold text-accent-text underline-offset-4 hover:underline"
+                              >
+                                Undo
+                              </button>
+                            </span>
+                          ),
+                          { id: `removed-${course._id}`, duration: 6000 }
+                        );
+                      }}
                       aria-label={`Remove ${course.courseName} from cart`}
                       className="rounded-lg px-3 py-2 text-sm font-semibold text-danger hover:bg-danger/10"
                     >

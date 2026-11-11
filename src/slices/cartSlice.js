@@ -51,8 +51,7 @@ const cartSlice = createSlice({
         localStorage.setItem("cart", JSON.stringify(state.cart))
         localStorage.setItem("total", JSON.stringify(state.total))
         localStorage.setItem("totalItems", JSON.stringify(state.totalItems))
-        // show toast
-        toast.success("Removed from cart")
+        // The Undo toast is shown by the cart page
       }
     },
     resetCart: (state) => {

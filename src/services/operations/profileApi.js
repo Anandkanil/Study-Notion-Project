@@ -24,7 +24,7 @@ export function getUserDetails(token, navigate) {
     } catch (error) {
       dispatch(logout(navigate))
       console.log("GET_USER_DETAILS API ERROR............", error)
-      toast.error("Could Not Get User Details")
+      toast.error("Your profile couldn't load. Refresh the page to try again.")
     }
     dispatch(setLoading(false))
   }

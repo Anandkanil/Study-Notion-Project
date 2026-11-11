@@ -1,6 +1,6 @@
 import React, { Suspense, lazy, useEffect } from "react";
 import { Navigate, Route, Routes, useLocation } from "react-router-dom";
-import { Toaster } from "react-hot-toast";
+import toast, { Toaster } from "react-hot-toast";
 import { useSelector } from "react-redux";
 import "./App.css";
 
@@ -78,6 +78,22 @@ function RequireRole({ role, children, fallback }) {
 }
 
 /** New page, start at the top (but keep in-page #anchors working). */
+/** Tells people once when the connection drops, instead of every action failing silently. */
+function useOfflineNotice() {
+  useEffect(() => {
+    const offline = () =>
+      toast.error("You're offline. Actions will work again when you reconnect.", { id: "connection", duration: Infinity });
+    const online = () => toast.success("You're back online", { id: "connection", duration: 3000 });
+    if (typeof navigator !== "undefined" && navigator.onLine === false) offline();
+    window.addEventListener("offline", offline);
+    window.addEventListener("online", online);
+    return () => {
+      window.removeEventListener("offline", offline);
+      window.removeEventListener("online", online);
+    };
+  }, []);
+}
+
 function useScrollToTop(pathname) {
   useEffect(() => {
     if (!window.location.hash) window.scrollTo({ top: 0, left: 0, behavior: "instant" });
@@ -89,6 +105,7 @@ function App() {
   const location = useLocation();
   useRouteTitle(location.pathname);
   useScrollToTop(location.pathname);
+  useOfflineNotice();
 
   const dashboardHome =
     user?.accountType === ACCOUNT_TYPE.INSTRUCTOR ? "/dashboard/instructor" : "/dashboard/enrolled-courses";
