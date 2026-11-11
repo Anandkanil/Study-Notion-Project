@@ -144,18 +144,19 @@ const createCourse = async (req, res) => {
 const getAllCourses = async (req, res) => {
     try {
         // Fetch all courses with optional population of related fields
-        const courses = await Course.find()
-            .populate('instructor', 'firstName lastName image') // Populate instructor's basic info
-            .populate('courseContent', 'sectionName lectures')  // Populate course content details
-            .populate('category', 'name')                       // Populate Category name
-            .populate('ratingAndReviews', 'rating review');     // Populate reviews and ratings
-
-        if (courses.length === 0) {
-            return res.status(404).json({
-                success: false,
-                message: "No courses found."
-            });
-        }
+        // Public list: published courses only, with a student count instead of student IDs
+        const found = await Course.find({ status: 'Published' })
+            .select('-studentsEnrolled')
+            .populate('instructor', 'firstName lastName image')
+            .populate('category', 'name')
+            .populate('ratingAndReviews', 'rating')
+            .lean();
+        const counts = await Course.aggregate([
+            { $match: { status: 'Published' } },
+            { $project: { n: { $size: { $ifNull: ['$studentsEnrolled', []] } } } },
+        ]);
+        const countById = new Map(counts.map((c) => [String(c._id), c.n]));
+        const courses = found.map((c) => ({ ...c, studentsCount: countById.get(String(c._id)) || 0 }));
 
         // Respond with the list of courses
         return res.status(200).json({
@@ -241,7 +242,13 @@ const getCourseDetails = async (req, res) => {
                     select: 'title timeDuration description',
                 }
             })
-            .populate('ratingAndReviews')
+            // Reviews with the reviewer's public name and photo only
+            .populate({
+                path: 'ratingAndReviews',
+                select: 'rating review createdAt user',
+                options: { sort: { createdAt: -1 } },
+                populate: { path: 'user', select: 'firstName lastName image' },
+            })
             .populate('category')
             // Only ids: the page just needs to know whether the viewer is enrolled
             .populate('studentsEnrolled', '_id');
