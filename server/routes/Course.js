@@ -8,6 +8,7 @@ const router = express.Router()
 const {
   createCourse,
   getAllCourses,
+  searchCourses,
   getCourseDetails,
   // editCourseStatus,
   getInstructorCourses,
@@ -74,6 +75,8 @@ router.post("/deleteSubSection", auth, isInstructor, requireCourseOwner, deleteS
 router.post("/addSubSection", auth, isInstructor, requireCourseOwner, createSubSection)
 // Get all Registered Courses
 router.get("/getAllCourses", getAllCourses)
+// Public course search
+router.get("/search", searchCourses)
 // Get Details for a Specific Courses
 router.post("/getCourseDetails", getCourseDetails)
 // Get Details for a Specific Courses
