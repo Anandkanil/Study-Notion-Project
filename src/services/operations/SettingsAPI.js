@@ -129,11 +129,13 @@ export async function changePassword(token, formData) {
 
     // Show success message
     toast.success("Password changed successfully!");
+    return true;
   } catch (error) {
     console.error("Error changing password:", error);
     const errorMessage =
       error.response?.data?.message || "Could not change password.";
     toast.error(errorMessage);
+    return false;
   } finally {
     // Dismiss the loading toast
     toast.dismiss(toastId);

@@ -1,122 +1,71 @@
-import { RiEditBoxLine } from "react-icons/ri"
-import { useSelector } from "react-redux"
-import { useNavigate } from "react-router-dom"
+import React from "react";
+import { useSelector } from "react-redux";
+import { Link } from "react-router-dom";
+import { formattedDate } from "../../../utils/dateFormatter";
+import { buttonClass } from "../../ui";
 
-import { formattedDate } from "../../../utils/dateFormatter"
-import IconBtn from "../../common/IconBtn"
+const Detail = ({ label, value }) => (
+  <div className="flex flex-col gap-1">
+    <dt className="text-sm text-muted">{label}</dt>
+    <dd className={value ? "font-semibold text-ink" : "text-muted"}>{value || "Not added"}</dd>
+  </div>
+);
 
 export default function MyProfile() {
-  const { user } = useSelector((state) => state.profile)
-  const navigate = useNavigate()
+  const { user } = useSelector((state) => state.profile);
+  const d = user?.additionalDetails || {};
+  const missing = [!d.about && "a short bio", !d.contactNumber && "a phone number", !d.dateOfBirth && "your birthday"].filter(Boolean);
 
   return (
-    <>
-      <h1 className="mb-14 text-3xl font-medium text-richblack-5">
-        My Profile
-      </h1>
-      <div className="flex items-center justify-between rounded-md border-[1px] border-richblack-700 bg-richblack-800 p-8 px-12">
-        <div className="flex items-center gap-x-4">
-          <img
-            src={user?.image}
-            alt={`profile-${user?.firstName}`}
-            className="aspect-square w-[78px] rounded-full object-cover"
-          />
-          <div className="space-y-1">
-            <p className="text-lg font-semibold text-richblack-5">
-              {user?.firstName + " " + user?.lastName}
-            </p>
-            <p className="text-sm text-richblack-300">{user?.email}</p>
-          </div>
-        </div>
-        <IconBtn
-          text="Edit"
-          onclick={() => {
-            navigate("/dashboard/settings")
-          }}
-        >
-          <RiEditBoxLine className="ml-2" />
-        </IconBtn>
+    <div className="flex flex-col gap-6">
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <h1 className="font-display text-3xl font-bold text-ink">Profile</h1>
+        <Link to="/dashboard/settings" className={buttonClass("secondary")}>
+          Edit profile
+        </Link>
       </div>
-      <div className="my-10 flex flex-col gap-y-10 rounded-md border-[1px] border-richblack-700 bg-richblack-800 p-8 px-12">
-        <div className="flex w-full items-center justify-between">
-          <p className="text-lg font-semibold text-richblack-5">About</p>
-          <IconBtn
-            text="Edit"
-            onclick={() => {
-              navigate("/dashboard/settings")
-            }}
-          >
-            <RiEditBoxLine className="ml-2" />
-          </IconBtn>
-        </div>
-        <p
-          className={`${
-            user?.additionalDetails?.about
-              ? "text-richblack-5"
-              : "text-richblack-400"
-          } text-sm font-medium`}
-        >
-          {user?.additionalDetails?.about ?? "Write Something About Yourself"}
-        </p>
-      </div>
-      <div className="my-10 flex flex-col gap-y-10 rounded-md border-[1px] border-richblack-700 bg-richblack-800 p-8 px-12">
-        <div className="flex w-full items-center justify-between">
-          <p className="text-lg font-semibold text-richblack-5">
-            Personal Details
+
+      <section className="flex flex-wrap items-center gap-5 rounded-2xl border border-line bg-surface p-6">
+        <img src={user?.image} alt="" className="h-20 w-20 rounded-2xl object-cover" />
+        <div className="min-w-0">
+          <p className="text-xl font-bold text-ink">
+            {user?.firstName} {user?.lastName}
           </p>
-          <IconBtn
-            text="Edit"
-            onclick={() => {
-              navigate("/dashboard/settings")
-            }}
-          >
-           <RiEditBoxLine className="ml-2" />
-          </IconBtn>
+          <p className="truncate text-muted">{user?.email}</p>
+          <p className="mt-2 inline-block rounded-md bg-raised px-2 py-0.5 text-sm font-semibold text-ink">{user?.accountType}</p>
         </div>
-        <div className="flex max-w-[500px] justify-between">
-          <div className="flex flex-col gap-y-5">
-            <div>
-              <p className="mb-2 text-sm text-muted">First Name</p>
-              <p className="text-sm font-medium text-richblack-5">
-                {user?.firstName}
-              </p>
-            </div>
-            <div>
-              <p className="mb-2 text-sm text-muted">Email</p>
-              <p className="text-sm font-medium text-richblack-5">
-                {user?.email}
-              </p>
-            </div>
-            <div>
-              <p className="mb-2 text-sm text-muted">Gender</p>
-              <p className="text-sm font-medium text-richblack-5">
-                {user?.additionalDetails?.gender ?? "Add Gender"}
-              </p>
-            </div>
-          </div>
-          <div className="flex flex-col gap-y-5">
-            <div>
-              <p className="mb-2 text-sm text-muted">Last Name</p>
-              <p className="text-sm font-medium text-richblack-5">
-                {user?.lastName}
-              </p>
-            </div>
-            <div>
-              <p className="mb-2 text-sm text-muted">Phone Number</p>
-              <p className="text-sm font-medium text-richblack-5">
-                {user?.additionalDetails?.contactNumber ?? "Add Contact Number"}
-              </p>
-            </div>
-            <div>
-              <p className="mb-2 text-sm text-muted">Date Of Birth</p>
-              <p className="text-sm font-medium text-richblack-5">
-                {formattedDate(user?.additionalDetails?.dateOfBirth) ??
-                  "Add Date Of Birth"}
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
-    </>
-  )
+      </section>
+
+      {missing.length > 0 && (
+        <p className="rounded-2xl border border-dashed border-richblack-600 bg-surface px-5 py-4 text-muted">
+          Your profile is missing {missing.join(", ")}.{" "}
+          <Link to="/dashboard/settings" className="font-semibold text-accent-text hover:underline">
+            Add them in settings
+          </Link>
+          {user?.accountType === "Instructor" ? " — learners see your bio on your course pages." : "."}
+        </p>
+      )}
+
+      <section aria-labelledby="pf-about" className="rounded-2xl border border-line bg-surface p-6">
+        <h2 id="pf-about" className="font-semibold text-ink">
+          About
+        </h2>
+        <p className={`mt-2 ${d.about ? "text-ink" : "text-muted"}`}>{d.about || "No bio yet."}</p>
+      </section>
+
+      <section aria-labelledby="pf-details" className="rounded-2xl border border-line bg-surface p-6">
+        <h2 id="pf-details" className="font-semibold text-ink">
+          Personal details
+        </h2>
+        <dl className="mt-4 grid gap-5 sm:grid-cols-2">
+          <Detail label="First name" value={user?.firstName} />
+          <Detail label="Last name" value={user?.lastName} />
+          <Detail label="Email" value={user?.email} />
+          <Detail label="Phone" value={d.contactNumber} />
+          <Detail label="Gender" value={d.gender} />
+          <Detail label="Date of birth" value={formattedDate(d.dateOfBirth)} />
+        </dl>
+      </section>
+    </div>
+  );
 }

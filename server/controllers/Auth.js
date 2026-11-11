@@ -248,6 +248,9 @@ exports.changePassword = async function (req, res) {
         if (!oldPassword || !newPassword ) {
             return res.status(400).json({ success: false, message: 'All fields are required' });
         }
+        if (String(newPassword).length < 8) {
+            return res.status(400).json({ success: false, message: 'New password must be at least 8 characters' });
+        }
 
         // Find the user by ID
         const user = await User.findById(userId);
