@@ -17,7 +17,6 @@ export default defineConfig({
         manualChunks: {
           react: ["react", "react-dom", "react-router-dom"],
           redux: ["@reduxjs/toolkit", "react-redux"],
-          charts: ["chart.js", "react-chartjs-2"],
         },
       },
     },
