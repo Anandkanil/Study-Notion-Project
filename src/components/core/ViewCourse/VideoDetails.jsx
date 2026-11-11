@@ -73,6 +73,12 @@ const VideoDetails = () => {
     }
   };
 
+  // If the profile arrives after the video's metadata, restore once it's here
+  useEffect(() => {
+    if (videoRef.current?.readyState >= 1 && lastSaved.current === 0) restoreAndMaybeResume();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?._id, subSectionId]);
+
   const startOver = () => {
     const v = videoRef.current;
     if (v) v.currentTime = 0;
