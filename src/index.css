@@ -1,3 +1,122 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* ===== Night Shift design tokens =====
+   Dark is the default; light follows the system setting or the user's choice
+   (data-theme on <html>, set by ThemeProvider). Values are RGB channels so
+   Tailwind opacity modifiers (bg-accent/20) work. */
+:root,
+[data-theme="dark"] {
+  --bg: 20 24 51;
+  --surface: 30 35 71;
+  --raised: 38 44 87;
+  --line: 46 53 102;
+  --ink: 236 234 247;
+  --muted: 169 168 200;
+  --accent: 245 184 65;
+  --on-accent: 20 24 51;
+  --success: 94 211 164;
+  --danger: 255 122 133;
+  --accent-text: 245 184 65;
+  --rb-5: 236 234 247;
+  --rb-25: 220 218 236;
+  --rb-50: 201 199 224;
+  --rb-100: 185 184 214;
+  --rb-200: 169 168 200;
+  --rb-300: 152 151 189;
+  --rb-400: 143 142 184;
+  --rb-500: 90 91 133;
+  --rb-600: 59 67 122;
+  --rb-700: 46 53 102;
+  --rb-800: 30 35 71;
+  --rb-900: 20 24 51;
+  --ye-5: 255 241 207;
+  --ye-25: 251 210 122;
+  --ye-50: 245 184 65;
+  --ye-100: 227 166 47;
+  --ye-200: 204 147 36;
+  --ye-300: 176 125 27;
+  --ye-400: 143 101 20;
+  --ye-500: 110 77 15;
+  --ye-600: 85 57 10;
+  --ye-700: 61 40 6;
+  --ye-800: 42 27 4;
+  --ye-900: 26 16 2;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 20px;
+  --shadow-pop: 0 30px 80px -30px rgb(245 184 65 / 0.33);
+  color-scheme: dark;
+}
+
+[data-theme="light"] {
+  --bg: 246 246 251;
+  --surface: 255 255 255;
+  --raised: 238 238 247;
+  --line: 220 221 236;
+  --ink: 20 24 51;
+  --muted: 85 86 122;
+  --accent: 245 184 65;
+  --on-accent: 20 24 51;
+  --success: 22 122 82;
+  --danger: 196 43 58;
+  --accent-text: 138 90 0;
+  --rb-5: 20 24 51;
+  --rb-25: 31 34 68;
+  --rb-50: 43 46 82;
+  --rb-100: 58 60 97;
+  --rb-200: 74 76 112;
+  --rb-300: 85 86 122;
+  --rb-400: 98 99 134;
+  --rb-500: 155 156 186;
+  --rb-600: 195 197 219;
+  --rb-700: 220 221 236;
+  --rb-800: 255 255 255;
+  --rb-900: 246 246 251;
+  --ye-5: 122 79 0;
+  --ye-25: 138 90 0;
+  --ye-50: 245 184 65;
+  --ye-100: 227 166 47;
+  --ye-200: 204 147 36;
+  --ye-300: 176 125 27;
+  --ye-400: 143 101 20;
+  --ye-500: 110 77 15;
+  --ye-600: 85 57 10;
+  --ye-700: 61 40 6;
+  --ye-800: 42 27 4;
+  --ye-900: 26 16 2;
+  --shadow-pop: 0 24px 60px -28px rgb(20 24 51 / 0.25);
+  color-scheme: light;
+}
+
+@layer base {
+  html { background: rgb(var(--bg)); color: rgb(var(--ink)); }
+  body { @apply font-sans antialiased; }
+  h1, h2, h3 { text-wrap: balance; }
+  :focus-visible { outline: 3px solid rgb(var(--accent)); outline-offset: 2px; border-radius: 4px; }
+  ::selection { background: rgb(var(--accent) / 0.35); }
+}
+
+/* Old classes that assume a dark page, kept readable in light mode */
+[data-theme="light"] .bg-yellow-50,
+[data-theme="light"] .bg-yellow-50 .text-richblack-900,
+[data-theme="light"] .bg-yellow-50.text-richblack-900 { color: rgb(var(--on-accent)); }
+[data-theme="light"] .text-yellow-50,
+[data-theme="light"] .text-yellow-25,
+[data-theme="light"] .text-yellow-100 { color: rgb(var(--accent-text)); }
+[data-theme="light"] .text-white { color: rgb(var(--ink)); }
+
+@layer components {
+  .skeleton {
+    background: linear-gradient(90deg, rgb(var(--line)) 0%, rgb(var(--raised)) 50%, rgb(var(--line)) 100%);
+    background-size: 200% 100%;
+    animation: sn-shimmer 1.4s ease-in-out infinite;
+    border-radius: var(--radius-sm);
+  }
+}
+@keyframes sn-shimmer { from { background-position: 200% 0; } to { background-position: -200% 0; } }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; scroll-behavior: auto !important; }
+}

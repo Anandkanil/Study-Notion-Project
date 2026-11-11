@@ -9,9 +9,9 @@ const Dashboard = () => {
 
     if(profileLoading || authLoading)return(<div>Loading not completed</div>)
   return (
-    <div className='relative flex h-[calc(100vh-3.5rem)]'>
+    <div className='relative flex h-[calc(100vh-4rem)]'>
         <Sidebar />
-        <div className='min-h-[calc(100vh-3.5rem)] overflow-auto w-full'>
+        <div className='min-h-[calc(100vh-4rem)] overflow-auto w-full'>
             <div className='mx-auto w-11/12 max-w-[1000px] pt-10'>
                 <Outlet />
             </div>

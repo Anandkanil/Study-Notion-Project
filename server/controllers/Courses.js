@@ -140,7 +140,7 @@ const getAllCourses = async (req, res) => {
     try {
         // Fetch all courses with optional population of related fields
         const courses = await Course.find()
-            .populate('instructor', 'firstName lastName email') // Populate instructor's basic info
+            .populate('instructor', 'firstName lastName image') // Populate instructor's basic info
             .populate('courseContent', 'sectionName lectures')  // Populate course content details
             .populate('category', 'name')                       // Populate Category name
             .populate('ratingAndReviews', 'rating review');     // Populate reviews and ratings

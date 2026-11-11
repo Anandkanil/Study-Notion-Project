@@ -1,95 +1,86 @@
 import React, { useEffect, useState } from "react";
-import ReactStars from "react-rating-stars-component";
-import { Swiper, SwiperSlide } from "swiper/react";
-import "swiper/css";
-import "swiper/css/free-mode";
-import "swiper/css/pagination";
-import "../../App.css";
-import { FaStar } from "react-icons/fa";
-import { Autoplay, Pagination } from "swiper/modules";
 import { apiConnector } from "../../services/apiconnector";
 import { ratingsEndpoints } from "../../services/apis";
 
+const MAX_WORDS = 40;
+const shorten = (text = "") => {
+  const words = text.trim().split(/\s+/);
+  return words.length > MAX_WORDS ? `${words.slice(0, MAX_WORDS).join(" ")}…` : text;
+};
+
+function Stars({ value }) {
+  const full = Math.round(value);
+  return (
+    <span className="flex gap-0.5" role="img" aria-label={`${value} out of 5 stars`}>
+      {[1, 2, 3, 4, 5].map((n) => (
+        <svg key={n} width="16" height="16" viewBox="0 0 24 24" aria-hidden="true" className={n <= full ? "fill-accent" : "fill-line"}>
+          <path d="M12 2l3 7 7.5.6-5.7 4.9 1.8 7.5L12 18l-6.6 4 1.8-7.5L1.5 9.6 9 9z" />
+        </svg>
+      ))}
+    </span>
+  );
+}
+
+/** Learner reviews from the API. Shows nothing until there is something real to show. */
 function ReviewSlider() {
   const [reviews, setReviews] = useState([]);
-  const truncateWords = 15;
 
   useEffect(() => {
+    let alive = true;
     (async () => {
-      const { data } = await apiConnector(
-        "GET",
-        ratingsEndpoints.REVIEWS_DETAILS_API
-      );
-      if (data?.success) {
-        setReviews(data?.ratingsAndReviews);
+      try {
+        const { data } = await apiConnector("GET", ratingsEndpoints.REVIEWS_DETAILS_API);
+        if (alive && data?.success) {
+          // One review per person and course, with text
+          const seen = new Set();
+          const unique = (data.ratingsAndReviews || []).filter((r) => {
+            const key = `${r?.user?._id}-${r?.course?._id}`;
+            if (!r?.review?.trim() || seen.has(key)) return false;
+            seen.add(key);
+            return true;
+          });
+          setReviews(unique.slice(0, 6));
+        }
+      } catch {
+        /* reviews are optional: hide the section */
       }
     })();
+    return () => {
+      alive = false;
+    };
   }, []);
 
+  if (!reviews.length) return null;
+
   return (
-    <div className="text-white flex items-center justify-center sm:hidden">
-      <div className="my-[50px] min-h-[184px] w-full lg:max-w-maxContent">
-        <Swiper
-          slidesPerView={4} // Number of slides visible
-          spaceBetween={25} // Space between slides
-          loop={true} // Enables looping of slides
-          autoplay={{
-            delay: 2500, // Automatic slide change delay (you can disable this if you want manual interaction only)
-            disableOnInteraction: false, // Keeps autoplay after interaction
-          }}
-          pagination={{ clickable: true }} // Pagination controls
-          modules={[Pagination, Autoplay]} // Swiper modules to be used
-          className="w-full"
-          touchMoveStopPropagation={true} // Ensures smoother touch interactions
-        >
-          {reviews.map((review, i) => (
-            <SwiperSlide key={i}>
-              <div className="flex flex-col sm:h-[220px] gap-3 bg-richblack-800 p-3 text-[14px] text-richblack-25">
-                <div className="flex items-center gap-4">
-                  <img
-                    src={
-                      review?.user?.image
-                        ? review?.user?.image
-                        : `https://api.dicebear.com/5.x/initials/svg?seed=${review?.user?.firstName} ${review?.user?.lastName}`
-                    }
-                    alt=""
-                    className="h-9 w-9 rounded-full object-cover"
-                  />
-                  <div className="flex flex-col">
-                    <h1 className="font-semibold text-richblack-5">{`${review?.user?.firstName} ${review?.user?.lastName}`}</h1>
-                    <h2 className="text-[12px] font-medium text-richblack-500">
-                      {review?.course?.courseName}
-                    </h2>
-                  </div>
-                </div>
-                <p className="font-medium text-richblack-25">
-                  {review?.review.split(" ").length > truncateWords
-                    ? `${review?.review
-                        .split(" ")
-                        .slice(0, truncateWords)
-                        .join(" ")} ...`
-                    : `${review?.review}`}
-                </p>
-                <div className="flex items-center gap-2">
-                  <h3 className="font-semibold text-yellow-100">
-                    {review.rating.toFixed(1)}
-                  </h3>
-                  <ReactStars
-                    count={5}
-                    value={review.rating}
-                    size={20}
-                    edit={false}
-                    activeColor="#ffd700"
-                    emptyIcon={<FaStar />}
-                    fullIcon={<FaStar />}
-                  />
+    <section aria-labelledby="reviews-title" className="mx-auto w-full max-w-6xl px-6 py-12">
+      <h2 id="reviews-title" className="font-display text-2xl font-medium text-ink">
+        What learners say
+      </h2>
+      <ul className="mt-6 grid gap-5 md:grid-cols-2 lg:grid-cols-3">
+        {reviews.map((review) => {
+          const name = [review?.user?.firstName, review?.user?.lastName].filter(Boolean).join(" ") || "A learner";
+          return (
+            <li key={review._id} className="flex flex-col gap-4 rounded-2xl border border-line bg-surface p-5">
+              <Stars value={review.rating} />
+              <blockquote className="m-0 text-ink">“{shorten(review.review)}”</blockquote>
+              <div className="mt-auto flex items-center gap-3">
+                <img
+                  src={review?.user?.image || `https://api.dicebear.com/9.x/initials/svg?seed=${encodeURIComponent(name)}`}
+                  alt=""
+                  className="h-9 w-9 rounded-full object-cover"
+                  loading="lazy"
+                />
+                <div className="min-w-0">
+                  <p className="truncate font-semibold text-ink">{name}</p>
+                  {review?.course?.courseName && <p className="truncate text-sm text-muted">{review.course.courseName}</p>}
                 </div>
               </div>
-            </SwiperSlide>
-          ))}
-        </Swiper>
-      </div>
-    </div>
+            </li>
+          );
+        })}
+      </ul>
+    </section>
   );
 }
 

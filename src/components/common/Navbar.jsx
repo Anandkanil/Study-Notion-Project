@@ -1,137 +1,198 @@
-import React, { useEffect, useState } from 'react';
-import logo from "../../assets/Logo/Logo-Full-Light.png";
-import { Link, matchPath } from 'react-router-dom';
-import { NavbarLinks } from "../../data/navbar-links";
-import { useLocation } from 'react-router-dom';
-import { useSelector } from 'react-redux';
-import { AiOutlineShoppingCart } from "react-icons/ai";
-import ProfileDropDown from '../core/Auth/ProfileDropDown';
-import { apiConnector } from '../../services/apiconnector';
-import { categories } from '../../services/apis';
-import { FaChevronDown } from "react-icons/fa6";
+import React, { useEffect, useRef, useState } from "react";
+import { Link, NavLink, matchPath, useLocation } from "react-router-dom";
+import { useSelector } from "react-redux";
 
-// Navbar Component
+import ProfileDropDown from "../core/Auth/ProfileDropDown";
+import ThemeToggle from "./ThemeToggle";
+import Logo from "./Logo";
+import useOnClickOutside from "../../hooks/useOnClickOutside";
+import { apiConnector } from "../../services/apiconnector";
+import { categories } from "../../services/apis";
+
+export const categorySlug = (name = "") => name.split(" ").join("-").toLowerCase();
+
+const linkClass = ({ isActive }) =>
+  `rounded-lg px-3 py-2 font-semibold transition-colors ${isActive ? "text-ink bg-raised" : "text-muted hover:text-ink"}`;
+
 const Navbar = () => {
-    const [subLinks, setSubLinks] = useState([]);
-    // eslint-disable-next-line
-    const [loading, setLoading] = useState(false);
-    // eslint-disable-next-line
-    const [loadingCategories, setLoadingCategories] = useState(true);
-    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [subLinks, setSubLinks] = useState([]);
+  const [catsLoading, setCatsLoading] = useState(true);
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const [catalogOpen, setCatalogOpen] = useState(false);
+  const catalogRef = useRef(null);
 
-    const fetchSubLinks = async () => {
-        try {
-            const result = await apiConnector("GET", categories.CATEGORIES_API);
-            setSubLinks(result.data?.data);
-        } catch (error) {
-            console.error("Error fetching categories:", error);
-        } finally {
-            setLoadingCategories(false);
-        }
+  const location = useLocation();
+  const token = useSelector((state) => state.auth.token);
+  const { user } = useSelector((state) => state.profile);
+  const totalItems = useSelector((state) => state.cart.totalItems);
+
+  useOnClickOutside(catalogRef, () => setCatalogOpen(false));
+
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      try {
+        const result = await apiConnector("GET", categories.CATEGORIES_API);
+        if (alive) setSubLinks(result.data?.data || []);
+      } catch (error) {
+        console.error("Error fetching categories:", error);
+      } finally {
+        if (alive) setCatsLoading(false);
+      }
+    })();
+    return () => {
+      alive = false;
     };
+  }, []);
 
-    const location = useLocation();
-    const token = useSelector((state) => state.auth.token);
-    const { user } = useSelector((state) => state.profile);
-    const totalItems = useSelector((state) => state.cart.totalItems);
-
-    const matchRoute = (route) => {
-        return matchPath({ path: route }, location.pathname);
+  // Close menus on navigation and on Escape
+  useEffect(() => {
+    setMobileOpen(false);
+    setCatalogOpen(false);
+  }, [location.pathname]);
+  useEffect(() => {
+    const onKey = (e) => {
+      if (e.key === "Escape") {
+        setCatalogOpen(false);
+        setMobileOpen(false);
+      }
     };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, []);
 
-    useEffect(() => {
-        fetchSubLinks();
-    }, [user, token]);
+  const withCourses = subLinks.filter((c) => c?.courses?.length > 0);
+  const onCatalog = Boolean(matchPath({ path: "/catalog/:catalogName" }, location.pathname));
+  const isStudent = user && user.accountType !== "Instructor";
 
-    return (
-        <div className='flex h-14 items-center justify-center border-b-[1px] border-b-richblack-700'>
-            <div className='flex w-11/12 max-w-maxContent items-center justify-between'>
-                {/* Logo Section - Hidden on small screens */}
-                <Link to="/" className="hidden sm:block">
-                    <img src={logo} width={160} height={42} loading='lazy' alt="Logo" />
-                </Link>
-
-                {/* Mobile Hamburger Icon */}
-                <button 
-                    className="lg:hidden p-2 text-white" 
-                    onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                >
-                    <div className={`w-6 h-0.5 bg-white transition-transform ${isMobileMenuOpen ? "ml-2 rotate-45 translate-y-2" : ""}`}></div>
-                    <div className={`w-6 h-0.5 bg-white mt-1 transition-transform ${isMobileMenuOpen ? "opacity-0" : ""}`}></div>
-                    <div className={`w-6 h-0.5 bg-white mt-1 transition-transform ${isMobileMenuOpen ? "ml-2 -rotate-45 -translate-y-1" : ""}`}></div>
-                </button>
-
-                {/* Navbar Links */}
-                <nav className={`lg:flex gap-x-6 text-richblack-25 sm:text-red ${isMobileMenuOpen ? "block absolute top-14 left-0 w-full bg-richblack-800 p-6 z-50" : "hidden lg:block"}`}>
-                    <ul className='flex flex-col lg:flex-row gap-y-4 lg:gap-x-6'>
-                        {NavbarLinks.map((link, index) => (
-                            <li key={index}>
-                                {link.title === "Catalog" ? (
-                                    <div className={`group relative flex cursor-pointer items-center gap-1 ${matchRoute("/catalog/:catalogName") ? "text-yellow-25" : "text-richblack-25"}`}>
-                                        <p>{link.title}</p>
-                                        <FaChevronDown />
-                                        <div className="invisible absolute left-[50%] top-[50%] z-[1000] flex w-[200px] translate-x-[-50%] translate-y-[3em] flex-col rounded-lg bg-richblack-5 p-4 text-richblack-900 opacity-0 transition-all duration-150 group-hover:visible group-hover:translate-y-[1.65em] group-hover:opacity-100 lg:w-[300px]">
-                                            <div className="absolute left-[50%] top-0 -z-10 h-6 w-6 translate-x-[80%] translate-y-[-40%] rotate-45 select-none rounded bg-richblack-5"></div>
-                                            {loading ? (
-                                                <p className="text-center">Loading...</p>
-                                            ) : subLinks.length ? (
-                                                subLinks?.filter((subLink) => subLink?.courses?.length > 0).map((subLink, i) => (
-                                                    <Link
-                                                        to={`/catalog/${subLink.name.split(" ").join("-").toLowerCase()}`}
-                                                        className="rounded-lg bg-transparent py-4 pl-4 hover:bg-richblack-50"
-                                                        key={i}
-                                                    >
-                                                        <p>{subLink.name}</p>
-                                                    </Link>
-                                                ))
-                                            ) : (
-                                                <p className="text-center">No Courses Found</p>
-                                            )}
-                                        </div>
-                                    </div>
-                                ) : (
-                                    <Link to={link?.path}>
-                                        <p className={`${matchRoute(link?.path) ? "text-yellow-25" : "text-richblack-25"}`}>
-                                            {link.title}
-                                        </p>
-                                    </Link>
-                                )}
-                            </li>
-                        ))}
-                    </ul>
-                </nav>
-
-                {/* Authentication & Cart Section */}
-                <div className='flex gap-x-4 items-center'>
-                    {user && user?.accountType !== "Instructor" && (
-                        <Link to="/dashboard/cart" className='relative'>
-                            <AiOutlineShoppingCart className='text-white' size={20} />
-                            {totalItems > 0 && (
-                                <span className='absolute -top-3 -right-2 bg-caribbeangreen-300 rounded-full px-1 text-xs font-bold '>{totalItems}</span>
-                            )}
-                        </Link>
-                    )}
-
-                    {token === null && (
-                        <>
-                            <Link to="/login">
-                                <button className='border border-richblack-700 bg-richblack-800 px-[12px] py-[5px] text-richblack-100 rounded-md'>
-                                    Login
-                                </button>
-                            </Link>
-                            <Link to="/signup">
-                                <button className='border border-richblack-700 bg-richblack-800 px-[12px] py-[5px] text-richblack-100 rounded-md'>
-                                    SignUp
-                                </button>
-                            </Link>
-                        </>
-                    )}
-
-                    {user != null && <ProfileDropDown />}
-                </div>
-            </div>
-        </div>
+  const categoryList = (onPick) =>
+    catsLoading ? (
+      <div className="flex flex-col gap-2 p-2" aria-hidden="true">
+        {[0, 1, 2].map((i) => (
+          <div key={i} className="skeleton h-9" />
+        ))}
+      </div>
+    ) : withCourses.length ? (
+      withCourses.map((c) => (
+        <Link
+          key={c._id}
+          to={`/catalog/${categorySlug(c.name)}`}
+          onClick={onPick}
+          className="block rounded-xl px-3 py-2.5 text-ink hover:bg-raised"
+        >
+          {c.name}
+        </Link>
+      ))
+    ) : (
+      <p className="px-3 py-2 text-muted">Subjects couldn't load. Try again in a moment.</p>
     );
+
+  return (
+    <header className="sticky top-0 z-40 border-b border-line bg-bg/85 backdrop-blur supports-[backdrop-filter]:bg-bg/70">
+      <div className="mx-auto flex h-16 w-full max-w-6xl items-center gap-3 px-4 sm:px-6">
+        <button
+          type="button"
+          className="grid h-11 w-11 place-items-center rounded-xl border border-line bg-surface text-ink lg:hidden"
+          aria-label={mobileOpen ? "Close menu" : "Open menu"}
+          aria-expanded={mobileOpen}
+          aria-controls="mobile-nav"
+          onClick={() => setMobileOpen((o) => !o)}
+        >
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
+            {mobileOpen ? <path d="M6 6l12 12M18 6L6 18" /> : <path d="M4 7h16M4 12h16M4 17h16" />}
+          </svg>
+        </button>
+
+        <Logo />
+
+        <nav aria-label="Main" className="ml-4 hidden items-center gap-1 lg:flex">
+          <div className="relative" ref={catalogRef}>
+            <button
+              type="button"
+              aria-haspopup="true"
+              aria-expanded={catalogOpen}
+              onClick={() => setCatalogOpen((o) => !o)}
+              className={`flex items-center gap-1 rounded-lg px-3 py-2 font-semibold transition-colors ${onCatalog || catalogOpen ? "bg-raised text-ink" : "text-muted hover:text-ink"}`}
+            >
+              Catalog
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true" className={`transition-transform ${catalogOpen ? "rotate-180" : ""}`}>
+                <path d="M6 9l6 6 6-6" />
+              </svg>
+            </button>
+            {catalogOpen && (
+              <div className="absolute left-0 top-[calc(100%+8px)] w-72 rounded-2xl border border-line bg-surface p-2 shadow-[var(--shadow-pop)]">
+                {categoryList(() => setCatalogOpen(false))}
+              </div>
+            )}
+          </div>
+          <NavLink to="/about" className={linkClass}>
+            About
+          </NavLink>
+          <NavLink to="/contact" className={linkClass}>
+            Contact
+          </NavLink>
+        </nav>
+
+        <div className="ml-auto flex items-center gap-2">
+          <ThemeToggle />
+          {isStudent && (
+            <Link
+              to="/dashboard/cart"
+              aria-label={totalItems > 0 ? `Cart, ${totalItems} item${totalItems === 1 ? "" : "s"}` : "Cart"}
+              className="relative grid h-11 w-11 place-items-center rounded-xl border border-line bg-surface text-ink hover:bg-raised"
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <path d="M3 4h2l2.4 11.2a2 2 0 002 1.6h7.7a2 2 0 002-1.5L21 8H6" />
+                <circle cx="9.5" cy="20" r="1.3" />
+                <circle cx="17" cy="20" r="1.3" />
+              </svg>
+              {totalItems > 0 && (
+                <span aria-hidden="true" className="absolute -right-1.5 -top-1.5 grid h-5 min-w-5 place-items-center rounded-full bg-accent px-1 text-xs font-bold text-on-accent">
+                  {totalItems}
+                </span>
+              )}
+            </Link>
+          )}
+
+          {token === null ? (
+            <>
+              <Link to="/login" className="hidden rounded-xl px-4 py-2.5 font-semibold text-ink hover:bg-raised sm:inline-block">
+                Log in
+              </Link>
+              <Link to="/signup" className="rounded-xl bg-accent px-4 py-2.5 font-bold text-on-accent hover:brightness-105">
+                Start learning
+              </Link>
+            </>
+          ) : (
+            user && <ProfileDropDown />
+          )}
+        </div>
+      </div>
+
+      {mobileOpen && (
+        <nav id="mobile-nav" aria-label="Main" className="border-t border-line bg-surface px-4 pb-6 pt-3 lg:hidden">
+          <p className="px-3 pb-1 pt-2 text-sm font-semibold text-muted">Subjects</p>
+          {categoryList(() => setMobileOpen(false))}
+          <div className="mt-3 flex flex-col border-t border-line pt-3">
+            <NavLink to="/" end className={linkClass}>
+              Home
+            </NavLink>
+            <NavLink to="/about" className={linkClass}>
+              About
+            </NavLink>
+            <NavLink to="/contact" className={linkClass}>
+              Contact
+            </NavLink>
+            {token === null && (
+              <NavLink to="/login" className={linkClass}>
+                Log in
+              </NavLink>
+            )}
+          </div>
+        </nav>
+      )}
+    </header>
+  );
 };
 
 export default Navbar;

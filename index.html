@@ -1,17 +1,42 @@
 <!DOCTYPE html>
-<html lang="en">
-
+<html lang="en" data-theme="dark">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Study Notion | Anand</title>
-  <link rel="icon" type="image/jpeg" href="/SNlogo2.jpg">
+  <title>StudyNotion — Video courses in web, cloud, AI and security</title>
+  <meta name="description" content="Short video courses in web development, cloud computing, machine learning, UI/UX and cybersecurity. Pay once in rupees, learn at your own pace, and pick up exactly where you stopped." />
+  <meta name="theme-color" content="#141833" />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <link rel="apple-touch-icon" href="/SNlogo.png" />
+
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="StudyNotion" />
+  <meta property="og:title" content="StudyNotion — Learning that fits after work" />
+  <meta property="og:description" content="Video courses in web, cloud, machine learning, UI/UX and security, priced in rupees." />
+  <meta property="og:url" content="https://studynotion-project-1.netlify.app/" />
+  <meta property="og:image" content="https://studynotion-project-1.netlify.app/og-image.png" />
+  <meta name="twitter:card" content="summary_large_image" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Unbounded:wght@500;600;700&display=swap" rel="stylesheet" />
+
+  <script>
+    // Apply the saved or system theme before first paint (no flash)
+    (function () {
+      try {
+        var saved = localStorage.getItem("sn-theme");
+        var theme = saved === "light" || saved === "dark" ? saved
+          : (window.matchMedia && window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark");
+        document.documentElement.setAttribute("data-theme", theme);
+      } catch (e) {}
+    })();
+  </script>
 </head>
 
 <body>
-  <noscript>You need to enable JavaScript to run this app.</noscript>
+  <noscript>StudyNotion needs JavaScript to run.</noscript>
   <div id="root"></div>
   <script type="module" src="/src/index.jsx"></script>
 </body>
-
 </html>
