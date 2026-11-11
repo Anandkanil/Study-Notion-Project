@@ -89,7 +89,10 @@ const categoryPageDetails = async (req, res) => {
             .populate({
                 path: "courses",
                 match: { status: "Published" },
-                populate: { path: "ratingAndReviews" },
+                populate: [
+                    { path: "ratingAndReviews" },
+                    { path: "instructor", select: "firstName lastName image" },
+                ],
             })
             .exec();
 
@@ -124,6 +127,10 @@ const categoryPageDetails = async (req, res) => {
                 .populate({
                     path: "courses",
                     match: { status: "Published" },
+                    populate: [
+                        { path: "ratingAndReviews" },
+                        { path: "instructor", select: "firstName lastName image" },
+                    ],
                 })
                 .exec();
         }
@@ -133,7 +140,10 @@ const categoryPageDetails = async (req, res) => {
             .populate({
                 path: "courses",
                 match: { status: "Published" },
-                populate: { path: "instructor", select: "firstName lastName image" },
+                populate: [
+                    { path: "ratingAndReviews" },
+                    { path: "instructor", select: "firstName lastName image" },
+                ],
             })
             .exec();
 

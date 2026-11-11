@@ -1,142 +1,193 @@
-import React, { useEffect, useState } from 'react'
-import Footer from '../components/common/Footer'
-import { useParams } from 'react-router-dom'
-import { apiConnector } from '../services/apiconnector';
-import { categories } from '../services/apis';
-import getCatalogPageData  from '../services/operations/pageAndComponentData';
-import CourseSlider from '../components/core/Catalog/CourseSlider';
-import { useSelector } from "react-redux"
-import Error from "./Error"
-import CourseCard from '../components/core/Catalog/CourseCard';
+import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { Link, useParams } from "react-router-dom";
+
+import Footer from "../components/common/Footer";
+import CourseCard from "../components/core/Catalog/CourseCard";
+import { categorySlug } from "../components/common/Navbar";
+import { Button, EmptyState, buttonClass } from "../components/ui";
+import { apiConnector } from "../services/apiconnector";
+import { categories, catalogData } from "../services/apis";
+
+const SORTS = [
+  ["popular", "Most enrolled"],
+  ["newest", "Newest"],
+];
+
+const CardSkeletons = ({ n = 3 }) => (
+  <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3" aria-hidden="true">
+    {Array.from({ length: n }, (_, i) => (
+      <div key={i} className="flex flex-col gap-3 rounded-2xl border border-line bg-surface p-4">
+        <div className="skeleton aspect-video w-full" />
+        <div className="skeleton h-5 w-3/4" />
+        <div className="skeleton h-4 w-1/2" />
+      </div>
+    ))}
+  </div>
+);
+
+const CourseGrid = ({ courses }) => (
+  <ul className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+    {courses.map((c) => (
+      <li key={c._id}>
+        <CourseCard course={c} />
+      </li>
+    ))}
+  </ul>
+);
 
 const Catalog = () => {
+  const { catalogName } = useParams();
+  const [state, setState] = useState({ status: "loading" });
+  const [sort, setSort] = useState("popular");
 
-    const { loading } = useSelector((state) => state.profile)
-  const { catalogName } = useParams()
-  const [active, setActive] = useState(1)
-    const [catalogPageData, setCatalogPageData] = useState(null);
-    const [categoryId, setCategoryId] = useState("");
-
-    //Fetch all categories
-    useEffect(()=> {
-        const getCategories = async() => {
-            const res = await apiConnector("GET", categories.CATEGORIES_API);
-            const category_id = 
-            res?.data?.data?.filter((ct) => ct.name.split(" ").join("-").toLowerCase() === catalogName)[0]._id;
-            setCategoryId(category_id);
-        }
-        getCategories();
-    },[catalogName]);
-
-    useEffect(() => {
-        const getCategoryDetails = async() => {
-            try{
-                const res = await getCatalogPageData(categoryId);
-                // console.log("PRinting res: ", res);
-                setCatalogPageData(res);
-            }
-            catch(error) {
-                console.log(error)
-            }
-        }
-        if(categoryId) {
-            getCategoryDetails();
-        }
-        
-    },[categoryId]);
-
-
-    if (loading || !catalogPageData) {
-        return (
-          <div className="grid min-h-[calc(100vh-4rem)] place-items-center">
-            <div className="spinner"></div>
-          </div>
-        )
+  const load = useCallback(async () => {
+    setState({ status: "loading" });
+    try {
+      const res = await apiConnector("GET", categories.CATEGORIES_API);
+      const category = (res.data?.data || []).find((c) => categorySlug(c.name) === catalogName);
+      if (!category) {
+        setState({ status: "notfound" });
+        return;
       }
-      if (!loading && !catalogPageData.success) {
-        return <Error />
+      try {
+        const page = await apiConnector("POST", catalogData.CATALOGPAGEDATA_API, { categoryId: category._id });
+        setState({ status: "ready", category, data: page.data?.data || {} });
+      } catch (err) {
+        // The API answers 404 when a subject has no published courses yet
+        if (err?.response?.status === 404) setState({ status: "ready", category, data: {} });
+        else throw err;
       }
-    
-      return (
-        <>
-          {/* Hero Section */}
-          <div className=" box-content bg-richblack-800 px-4">
-            <div className="mx-auto flex min-h-[260px] max-w-maxContentTab flex-col justify-center gap-4 lg:max-w-maxContent ">
-              <p className="text-sm text-richblack-300">
-                {`Home / Catalog / `}
-                <span className="text-yellow-25">
-                  {catalogPageData?.data?.selectedCategory?.name}
-                </span>
-              </p>
-              <p className="text-3xl text-richblack-5">
-                {catalogPageData?.data?.selectedCategory?.name}
-              </p>
-              <p className="max-w-[870px] text-richblack-200">
-                {catalogPageData?.data?.selectedCategory?.description}
-              </p>
+    } catch (error) {
+      console.error("Catalog error:", error);
+      setState({ status: "error" });
+    }
+  }, [catalogName]);
+
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  useEffect(() => {
+    if (state.category) document.title = `${state.category.name} courses · StudyNotion`;
+  }, [state.category]);
+
+  const courses = useMemo(() => {
+    const list = [...(state.data?.selectedCategory?.courses || [])];
+    if (sort === "newest") list.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    else list.sort((a, b) => (b.studentsEnrolled?.length || 0) - (a.studentsEnrolled?.length || 0));
+    return list;
+  }, [state.data, sort]);
+
+  const other = state.data?.differentCategory;
+  const popularEverywhere = (state.data?.mostSellingCourses || []).filter(
+    (c) => !courses.some((own) => own._id === c._id)
+  );
+
+  if (state.status === "notfound") {
+    return (
+      <div className="flex flex-1 flex-col">
+        <div className="mx-auto w-full max-w-3xl flex-1 px-6 py-16">
+          <EmptyState title="We couldn't find that subject" action={<Link to="/" className={buttonClass("primary")}>See all subjects</Link>}>
+            The link may be out of date, or the subject was renamed.
+          </EmptyState>
+        </div>
+        <Footer />
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex flex-1 flex-col">
+      <section className="border-b border-line bg-surface">
+        <div className="mx-auto w-full max-w-6xl px-6 py-12">
+          <nav aria-label="Breadcrumb" className="text-sm text-muted">
+            <ol className="flex flex-wrap gap-2">
+              <li>
+                <Link to="/" className="hover:text-ink">
+                  Home
+                </Link>
+              </li>
+              <li aria-hidden="true">/</li>
+              <li aria-current="page" className="text-ink">
+                {state.category?.name || "Catalog"}
+              </li>
+            </ol>
+          </nav>
+          {state.category ? (
+            <>
+              <h1 className="mt-3 font-display text-4xl font-bold text-ink">{state.category.name}</h1>
+              {state.category.description && <p className="mt-3 max-w-2xl text-lg text-muted">{state.category.description}</p>}
+            </>
+          ) : (
+            <div className="mt-3 flex flex-col gap-3" aria-hidden="true">
+              <div className="skeleton h-10 w-72" />
+              <div className="skeleton h-5 w-full max-w-xl" />
             </div>
-          </div>
-    
-          {/* Section 1 */}
-          <div className=" mx-auto box-content w-full max-w-maxContentTab px-4 py-12 lg:max-w-maxContent">
-            <div className="section_heading">Courses to get you started</div>
-            <div className="my-4 flex border-b border-b-richblack-600 text-sm">
-              <p
-                className={`px-4 py-2 ${
-                  active === 1
-                    ? "border-b border-b-yellow-25 text-yellow-25"
-                    : "text-richblack-50"
-                } cursor-pointer`}
-                onClick={() => setActive(1)}
-              >
-                Most Populer
-              </p>
-              <p
-                className={`px-4 py-2 ${
-                  active === 2
-                    ? "border-b border-b-yellow-25 text-yellow-25"
-                    : "text-richblack-50"
-                } cursor-pointer`}
-                onClick={() => setActive(2)}
-              >
-                New
-              </p>
-            </div>
-            <div>
-              <CourseSlider
-                Courses={catalogPageData?.data?.selectedCategory?.courses}
-              />
-            </div>
-          </div>
-          {/* Section 2 */}
-          <div className=" mx-auto box-content w-full max-w-maxContentTab px-4 py-12 lg:max-w-maxContent">
-            <div className="section_heading">
-              Top courses in {catalogPageData?.data?.differentCategory?.name}
-            </div>
-            <div className="py-8">
-              <CourseSlider
-                Courses={catalogPageData?.data?.differentCategory?.courses}
-              />
-            </div>
-          </div>
-    
-          {/* Section 3 */}
-          <div className=" mx-auto box-content w-full max-w-maxContentTab px-4 py-12 lg:max-w-maxContent">
-            <div className="section_heading">Frequently Bought</div>
-            <div className="py-8">
-              <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-                {catalogPageData?.data?.mostSellingCourses
-                  ?.slice(0, 4)
-                  .map((course, i) => (
-                    <CourseCard course={course} key={i} Height={"h-[400px]"} />
-                  ))}
+          )}
+        </div>
+      </section>
+
+      <div className="mx-auto flex w-full max-w-6xl flex-col gap-14 px-6 py-12">
+        {state.status === "error" ? (
+          <EmptyState title="Courses couldn't load" action={<Button variant="secondary" onClick={load}>Try again</Button>}>
+            The server may still be waking up. This usually takes under a minute.
+          </EmptyState>
+        ) : (
+          <section aria-labelledby="cat-courses">
+            <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
+              <h2 id="cat-courses" className="font-display text-2xl font-medium text-ink">
+                Courses{state.status === "ready" ? ` (${courses.length})` : ""}
+              </h2>
+              <div role="radiogroup" aria-label="Sort courses" className="flex gap-1 rounded-xl border border-line bg-surface p-1">
+                {SORTS.map(([key, label]) => (
+                  <button
+                    key={key}
+                    type="button"
+                    role="radio"
+                    aria-checked={sort === key}
+                    onClick={() => setSort(key)}
+                    className={`rounded-lg px-3.5 py-2 text-sm font-semibold transition-colors ${sort === key ? "bg-accent text-on-accent" : "text-muted hover:text-ink"}`}
+                  >
+                    {label}
+                  </button>
+                ))}
               </div>
             </div>
-          </div>
-    
-          <Footer />
-        </>
-      )
-    }
-    
-    export default Catalog
+            {state.status === "loading" ? (
+              <CardSkeletons />
+            ) : courses.length ? (
+              <CourseGrid courses={courses} />
+            ) : (
+              <EmptyState title="No courses here yet">New courses in {state.category?.name} will appear here once instructors publish them.</EmptyState>
+            )}
+          </section>
+        )}
+
+        {other?.courses?.length > 0 && (
+          <section aria-labelledby="cat-other">
+            <h2 id="cat-other" className="mb-5 font-display text-2xl font-medium text-ink">
+              Also popular in{" "}
+              <Link to={`/catalog/${categorySlug(other.name)}`} className="underline decoration-accent decoration-2 underline-offset-4 hover:text-accent-text">
+                {other.name}
+              </Link>
+            </h2>
+            <CourseGrid courses={other.courses.slice(0, 3)} />
+          </section>
+        )}
+
+        {popularEverywhere.length > 0 && (
+          <section aria-labelledby="cat-top">
+            <h2 id="cat-top" className="mb-5 font-display text-2xl font-medium text-ink">
+              Most enrolled across StudyNotion
+            </h2>
+            <CourseGrid courses={popularEverywhere.slice(0, 6)} />
+          </section>
+        )}
+      </div>
+
+      <Footer />
+    </div>
+  );
+};
+
+export default Catalog;
