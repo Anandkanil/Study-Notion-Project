@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import { Link, NavLink, matchPath, useLocation } from "react-router-dom";
+import { Link, NavLink, matchPath, useLocation, useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 
 import ProfileDropDown from "../core/Auth/ProfileDropDown";
@@ -22,6 +22,9 @@ const Navbar = () => {
   const catalogRef = useRef(null);
 
   const location = useLocation();
+  const navigate = useNavigate();
+  const [searchText, setSearchText] = useState("");
+  const onSearchPage = location.pathname === "/search";
   const token = useSelector((state) => state.auth.token);
   const { user } = useSelector((state) => state.profile);
   const totalItems = useSelector((state) => state.cart.totalItems);
@@ -134,6 +137,46 @@ const Navbar = () => {
         </nav>
 
         <div className="ml-auto flex items-center gap-2">
+          {!onSearchPage && (
+            <form
+              role="search"
+              onSubmit={(e) => {
+                e.preventDefault();
+                const q = searchText.trim();
+                navigate(q ? `/search?q=${encodeURIComponent(q)}` : "/search");
+                setSearchText("");
+              }}
+              className="hidden h-11 items-center gap-2 rounded-xl border border-line bg-surface px-3 text-muted focus-within:border-accent focus-within:ring-2 focus-within:ring-accent/30 xl:flex"
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
+                <circle cx="11" cy="11" r="7" />
+                <path d="M20 20l-3.5-3.5" />
+              </svg>
+              <label htmlFor="nav-search" className="sr-only">
+                Search courses
+              </label>
+              <input
+                id="nav-search"
+                type="search"
+                value={searchText}
+                onChange={(e) => setSearchText(e.target.value)}
+                placeholder="Search courses"
+                className="w-44 bg-transparent text-ink placeholder:text-muted focus:outline-none"
+              />
+            </form>
+          )}
+          {!onSearchPage && (
+            <Link
+              to="/search"
+              aria-label="Search courses"
+              className="hidden h-11 w-11 place-items-center rounded-xl border border-line bg-surface text-ink hover:bg-raised sm:grid xl:hidden"
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
+                <circle cx="11" cy="11" r="7" />
+                <path d="M20 20l-3.5-3.5" />
+              </svg>
+            </Link>
+          )}
           <ThemeToggle />
           {isStudent && (
             <Link
@@ -172,6 +215,35 @@ const Navbar = () => {
 
       {mobileOpen && (
         <nav id="mobile-nav" aria-label="Main" className="border-t border-line bg-surface px-4 pb-6 pt-3 lg:hidden">
+          {!onSearchPage && (
+            <form
+              role="search"
+              onSubmit={(e) => {
+                e.preventDefault();
+                const q = searchText.trim();
+                navigate(q ? `/search?q=${encodeURIComponent(q)}` : "/search");
+                setSearchText("");
+              }}
+              className="mb-2 flex h-12 items-center gap-2 rounded-xl border border-field bg-bg px-3 text-muted focus-within:border-accent focus-within:ring-2 focus-within:ring-accent/30 sm:hidden"
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
+                <circle cx="11" cy="11" r="7" />
+                <path d="M20 20l-3.5-3.5" />
+              </svg>
+              <label htmlFor="mobile-search" className="sr-only">
+                Search courses
+              </label>
+              <input
+                id="mobile-search"
+                type="search"
+                enterKeyHint="search"
+                value={searchText}
+                onChange={(e) => setSearchText(e.target.value)}
+                placeholder="Search courses"
+                className="w-full bg-transparent text-ink placeholder:text-muted focus:outline-none"
+              />
+            </form>
+          )}
           <p className="px-3 pb-1 pt-2 text-sm font-semibold text-muted">Subjects</p>
           {categoryList(() => setMobileOpen(false))}
           <div className="mt-3 flex flex-col border-t border-line pt-3">
