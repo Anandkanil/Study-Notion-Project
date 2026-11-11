@@ -1,208 +1,141 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { useNavigate, useParams } from "react-router-dom";
-
-import "video-react/dist/video-react.css";
-import { BigPlayButton, Player } from "video-react";
+import { Link, useNavigate, useParams } from "react-router-dom";
 
 import { markLectureAsComplete } from "../../../services/operations/courseDetailsAPI";
 import { updateCompletedLectures } from "../../../slices/viewCourseSlice";
-import IconBtn from "../../common/IconBtn";
+import { Button, buttonClass } from "../../ui";
 
 const VideoDetails = () => {
   const { courseId, sectionId, subSectionId } = useParams();
   const navigate = useNavigate();
-  // const location = useLocation();
-  const videoPlayerRef = useRef(null);
   const dispatch = useDispatch();
-
   const { token } = useSelector((state) => state.auth);
-  const { courseSectionData, courseEntireData, completedLectures } =
-    useSelector((state) => state.viewCourse);
+  const { courseSectionData, courseEntireData, completedLectures } = useSelector((state) => state.viewCourse);
+  const [saving, setSaving] = useState(false);
+  const [ended, setEnded] = useState(false);
 
-  const [currentVideoData, setCurrentVideoData] = useState(null);
-  const [courseThumbnail, setCourseThumbnail] = useState("");
-  const [isVideoEnded, setIsVideoEnded] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  // Flat, ordered list of every lesson, for previous/next
+  const lessons = useMemo(
+    () => (courseSectionData || []).flatMap((s) => (s.subSection || []).map((sub) => ({ sectionId: s._id, sectionName: s.sectionName, sub }))),
+    [courseSectionData]
+  );
+  const index = lessons.findIndex((l) => l.sectionId === sectionId && l.sub._id === subSectionId);
+  const current = lessons[index];
+  const prev = index > 0 ? lessons[index - 1] : null;
+  const next = index >= 0 && index < lessons.length - 1 ? lessons[index + 1] : null;
+  const href = (l) => `/view-course/${courseId}/section/${l.sectionId}/sub-section/${l.sub._id}`;
+  const isDone = (completedLectures || []).map(String).includes(String(subSectionId));
 
-  // Fetch and set the video details on component mount or route change
-  // eslint-disable-next-line
-  useEffect(() => {
-    const populateCourseData = async () => {
-      if (!courseSectionData.length) return; // If no course section data, exit early
-  
-      // Redirect if any essential ID is missing
-      if (!courseId || !sectionId || !subSectionId) {
-        navigate(`/dashboard/enrolled-courses`);
-        return;
-      }
-  
-      // Find the relevant section and sub-section
-      const selectedSection = courseSectionData.find((section) => section._id === sectionId);
-      const selectedSubSection = selectedSection?.subSection.find(
-        (subSection) => subSection._id === subSectionId
-      );
-  
-      // Set state based on found data
-      setCurrentVideoData(selectedSubSection || null);
-      setCourseThumbnail(courseEntireData.thumbnail || "");
-      setIsVideoEnded(false);
-    };
-  
-    populateCourseData();
-  }, [courseSectionData, courseEntireData,courseId, navigate, sectionId,subSectionId]); 
-
-  // Check if the current lecture is the first video in the course
-  const isFirstVideo = () => {
-    const sectionIndex = courseSectionData.findIndex(
-      (section) => section._id === sectionId
-    );
-    const subSectionIndex = courseSectionData[sectionIndex]?.subSection.findIndex(
-      (subSection) => subSection._id === subSectionId
-    );
-    return sectionIndex === 0 && subSectionIndex === 0;
+  const markComplete = async () => {
+    if (isDone) return true;
+    setSaving(true);
+    const ok = await markLectureAsComplete({ courseId, subsectionId: subSectionId }, token);
+    if (ok) dispatch(updateCompletedLectures(subSectionId));
+    setSaving(false);
+    return ok;
   };
 
-  // Navigate to the next video
-  const navigateToNextVideo = () => {
-    const sectionIndex = courseSectionData.findIndex(
-      (section) => section._id === sectionId
-    );
-    const totalSubSections = courseSectionData[sectionIndex].subSection.length;
-    const subSectionIndex = courseSectionData[sectionIndex]?.subSection.findIndex(
-      (subSection) => subSection._id === subSectionId
-    );
-
-    if (subSectionIndex < totalSubSections - 1) {
-      const nextSubSectionId =
-        courseSectionData[sectionIndex].subSection[subSectionIndex + 1]._id;
-      navigate(`/view-course/${courseId}/section/${sectionId}/sub-section/${nextSubSectionId}`);
-    } else {
-      const nextSectionId = courseSectionData[sectionIndex + 1]._id;
-      const nextSubSectionId = courseSectionData[sectionIndex + 1].subSection[0]._id;
-      navigate(`/view-course/${courseId}/section/${nextSectionId}/sub-section/${nextSubSectionId}`);
-    }
+  const completeAndContinue = async () => {
+    const ok = await markComplete();
+    if (ok && next) navigate(href(next));
   };
 
-  // Check if the current lecture is the last video in the course
-  const isLastVideo = () => {
-    const sectionIndex = courseSectionData.findIndex(
-      (section) => section._id === sectionId
-    );
-    const totalSubSections = courseSectionData[sectionIndex]?.subSection.length;
-    const subSectionIndex = courseSectionData[sectionIndex]?.subSection.findIndex(
-      (subSection) => subSection._id === subSectionId
-    );
-
+  if (!current) {
     return (
-      sectionIndex === courseSectionData.length - 1 &&
-      subSectionIndex === totalSubSections - 1
+      <div className="flex flex-col items-start gap-4">
+        {courseEntireData?.thumbnail && <img src={courseEntireData.thumbnail} alt="" className="aspect-video w-full rounded-2xl object-cover" />}
+        <h1 className="font-display text-2xl font-medium text-ink">{lessons.length ? "Choose a lesson to start" : "No lessons yet"}</h1>
+        {lessons[0] && (
+          <Link to={href(lessons[0])} className={buttonClass("primary")}>
+            Start the first lesson
+          </Link>
+        )}
+      </div>
     );
-  };
-
-  // Navigate to the previous video
-  const navigateToPreviousVideo = () => {
-    const sectionIndex = courseSectionData.findIndex(
-      (section) => section._id === sectionId
-    );
-    const subSectionIndex = courseSectionData[sectionIndex]?.subSection.findIndex(
-      (subSection) => subSection._id === subSectionId
-    );
-
-    if (subSectionIndex > 0) {
-      const previousSubSectionId =
-        courseSectionData[sectionIndex].subSection[subSectionIndex - 1]._id;
-      navigate(`/view-course/${courseId}/section/${sectionId}/sub-section/${previousSubSectionId}`);
-    } else {
-      const previousSectionId = courseSectionData[sectionIndex - 1]._id;
-      const lastSubSectionIndex =
-        courseSectionData[sectionIndex - 1].subSection.length - 1;
-      const lastSubSectionId =
-        courseSectionData[sectionIndex - 1].subSection[lastSubSectionIndex]._id;
-      navigate(`/view-course/${courseId}/section/${previousSectionId}/sub-section/${lastSubSectionId}`);
-    }
-  };
-
-  // Mark the lecture as completed
-  const markLectureComplete = async () => {
-    setIsLoading(true);
-    const response = await markLectureAsComplete(
-      { courseId, subsectionId: subSectionId },
-      token
-    );
-    if (response) {
-      dispatch(updateCompletedLectures(subSectionId));
-    }
-    setIsLoading(false);
-  };
+  }
 
   return (
-    <div className="flex flex-col gap-5 text-white">
-      {!currentVideoData ? (
-        <img
-          src={courseThumbnail}
-          alt="Preview"
-          className="h-full w-full rounded-md object-cover"
-        />
-      ) : (
-        <Player
-          ref={videoPlayerRef}
-          aspectRatio="16:9"
+    <article className="flex flex-col gap-5">
+      <div className="relative overflow-hidden rounded-2xl border border-line bg-[rgb(8_10_24)]">
+        <video
+          key={current.sub._id}
+          src={current.sub.videoUrl}
+          poster={courseEntireData?.thumbnail}
+          controls
           playsInline
-          onEnded={() => setIsVideoEnded(true)}
-          src={currentVideoData?.videoUrl}
+          preload="metadata"
+          onEnded={() => {
+            setEnded(true);
+            markComplete();
+          }}
+          onPlay={() => setEnded(false)}
+          className="aspect-video w-full bg-black"
         >
-          <BigPlayButton position="center" />
-          {isVideoEnded && (
-            <div className="absolute inset-0 z-[100] grid gap-5 h-full place-content-center bg-gradient-to-t from-black via-black/70 to-transparent">
-              {!completedLectures.includes(subSectionId) && (
-                <IconBtn
-                  disabled={isLoading}
-                  onclick={markLectureComplete}
-                  text={!isLoading ? "Mark As Completed" : "Loading..."}
-                  // eslint-disable-next-line
-                  style={"text-xl max-w-max px-4 mx-auto"}
-                />
-              )}
-              <IconBtn
-                disabled={isLoading}
-                onclick={() => {
-                  if (videoPlayerRef?.current) {
-                    videoPlayerRef?.current?.seek(0);
-                    setIsVideoEnded(false);
-                  }
-                }}
-                text="Rewatch"
-                // eslint-disable-next-line
-                style={"text-xl max-w-max px-4 mx-auto mt-2"}
-              />
-              <div className="mt-10 flex min-w-[250px] justify-center gap-x-4 text-xl">
-                {!isFirstVideo() && (
-                  <button
-                    disabled={isLoading}
-                    onClick={navigateToPreviousVideo}
-                    className="blackButton"
-                  >
-                    Prev
-                  </button>
-                )}
-                {!isLastVideo() && (
-                  <button
-                    disabled={isLoading}
-                    onClick={navigateToNextVideo}
-                    className="blackButton"
-                  >
-                    Next
-                  </button>
-                )}
+          Your browser can't play this video.
+        </video>
+        {ended && next && (
+          <div className="absolute inset-0 grid place-items-center bg-[rgb(8_10_24/0.8)] p-6 text-center">
+            <div className="flex flex-col items-center gap-4">
+              <p className="text-sm font-semibold text-[#A9A8C8]">Up next</p>
+              <p className="font-display text-xl font-medium text-[#ECEAF7]">{next.sub.title}</p>
+              <div className="flex flex-wrap justify-center gap-3">
+                <Link to={href(next)} className={buttonClass("primary")}>
+                  Play next lesson
+                </Link>
+                <button type="button" onClick={() => setEnded(false)} className="rounded-xl border border-[#3B437A] px-5 py-3 font-bold text-[#ECEAF7] hover:bg-[#262C57]">
+                  Stay here
+                </button>
               </div>
             </div>
-          )}
-        </Player>
-      )}
-      <h1 className="mt-4 text-3xl font-semibold">{currentVideoData?.title}</h1>
-      <p className="pt-2 pb-6">{currentVideoData?.description}</p>
-    </div>
+          </div>
+        )}
+      </div>
+
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div className="min-w-0">
+          <p className="text-sm font-semibold text-muted">
+            {current.sectionName} · Lesson {index + 1} of {lessons.length}
+          </p>
+          <h1 className="mt-1 font-display text-2xl font-medium text-ink">{current.sub.title}</h1>
+        </div>
+        {isDone ? (
+          <span className="inline-flex items-center gap-2 rounded-xl bg-success/15 px-4 py-2.5 font-semibold text-success">
+            <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
+            </svg>
+            Completed
+          </span>
+        ) : (
+          <Button variant="secondary" onClick={markComplete} loading={saving} loadingText="Saving…">
+            Mark as complete
+          </Button>
+        )}
+      </div>
+
+      {current.sub.description && <p className="max-w-prose whitespace-pre-line text-ink">{current.sub.description}</p>}
+
+      <nav aria-label="Lesson navigation" className="flex flex-wrap justify-between gap-3 border-t border-line pt-5">
+        {prev ? (
+          <Link to={href(prev)} className={buttonClass("ghost")}>
+            ← Previous
+          </Link>
+        ) : (
+          <span />
+        )}
+        {next ? (
+          <Button onClick={completeAndContinue} loading={saving} loadingText="Saving…">
+            {isDone ? "Next lesson →" : "Complete and continue →"}
+          </Button>
+        ) : (
+          !isDone && (
+            <Button onClick={markComplete} loading={saving} loadingText="Saving…">
+              Finish the course
+            </Button>
+          )
+        )}
+      </nav>
+    </article>
   );
 };
 
