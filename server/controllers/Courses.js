@@ -171,6 +171,50 @@ const getAllCourses = async (req, res) => {
     }
 };
 
+// GET /course/search?q=react — published courses whose name, description, tags,
+// subject or instructor match. Public; returns only what a course card needs.
+const escapeRegex = (text) => text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+const searchCourses = async (req, res) => {
+    try {
+        const q = String(req.query.q || '').trim().slice(0, 80);
+        if (q.length < 2) {
+            return res.status(200).json({ success: true, query: q, courses: [] });
+        }
+        const pattern = new RegExp(escapeRegex(q), 'i');
+
+        const [categories, instructors] = await Promise.all([
+            Category.find({ name: pattern }).select('_id'),
+            User.find({ accountType: 'Instructor', $or: [{ firstName: pattern }, { lastName: pattern }] }).select('_id'),
+        ]);
+
+        const courses = await Course.find({
+            status: 'Published',
+            $or: [
+                { courseName: pattern },
+                { courseDescription: pattern },
+                { tags: pattern },
+                { category: { $in: categories.map((c) => c._id) } },
+                { instructor: { $in: instructors.map((u) => u._id) } },
+            ],
+        })
+            .select('courseName thumbnail price instructor ratingAndReviews category')
+            .populate('instructor', 'firstName lastName')
+            .populate('category', 'name')
+            .populate('ratingAndReviews', 'rating')
+            .limit(48)
+            .lean();
+
+        // Title matches first, then the rest
+        courses.sort((a, b) => Number(pattern.test(b.courseName)) - Number(pattern.test(a.courseName)));
+
+        return res.status(200).json({ success: true, query: q, courses });
+    } catch (error) {
+        console.error('Course search failed:', error.message);
+        return res.status(500).json({ success: false, message: "Search isn't working right now. Please try again." });
+    }
+};
+
 const getCourseDetails = async (req, res) => {
     const courseId = req.body.courseId;
 
@@ -610,4 +654,4 @@ const editCourse = async (req, res) => {
 }
 
 
-module.exports = { createCourse, getAllCourses,getCourseDetails,editCourseStatus, getInstructorCourses,deleteCourse, getFullCourseDetails, editCourse };
+module.exports = { createCourse, getAllCourses, searchCourses,getCourseDetails,editCourseStatus, getInstructorCourses,deleteCourse, getFullCourseDetails, editCourse };

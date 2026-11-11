@@ -29,6 +29,8 @@ const MyProfile = lazy(() => import("./components/core/Dashboard/MyProfile"));
 const Settings = lazy(() => import("./components/core/Dashboard/Settings"));
 const Cart = lazy(() => import("./components/core/Dashboard/Cart"));
 const EnrolledCourses = lazy(() => import("./components/core/Dashboard/EnrolledCourses"));
+const Certificate = lazy(() => import("./components/core/Dashboard/Certificate"));
+const Search = lazy(() => import("./pages/Search"));
 const AddCourse = lazy(() => import("./components/core/Dashboard/AddCourse/index"));
 const EditCourse = lazy(() => import("./components/core/Dashboard/AddCourse/CourseInformation/EditCourse/index"));
 const MyCourses = lazy(() => import("./components/core/Dashboard/MyCourses"));
@@ -43,6 +45,7 @@ const TITLES = [
   [/^\/about/, "About"],
   [/^\/contact/, "Contact us"],
   [/^\/catalog\//, "Catalog"],
+  [/^\/search/, "Search courses"],
   [/^\/courses\//, "Course"],
   [/^\/forgot-password/, "Reset your password"],
   [/^\/reset-password/, "Choose a new password"],
@@ -51,6 +54,7 @@ const TITLES = [
   [/^\/dashboard\/settings/, "Settings"],
   [/^\/dashboard\/cart/, "Cart"],
   [/^\/dashboard\/enrolled-courses/, "My learning"],
+  [/^\/dashboard\/certificate/, "Certificate"],
   [/^\/dashboard\/instructor/, "Instructor dashboard"],
   [/^\/dashboard\/my-courses/, "My courses"],
   [/^\/dashboard\/add-course/, "New course"],
@@ -137,6 +141,7 @@ function App() {
               <Route path="/about" element={<About />} />
               <Route path="/contact" element={<Contact />} />
               <Route path="/catalog/:catalogName" element={<Catalog />} />
+              <Route path="/search" element={<Search />} />
               <Route path="/forgot-password" element={<ForgotPassword />} />
               <Route path="/reset-password/:token" element={<UpdatePassword />} />
               <Route path="/verify-email" element={<VerifyEmail />} />
@@ -156,6 +161,7 @@ function App() {
 
                 <Route path="/dashboard/cart" element={<RequireRole role={ACCOUNT_TYPE.STUDENT} fallback={dashboardHome}><Cart /></RequireRole>} />
                 <Route path="/dashboard/enrolled-courses" element={<RequireRole role={ACCOUNT_TYPE.STUDENT} fallback={dashboardHome}><EnrolledCourses /></RequireRole>} />
+                <Route path="/dashboard/certificate/:courseId" element={<RequireRole role={ACCOUNT_TYPE.STUDENT} fallback={dashboardHome}><Certificate /></RequireRole>} />
                 <Route path="/dashboard/add-course" element={<RequireRole role={ACCOUNT_TYPE.INSTRUCTOR} fallback={dashboardHome}><AddCourse /></RequireRole>} />
                 <Route path="/dashboard/instructor" element={<RequireRole role={ACCOUNT_TYPE.INSTRUCTOR} fallback={dashboardHome}><Instructor /></RequireRole>} />
                 <Route path="/dashboard/my-courses" element={<RequireRole role={ACCOUNT_TYPE.INSTRUCTOR} fallback={dashboardHome}><MyCourses /></RequireRole>} />

@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { useSelector } from "react-redux";
 
 import Footer from "../components/common/Footer";
 import ReviewSlider from "../components/common/ReviewSlider";
@@ -8,6 +9,7 @@ import { categorySlug } from "../components/common/Navbar";
 import { apiConnector } from "../services/apiconnector";
 import { categories, courseEndpoints } from "../services/apis";
 import InstructorImage from "../assets/Images/Instructor.png";
+import { formatClock, getLastLesson, getPosition } from "../utils/learningMemory";
 
 const btnPrimary =
   "inline-flex items-center justify-center rounded-xl bg-accent px-6 py-3.5 text-base font-bold text-on-accent transition hover:brightness-105";
@@ -37,6 +39,34 @@ function PlayerPreview() {
         </figcaption>
       </div>
     </figure>
+  );
+}
+
+/** Signed-in students who have watched something on this device get a one-tap way back in. */
+function ContinueLearning() {
+  const { user } = useSelector((state) => state.profile);
+  const token = useSelector((state) => state.auth.token);
+  if (!token || !user?._id || user.accountType === "Instructor") return null;
+  const last = getLastLesson(user._id);
+  if (!last?.courseId || !last?.subSectionId) return null;
+  const position = getPosition(user._id, last.subSectionId);
+  const href = `/view-course/${last.courseId}/section/${last.sectionId}/sub-section/${last.subSectionId}`;
+  return (
+    <section aria-label="Continue learning" className="mx-auto w-full max-w-6xl px-6 pt-8">
+      <Link to={href} className="flex items-center gap-4 rounded-2xl border border-line bg-surface p-3 pr-5 transition-colors hover:bg-raised">
+        {last.thumbnail && <img src={last.thumbnail} alt="" className="hidden aspect-video w-32 rounded-xl object-cover sm:block" />}
+        <span className="flex min-w-0 flex-1 flex-col">
+          <span className="text-sm font-semibold text-muted">Continue learning{position >= 3 ? ` · ${formatClock(position)} in` : ""}</span>
+          <span className="truncate font-bold text-ink">{last.lessonTitle}</span>
+          {last.courseName && <span className="truncate text-sm text-muted">{last.courseName}</span>}
+        </span>
+        <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-accent" aria-hidden="true">
+          <svg width="16" height="16" viewBox="0 0 24 24">
+            <path d="M8 5l12 7-12 7z" fill="currentColor" className="text-on-accent" />
+          </svg>
+        </span>
+      </Link>
+    </section>
   );
 }
 
@@ -80,6 +110,7 @@ function Home() {
 
   return (
     <div className="flex flex-col">
+      <ContinueLearning />
       {/* Hero */}
       <section className="mx-auto grid w-full max-w-6xl items-center gap-12 px-6 pb-12 pt-14 md:grid-cols-[1fr_1.05fr] md:pt-20">
         <div>
