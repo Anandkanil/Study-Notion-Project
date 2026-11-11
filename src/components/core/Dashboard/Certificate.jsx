@@ -6,6 +6,7 @@ import { apiConnector } from "../../../services/apiconnector";
 import { courseEndpoints, profileEndpoints } from "../../../services/apis";
 import { getCertificateDate } from "../../../utils/learningMemory";
 import { Button, EmptyState, buttonClass } from "../../ui";
+import RatePrompt from "./RatePrompt";
 
 /** Short, stable reference for a learner + course pair, e.g. "SN-4K7Q-2M9X". */
 const certificateId = (userId, courseId) => {
@@ -116,6 +117,8 @@ export default function Certificate() {
           <Button onClick={() => window.print()}>Download PDF</Button>
         </div>
       </div>
+
+      <RatePrompt course={course} myRating={course.myRating} />
 
       {/* Fixed print-friendly colours: the certificate looks the same in light and dark mode */}
       <section
