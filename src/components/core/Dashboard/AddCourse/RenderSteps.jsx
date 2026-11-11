@@ -50,7 +50,7 @@ export default function RenderSteps() {
     <div className="grid items-start gap-8 xl:grid-cols-[1fr_300px]">
       <div className="flex min-w-0 flex-col gap-8">
         <Stepper step={step} />
-        <div className="rounded-2xl border border-line bg-surface p-5 sm:p-6">
+        <div>
           {step === 1 && <CourseInformationForm />}
           {step === 2 && <CourseBuilderForm />}
           {step === 3 && <PublishCourse />}

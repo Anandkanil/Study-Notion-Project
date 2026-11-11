@@ -46,7 +46,7 @@ export default function Cart() {
               const count = course.ratingAndReviews?.length || 0;
               return (
                 <li key={course._id} className="flex flex-wrap gap-4 rounded-2xl border border-line bg-surface p-4 sm:flex-nowrap">
-                  <Link to={`/courses/${course._id}`} className="shrink-0">
+                  <Link to={`/courses/${course._id}`} className="shrink-0" tabIndex={-1} aria-hidden="true">
                     <img src={course.thumbnail} alt="" className="aspect-video w-full rounded-xl object-cover sm:w-48" />
                   </Link>
                   <div className="flex min-w-0 flex-1 flex-col gap-1">
