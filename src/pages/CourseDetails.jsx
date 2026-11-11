@@ -110,8 +110,8 @@ const CourseDetails = () => {
   }
 
   // Render error state
-  if (error) {
-    return <div>{error}</div>;
+  if (error || !courseData?.courseDetails) {
+    return <div className="p-8 text-richblack-5">{error || "Course not found."}</div>;
   }
 
   const {
@@ -147,8 +147,10 @@ const CourseDetails = () => {
     });
   };
 
-  const isEnrolled =
-    user && studentsEnrolled.some((student) => student._id === user._id);
+  // Logged-out visitors have no user, so never read user._id directly
+  const isEnrolled = Boolean(
+    user?._id && studentsEnrolled?.some((student) => String(student?._id ?? student) === String(user._id))
+  );
 
   // Render course details
   return (
@@ -201,11 +203,8 @@ const CourseDetails = () => {
               <p className="space-x-3 pb-4 text-3xl font-semibold text-richblack-5">
                 Rs. {price}
               </p>
-              <button className="yellowButton" onClick={studentsEnrolled.some((student)=>student._id===user._id)?() => navigate("/dashboard/enrolled-courses"):handleBuyCourse}>
-                {/* Buy Now */}
-                {
-                  studentsEnrolled.some((student)=>student._id===user._id)?"Go to Course":"Buy Now"
-                }
+              <button className="yellowButton" onClick={isEnrolled ? () => navigate("/dashboard/enrolled-courses") : handleBuyCourse}>
+                {isEnrolled ? "Go to Course" : "Buy Now"}
               </button>
               {!isEnrolled && (
             <button onClick={handleAddToCart} className="blackButton w-full">

@@ -39,22 +39,25 @@ const ExploreMore = () => {
         Learn to build anything you can imagine
       </p>
 
-      <div className='mt-5 w-fit flex flex-row rounded-full bg-richblack-800 mb-5 border-richblack-100
+      <div role='tablist' aria-label='Course groups' className='mt-5 w-fit max-w-full overflow-x-auto flex flex-row rounded-full bg-richblack-800 mb-5 border-richblack-100
       px-1 py-1'>
         {
           tabsName.map((element, index) => {
             return (
-              <div
-                className={`text-[16px] flex flex-row items-center gap-2 
+              <button
+                type='button'
+                role='tab'
+                aria-selected={currentTab === element}
+                className={`text-[14px] sm:text-[16px] whitespace-nowrap flex flex-row items-center gap-2 
                 ${currentTab === element
                     ? "bg-richblack-900 text-richblack-5 font-medium"
                     : "text-richblack-200"} rounded-full transition-all duration-200 cursor-pointer
-                hover:bg-richblack-900 hover:text-richblack-5 px-7 py-2`}
+                hover:bg-richblack-900 hover:text-richblack-5 px-4 sm:px-7 py-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-yellow-50`}
                 key={index}
                 onClick={() => setMyCards(element)}
               >
                 {element}
-              </div>
+              </button>
             )
           })
         }
@@ -65,7 +68,7 @@ const ExploreMore = () => {
 
         {/* course card ka group */}
 
-        <div className='absolute flex flex-row gap-10 justify-between w-full'>
+        <div className='lg:absolute flex flex-col lg:flex-row items-center lg:items-stretch gap-10 justify-between w-full'>
           {
             courses.map((element, index) => {
               return (

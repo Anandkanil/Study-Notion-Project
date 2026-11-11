@@ -1,12 +1,16 @@
 import React, { useState } from "react";
 import { AiOutlineEyeInvisible, AiOutlineEye } from "react-icons/ai";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { login } from "../../../services/operations/authAPI";
 import { useDispatch } from "react-redux";
 
 export default function LoginForm() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const location = useLocation();
+  // Only same-site paths, so a crafted link can't redirect elsewhere
+  const from = location.state?.from;
+  const redirectTo = typeof from === "string" && from.startsWith("/") && !from.startsWith("//") ? from : undefined;
 
   // State for form data
   const [formData, setFormData] = useState({
@@ -31,7 +35,7 @@ export default function LoginForm() {
     e.preventDefault();
 
     if (formData.email.trim() && formData.password.trim()) {
-      dispatch(login(formData.email, formData.password, navigate));
+      dispatch(login(formData.email, formData.password, navigate, redirectTo));
     }
   }
 

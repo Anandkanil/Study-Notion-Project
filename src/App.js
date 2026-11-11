@@ -1,4 +1,5 @@
-import { Route, Routes } from "react-router-dom";
+import { Route, Routes, useLocation } from "react-router-dom";
+import ErrorBoundary from "./components/common/ErrorBoundary";
 import "./App.css";
 import { Toaster } from "react-hot-toast";
 
@@ -38,6 +39,7 @@ import Instructor from "./components/core/Dashboard/InstructorDashboard/Instruct
 
 function App() {
   const { user } = useSelector((state) => state.profile);
+  const location = useLocation();
 
   return (
     <div className="w-screen min-h-screen bg-richblack-900 flex flex-col font-inter">
@@ -47,6 +49,7 @@ function App() {
       {/* Navbar component */}
       <Navbar />
       
+      <ErrorBoundary resetKey={location.pathname}>
       <Routes>
         {/* Public Routes: Accessible without authentication */}
         <Route path="/" element={<Home />} />
@@ -114,6 +117,7 @@ function App() {
         {/* Catch-all Route: Will be displayed for any undefined route */}
         <Route path="*" element={<PageNotFound />} />
       </Routes>
+      </ErrorBoundary>
     </div>
   );
 }

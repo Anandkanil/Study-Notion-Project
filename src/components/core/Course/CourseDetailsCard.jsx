@@ -42,7 +42,7 @@ function CourseDetailsCard({ course, setConfirmationModal, handleBuyCourse }) {
   };
 
   const isEnrolled =
-    user && course?.studentsEnrolled.some((student) => student._id === user._id);
+    Boolean(user?._id && course?.studentsEnrolled?.some((student) => String(student?._id ?? student) === String(user._id)));
 
   return (
     <div className="flex flex-col gap-4 rounded-md bg-richblack-700 p-4 text-richblack-5">
