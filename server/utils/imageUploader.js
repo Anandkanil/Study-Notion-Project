@@ -1,4 +1,5 @@
 const cloudinary = require('cloudinary').v2;
+const fs = require('fs');
 
 exports.uploadImageToCloudinary = async (file, folder, height, quality) => {
     const options = {
@@ -28,5 +29,8 @@ exports.uploadImageToCloudinary = async (file, folder, height, quality) => {
             message: "Image upload failed. Please try again.",
             error: error.message
         };
+    } finally {
+        // The temp copy is no longer needed once Cloudinary has it (or the upload failed)
+        if (file?.tempFilePath) fs.unlink(file.tempFilePath, () => {});
     }
 };

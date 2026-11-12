@@ -190,8 +190,18 @@ exports.getAllUserDetails = async (req, res) => {
 // Update Display Picture
 exports.updateDisplayPicture = async (req, res) => {
   try {
-    const { displayPicture } = req.files;
+    const displayPicture = req.files?.displayPicture;
     const userId = req.user.userId;
+
+    if (!displayPicture || Array.isArray(displayPicture)) {
+      return res.status(400).json({ success: false, message: "Choose one image to upload." });
+    }
+    if (!/^image\/(jpeg|png|gif|webp)$/.test(displayPicture.mimetype || "")) {
+      return res.status(400).json({ success: false, message: "Use a JPG, PNG, GIF or WebP image." });
+    }
+    if (displayPicture.size > 5 * 1024 * 1024) {
+      return res.status(400).json({ success: false, message: "That image is over 5 MB. Choose a smaller one." });
+    }
 
     const image = await uploadImageToCloudinary(
       displayPicture,
@@ -203,7 +213,7 @@ exports.updateDisplayPicture = async (req, res) => {
     if (!image || !image.url) {
       return res.status(500).json({
         success: false,
-        message: "Failed to upload the image.",
+        message: "Your photo couldn't be uploaded. Please try again.",
       });
     }
 
@@ -217,7 +227,7 @@ exports.updateDisplayPicture = async (req, res) => {
 
     return res.status(200).json({
       success: true,
-      message: "Image updated successfully.",
+      message: "Profile photo updated",
       data: updatedUser,
     });
   } catch (error) {
