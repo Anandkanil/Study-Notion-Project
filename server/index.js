@@ -52,7 +52,7 @@ app.use(cors({
         return callback(null, false);
     },
     credentials:true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
 }));
 
 // Uploads go to the system temp folder (always writable; "/temp" isn't on Render)
