@@ -4,44 +4,52 @@ import { Link } from "react-router-dom";
 import ConfirmationModal from "../../../common/ConfirmationModal";
 import { formatINR } from "../../../../utils/formatINR";
 import { Button, EmptyState } from "../../../ui";
-import { LoadFailed, PageHeader, RowsSkeleton, SearchBox, Segmented, fullName, shortDate, useAdminApi, useAdminLoad, useDebounced, withToast } from "./shared";
+import { LoadFailed, PageHeader, ReasonDialog, RowsSkeleton, SearchBox, Segmented, fullName, shortDate, useAdminApi, useAdminLoad, useDebounced, withToast } from "./shared";
 
-const StatusBadge = ({ status }) => (
-  <span
-    className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-xs font-semibold ${
-      status === "Published" ? "border-success/40 text-success" : "border-line text-muted"
-    }`}
-  >
-    <span aria-hidden="true">{status === "Published" ? "●" : "○"}</span>
-    {status === "Published" ? "Published" : "Draft"}
-  </span>
-);
+const BADGE = {
+  Published: ["border-success/40 text-success", "●", "Published"],
+  Pending: ["border-accent/60 text-accent-text", "◐", "Waiting for review"],
+  Draft: ["border-line text-muted", "○", "Draft"],
+};
+const StatusBadge = ({ status }) => {
+  const [cls, dot, text] = BADGE[status] || BADGE.Draft;
+  return (
+    <span className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-xs font-semibold ${cls}`}>
+      <span aria-hidden="true">{dot}</span>
+      {text}
+    </span>
+  );
+};
 
 export default function AdminCourses() {
   const api = useAdminApi();
   const [text, setText] = useState("");
-  const [filter, setFilter] = useState("all");
+  const [filter, setFilter] = useState("Pending");
+  const [sendBack, setSendBack] = useState(null);
   const q = useDebounced(text);
   const params = { q: q.trim().length >= 2 ? q.trim() : undefined, status: filter === "all" ? undefined : filter };
   const [{ status, data }, load] = useAdminLoad("/courses", params, [q, filter]);
   const [confirm, setConfirm] = useState(null);
 
-  const setStatus = async (course, next) => {
+  const setStatus = async (course, next, note) => {
     setConfirm(null);
-    const res = await withToast(api("PATCH", `/courses/${course._id}/status`, { status: next }), {
-      loading: next === "Published" ? "Publishing…" : "Unpublishing…",
+    const res = await withToast(api("PATCH", `/courses/${course._id}/status`, { status: next, note }), {
+      loading: course.status === "Pending" ? (next === "Published" ? "Approving…" : "Sending back…") : next === "Published" ? "Publishing…" : "Unpublishing…",
       fallbackError: "The course couldn't be updated.",
     });
-    if (res) load();
+    if (res) {
+      setSendBack(null);
+      load();
+    }
   };
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader title="Courses">Every course on StudyNotion, drafts included. Unpublishing hides a course from the catalog; enrolled students keep access.</PageHeader>
+      <PageHeader title="Courses">Courses instructors publish wait here for your review before they appear in the catalog. Unpublishing hides a course; enrolled students keep access.</PageHeader>
 
       <div className="flex flex-wrap items-center gap-3">
         <SearchBox value={text} onChange={setText} placeholder="Search by course name" label="Search courses" />
-        <Segmented label="Status" value={filter} onChange={setFilter} options={[["all", "All"], ["Published", "Published"], ["Draft", "Drafts"]]} />
+        <Segmented label="Status" value={filter} onChange={setFilter} options={[["Pending", "Waiting for review"], ["all", "All"], ["Published", "Published"], ["Draft", "Drafts"]]} />
       </div>
 
       <div aria-live="polite">
@@ -50,7 +58,7 @@ export default function AdminCourses() {
         ) : !data ? (
           <RowsSkeleton label="Loading courses" />
         ) : data.length === 0 ? (
-          <EmptyState title="No courses match">Try another search or filter.</EmptyState>
+          <EmptyState title={filter === "Pending" ? "Nothing to review" : "No courses match"}>{filter === "Pending" ? "When an instructor publishes a course, it waits here for you." : "Try another search or filter."}</EmptyState>
         ) : (
           <ul className={`flex flex-col gap-3 ${status === "loading" ? "opacity-60" : ""}`}>
             {data.map((c) => (
@@ -75,7 +83,17 @@ export default function AdminCourses() {
                     {c.category?.name || "No subject"} · {formatINR(c.price) || "₹0"} · {c.studentsCount} {c.studentsCount === 1 ? "student" : "students"} · Created {shortDate(c.createdAt)}
                   </p>
                 </div>
-                {c.status === "Published" ? (
+                {c.status === "Draft" && c.reviewNote && <p className="w-full text-sm text-muted">Sent back: {c.reviewNote}</p>}
+                {c.status === "Pending" ? (
+                  <div className="flex gap-2">
+                    <Button size="sm" onClick={() => setStatus(c, "Published")}>
+                      Approve
+                    </Button>
+                    <Button variant="secondary" size="sm" onClick={() => setSendBack(c)}>
+                      Send back
+                    </Button>
+                  </div>
+                ) : c.status === "Published" ? (
                   <Button
                     variant="secondary"
                     size="sm"
@@ -103,6 +121,17 @@ export default function AdminCourses() {
         )}
       </div>
       {confirm && <ConfirmationModal modalData={confirm} />}
+      {sendBack && (
+        <ReasonDialog
+          title={`Send back ${sendBack.courseName}?`}
+          description="It goes back to the instructor as a draft. They get an email with your note, fix it, and publish again."
+          label="What should the instructor change?"
+          placeholder="e.g. Lesson 3 has no audio. Please re-upload it."
+          confirmText="Send back"
+          onCancel={() => setSendBack(null)}
+          onConfirm={(note) => setStatus(sendBack, "Draft", note)}
+        />
+      )}
     </div>
   );
 }

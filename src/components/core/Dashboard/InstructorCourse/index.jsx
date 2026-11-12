@@ -410,7 +410,7 @@ export default function InstructorCourse() {
         <div>
           <h1 className="font-display text-3xl font-bold text-ink">{data.course.courseName}</h1>
           <p className="mt-1 text-muted">
-            {data.course.status} · {rupees(data.course.price)}
+            {data.course.status === "Pending" ? "Waiting for review" : data.course.status} · {rupees(data.course.price)}
           </p>
         </div>
         <Link to={`/dashboard/edit-course/${courseId}`} className={buttonClass("secondary")}>

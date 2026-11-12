@@ -70,7 +70,7 @@ export default function AdminOverview() {
         <Stat label="Revenue" value={rupees(totals.revenue)} hint={`${rupees(thisMonth.revenue)} this month`} to="/dashboard/admin/purchases" />
         <Stat label="Orders" value={count(totals.orders)} hint={`${thisMonth.orders} this month`} to="/dashboard/admin/purchases" />
         <Stat label="Students" value={count(totals.students)} hint={`${count(totals.instructors)} instructors`} to="/dashboard/admin/users" />
-        <Stat label="Published courses" value={count(totals.publishedCourses)} hint={`${totals.draftCourses} in draft`} to="/dashboard/admin/courses" />
+        <Stat label="Published courses" value={count(totals.publishedCourses)} hint={totals.pendingCourses ? `${totals.pendingCourses} waiting for your review` : `${totals.draftCourses} in draft`} to="/dashboard/admin/courses" />
       </div>
 
       <div className="grid gap-6 xl:grid-cols-2">

@@ -68,7 +68,10 @@ export default function Purchases() {
                   {dateText(p.createdAt)} · {p.courses.length} {p.courses.length === 1 ? "course" : "courses"}
                 </p>
               </div>
-              <p className="text-lg font-bold text-ink">{formatINR(p.amount)}</p>
+              <p className="text-lg font-bold text-ink">
+                <span className={p.refund ? "text-muted line-through" : ""}>{formatINR(p.amount)}</span>
+                {p.refund && <span className="ml-2 rounded-full border border-line px-2 py-0.5 align-middle text-xs font-semibold text-muted">Refunded</span>}
+              </p>
               <Link to={`/dashboard/purchases/${p.orderId}`} className={buttonClass("secondary", "sm")}>
                 Receipt
               </Link>
@@ -161,10 +164,21 @@ export function Receipt() {
           </tbody>
         </table>
 
+        {p.coupon?.code && (
+          <p className="pt-4 text-sm text-[#4A4F6E]">
+            Discount code {p.coupon.code}: {p.coupon.percentOff}% off, already included in the prices above.
+          </p>
+        )}
         <div className="flex items-baseline justify-between pt-5">
           <span className="font-bold">Total paid</span>
           <span className="font-display text-2xl font-semibold tabular-nums">{formatINR(p.amount)}</span>
         </div>
+        {p.refund && (
+          <div className="mt-3 flex items-baseline justify-between text-[#4A4F6E]">
+            <span>Refunded on {dateText(p.refund.at)}</span>
+            <span className="tabular-nums">−{formatINR(p.refund.amount)}</span>
+          </div>
+        )}
         <p className="mt-6 text-sm text-[#4A4F6E]">Paid online through Razorpay. One-time payment with lifetime access to the courses listed.</p>
       </section>
     </div>

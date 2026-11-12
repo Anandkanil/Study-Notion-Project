@@ -6,6 +6,7 @@ export const ACCOUNT_TYPE = {
   
   export const COURSE_STATUS = {
     DRAFT: "Draft",
+    PENDING: "Pending",
     PUBLISHED: "Published",
   }
 /** Where each kind of account lands after logging in, and what "Dashboard" opens. */

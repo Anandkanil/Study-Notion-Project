@@ -19,7 +19,7 @@ export default function PublishCourse() {
 
   // eslint-disable-next-line
   useEffect(() => {
-    if (course?.status === COURSE_STATUS.PUBLISHED) {
+    if (course?.status === COURSE_STATUS.PUBLISHED || course?.status === COURSE_STATUS.PENDING) {
       setValue("public", true)
     }
   }, [course.status,setValue])
@@ -36,7 +36,7 @@ export default function PublishCourse() {
   const handleCoursePublish = async () => {
     // check if form has been updated or not
     if (
-      (course?.status === COURSE_STATUS.PUBLISHED &&
+      ((course?.status === COURSE_STATUS.PUBLISHED || course?.status === COURSE_STATUS.PENDING) &&
         getValues("public") === true) ||
       (course?.status === COURSE_STATUS.DRAFT && getValues("public") === false)
     ) {
@@ -56,7 +56,7 @@ export default function PublishCourse() {
       formData,
       token,
       courseStatus === COURSE_STATUS.PUBLISHED
-        ? "Published! Your course is now in the catalog."
+        ? "Sent for review. You'll get an email when an admin approves it."
         : "Saved as a draft. Only you can see it."
     )
     if (result) {
@@ -85,9 +85,16 @@ export default function PublishCourse() {
               className="border-gray-300 h-4 w-4 rounded bg-richblack-500 text-richblack-400 focus:ring-2 focus:ring-richblack-5"
             />
             <span className="ml-2 text-richblack-400">
-              Make this course as public
+              Publish this course
             </span>
           </label>
+          <p className="mt-2 text-sm text-muted">
+            {course?.status === COURSE_STATUS.PUBLISHED
+              ? "It's live in the catalog. Untick to take it down."
+              : course?.status === COURSE_STATUS.PENDING
+                ? "It's waiting for an admin's review. Untick to withdraw it."
+                : "An admin checks every new course before it appears in the catalog. You'll get an email when it's approved."}
+          </p>
         </div>
 
         {/* Next Prev Button */}

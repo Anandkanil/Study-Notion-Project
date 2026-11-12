@@ -133,3 +133,83 @@ export function useDebounced(value, ms = 300) {
   }, [value, ms]);
   return v;
 }
+
+/**
+ * Dialog that asks for a short written reason before an action (send back, suspend, refund).
+ * props: title, description, label, placeholder, confirmText, danger, minLength, onConfirm(text), onCancel
+ */
+export function ReasonDialog({ title, description, label, placeholder, confirmText, danger, minLength = 5, onConfirm, onCancel }) {
+  const [text, setText] = useState("");
+  const [busy, setBusy] = useState(false);
+  const ref = React.useRef(null);
+  useEffect(() => {
+    const last = document.activeElement;
+    ref.current?.focus();
+    const onKey = (e) => e.key === "Escape" && !busy && onCancel();
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      last?.focus?.();
+    };
+  }, [onCancel, busy]);
+  const ok = text.trim().length >= minLength;
+  return (
+    <div className="fixed inset-0 z-[60] grid place-items-center bg-black/60 p-4" onMouseDown={(e) => e.target === e.currentTarget && !busy && onCancel()}>
+      <form
+        role="dialog"
+        aria-modal="true"
+        aria-label={title}
+        onSubmit={async (e) => {
+          e.preventDefault();
+          if (!ok) return;
+          setBusy(true);
+          await onConfirm(text.trim());
+          setBusy(false);
+        }}
+        className="flex w-full max-w-md flex-col gap-4 rounded-2xl border border-line bg-surface p-6 shadow-[var(--shadow-pop)]"
+      >
+        <h2 className="font-display text-xl font-medium text-ink">{title}</h2>
+        {description && <p className="text-muted">{description}</p>}
+        <label className="flex flex-col gap-1.5">
+          <span className="text-sm font-semibold text-ink">{label}</span>
+          <textarea ref={ref} value={text} onChange={(e) => setText(e.target.value)} rows={3} maxLength={500} placeholder={placeholder} className="w-full rounded-xl border border-field bg-bg px-3 py-2 text-ink placeholder:text-muted focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/30" />
+          {text.length > 0 && !ok && <span className="text-sm text-muted">At least {minLength} characters.</span>}
+        </label>
+        <div className="flex justify-end gap-2">
+          <Button variant="secondary" onClick={onCancel} disabled={busy}>
+            Cancel
+          </Button>
+          <Button type="submit" variant={danger ? "danger" : "primary"} loading={busy} loadingText="Working…" disabled={!ok}>
+            {confirmText}
+          </Button>
+        </div>
+      </form>
+    </div>
+  );
+}
+
+/** Downloads an admin CSV export (needs the login header, so not a plain link). */
+export function useCsvDownload() {
+  const { token } = useSelector((state) => state.auth);
+  return useCallback(
+    async (kind) => {
+      const id = toast.loading("Preparing your download…");
+      try {
+        const res = await apiConnector("GET", `${adminEndpoints.BASE}/export/${kind}`, null, { Authorization: `Bearer ${token}` });
+        const blob = new Blob([res.data], { type: "text/csv;charset=utf-8" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `studynotion-${kind}-${new Date().toISOString().slice(0, 10)}.csv`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+        toast.success("Download started", { id });
+      } catch (error) {
+        toast.error(error.response?.data?.message || "The export couldn't be created. Please try again.", { id });
+      }
+    },
+    [token]
+  );
+}
