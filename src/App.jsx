@@ -33,6 +33,7 @@ const EnrolledCourses = lazy(() => import("./components/core/Dashboard/EnrolledC
 const Certificate = lazy(() => import("./components/core/Dashboard/Certificate"));
 const Purchases = lazy(() => import("./components/core/Dashboard/Purchases"));
 const Wishlist = lazy(() => import("./components/core/Dashboard/Wishlist"));
+const InstructorCourse = lazy(() => import("./components/core/Dashboard/InstructorCourse"));
 const AdminOverview = lazy(() => import("./components/core/Dashboard/Admin/Overview"));
 const AdminSubjects = lazy(() => import("./components/core/Dashboard/Admin/Subjects"));
 const AdminCourses = lazy(() => import("./components/core/Dashboard/Admin/Courses"));
@@ -73,6 +74,7 @@ const TITLES = [
   [/^\/dashboard\/purchases\/./, "Receipt"],
   [/^\/dashboard\/purchases/, "Purchases"],
   [/^\/dashboard\/wishlist/, "Wishlist"],
+  [/^\/dashboard\/instructor\/courses\//, "Course stats and tools"],
   [/^\/dashboard\/instructor/, "Instructor dashboard"],
   [/^\/dashboard\/my-courses/, "My courses"],
   [/^\/dashboard\/add-course/, "New course"],
@@ -204,6 +206,7 @@ function App() {
                 <Route path="/dashboard/cart" element={<RequireRole role={ACCOUNT_TYPE.STUDENT} fallback={dashboardHome}><Cart /></RequireRole>} />
                 <Route path="/dashboard/enrolled-courses" element={<RequireRole role={ACCOUNT_TYPE.STUDENT} fallback={dashboardHome}><EnrolledCourses /></RequireRole>} />
                 <Route path="/dashboard/certificate/:courseId" element={<RequireRole role={ACCOUNT_TYPE.STUDENT} fallback={dashboardHome}><Certificate /></RequireRole>} />
+                <Route path="/dashboard/instructor/courses/:courseId" element={<RequireRole role={ACCOUNT_TYPE.INSTRUCTOR} fallback={dashboardHome}><InstructorCourse /></RequireRole>} />
                 <Route path="/dashboard/wishlist" element={<RequireRole role={ACCOUNT_TYPE.STUDENT} fallback={dashboardHome}><Wishlist /></RequireRole>} />
                 <Route path="/dashboard/purchases" element={<RequireRole role={ACCOUNT_TYPE.STUDENT} fallback={dashboardHome}><Purchases /></RequireRole>} />
                 <Route path="/dashboard/purchases/:orderId" element={<RequireRole role={ACCOUNT_TYPE.STUDENT} fallback={dashboardHome}><Receipt /></RequireRole>} />

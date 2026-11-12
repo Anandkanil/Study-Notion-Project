@@ -31,7 +31,7 @@ function loadScript(src) {
 }
 
 // Main function to handle course purchase
-export async function buyCourse(token, courses, userDetails, navigate, dispatch) {
+export async function buyCourse(token, courses, userDetails, navigate, dispatch, couponCode) {
     const toastId = toast.loading("Opening secure checkout…");
     
     try {
@@ -54,7 +54,7 @@ export async function buyCourse(token, courses, userDetails, navigate, dispatch)
         const orderResponse = await apiConnector(
             "POST",
             COURSE_PAYMENT_API,
-            { courses },
+            couponCode ? { courses, couponCode } : { courses },
             {
                 Authorization: `Bearer ${token}`,
             }

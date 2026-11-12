@@ -80,6 +80,7 @@ app.use('/api/v1/course',courseRoute);
 app.use('/api/v1/payment',paymentRoute);
 app.use('/api/v1/reach',contactRoute);
 app.use('/api/v1/admin',require('./routes/Admin'));
+app.use('/api/v1/instructor',require('./routes/Instructor'));
 
 app.get('/',(req,res)=>{res.send(`<h1>Welcome to the StudyNotion API</h1>`)});
 

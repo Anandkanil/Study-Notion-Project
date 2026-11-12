@@ -7,6 +7,7 @@ import toast from "react-hot-toast";
 import Footer from "../components/common/Footer";
 import WishlistButton from "../components/common/WishlistButton";
 import PreviewModal from "../components/core/Course/PreviewModal";
+import DiscountCode from "../components/common/DiscountCode";
 import { categorySlug } from "../components/common/Navbar";
 import { Button, EmptyState, buttonClass } from "../components/ui";
 import { buyCourse } from "../services/operations/studentFeaturesAPI";
@@ -73,6 +74,12 @@ function Reviews({ reviews, average }) {
                       {r.createdAt && <span>{formattedDate(r.createdAt)}</span>}
                     </p>
                     {r.review && <p className="mt-2 max-w-prose whitespace-pre-line text-ink">{r.review}</p>}
+                    {r.reply?.text && (
+                      <div className="mt-3 max-w-prose border-l-2 border-accent pl-4">
+                        <p className="text-sm font-semibold text-muted">Reply from the instructor{r.reply.at ? ` · ${formattedDate(r.reply.at)}` : ""}</p>
+                        <p className="mt-1 whitespace-pre-line text-ink">{r.reply.text}</p>
+                      </div>
+                    )}
                   </div>
                 </li>
               );
@@ -148,6 +155,7 @@ const CourseDetails = () => {
 
   // Phones: once the price card scrolls away, keep price + main action in a bottom bar
   const [previewOpen, setPreviewOpen] = useState(false);
+  const [discount, setDiscount] = useState(null);
   const mobileCardRef = useRef(null);
   const [showBar, setShowBar] = useState(false);
   useEffect(() => {
@@ -226,7 +234,7 @@ const CourseDetails = () => {
     if (isInstructorUser) return toast.error(`${user.accountType} accounts can't buy courses. Log in with a student account.`);
     setBuying(true);
     try {
-      await buyCourse(token, [courseId], user, navigate, dispatch);
+      await buyCourse(token, [courseId], user, navigate, dispatch, discount?.code);
     } finally {
       setBuying(false);
     }
@@ -264,7 +272,14 @@ const CourseDetails = () => {
         )}
       </div>
       <div className="flex flex-col gap-3 p-5">
-        <p className="font-display text-3xl font-semibold text-ink">{formatINR(course.price)}</p>
+        {discount ? (
+          <p className="flex flex-wrap items-baseline gap-3">
+            <span className="font-display text-3xl font-semibold text-ink">{formatINR(discount.newPrice)}</span>
+            <span className="text-lg text-muted line-through">{formatINR(course.price)}</span>
+          </p>
+        ) : (
+          <p className="font-display text-3xl font-semibold text-ink">{formatINR(course.price)}</p>
+        )}
         {isEnrolled ? (
           <Link to={startHref} className={buttonClass("primary", "lg")}>
             Go to course
@@ -288,6 +303,7 @@ const CourseDetails = () => {
               </Button>
             )}
             <WishlistButton variant="inline" courseId={course._id} courseName={course.courseName} />
+            {!isInstructorUser && <DiscountCode courseIds={[course._id]} applied={discount} onApply={setDiscount} />}
           </>
         )}
         <p className="text-center text-sm text-muted">One-time payment · Lifetime access</p>
@@ -473,7 +489,7 @@ const CourseDetails = () => {
           <div className="mx-auto flex max-w-6xl items-center gap-3">
             <div className="min-w-0 flex-1">
               <p className="truncate text-sm text-muted">{course.courseName}</p>
-              <p className="font-display text-xl font-semibold text-ink">{formatINR(course.price)}</p>
+              <p className="font-display text-xl font-semibold text-ink">{formatINR(discount ? discount.newPrice : course.price)}</p>
             </div>
             {isEnrolled ? (
               <Link to={startHref} className={buttonClass("primary")}>
@@ -503,7 +519,7 @@ const CourseDetails = () => {
                 handleBuy();
               }}
             >
-              Buy for {formatINR(course.price)}
+              Buy for {formatINR(discount ? discount.newPrice : course.price)}
             </Button>
           }
         />

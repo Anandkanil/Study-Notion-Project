@@ -6,22 +6,22 @@ import { apiConnector } from "../../../../services/apiconnector";
 import { adminEndpoints } from "../../../../services/apis";
 import { Button, EmptyState } from "../../../ui";
 
-/** Calls the admin API with the current login. Throws with the server's message. */
-export function useAdminApi() {
+/** Calls an API (the admin API by default) with the current login. Throws with the server's message. */
+export function useAdminApi(base = adminEndpoints.BASE) {
   const { token } = useSelector((state) => state.auth);
   return useCallback(
     async (method, path, body, params) => {
-      const res = await apiConnector(method, `${adminEndpoints.BASE}${path}`, body ?? null, { Authorization: `Bearer ${token}` }, params ?? null);
+      const res = await apiConnector(method, `${base}${path}`, body ?? null, { Authorization: `Bearer ${token}` }, params ?? null);
       if (!res.data?.success) throw new Error(res.data?.message || "Something went wrong");
       return res.data;
     },
-    [token]
+    [token, base]
   );
 }
 
 /** Loads a GET endpoint; re-runs when `deps` change. Returns [state, reload]. */
-export function useAdminLoad(path, params, deps = []) {
-  const api = useAdminApi();
+export function useAdminLoad(path, params, deps = [], base) {
+  const api = useAdminApi(base);
   const [state, setState] = useState({ status: "loading", data: null, meta: null });
   const load = useCallback(async () => {
     setState((s) => ({ ...s, status: "loading" }));

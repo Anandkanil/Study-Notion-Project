@@ -125,6 +125,9 @@ export default function MyCourses() {
                     {!isPublished && lessons === 0 && <p className="text-sm font-medium text-accent-text">Add at least one lesson, then publish it.</p>}
                   </div>
                   <div className="flex w-full flex-wrap items-start gap-2 sm:w-auto sm:flex-col">
+                    <Link to={`/dashboard/instructor/courses/${c._id}`} className={buttonClass("primary", "sm")}>
+                      Stats &amp; tools
+                    </Link>
                     <Link to={`/dashboard/edit-course/${c._id}`} className={buttonClass("secondary", "sm")}>
                       Edit
                     </Link>

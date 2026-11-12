@@ -8,9 +8,12 @@ const crypto = require("crypto");
 const mongoose = require("mongoose");
 const CourseProgress = require("../models/CourseProgress");
 const Purchase = require("../models/Purchase");
+const Coupon = require("../models/Coupon");
+const { findCoupon, discounted, normalize } = require("../utils/coupons");
+const { newEnrolmentEmail } = require("../mail/templates/newEnrolmentEmail");
 
-// Razorpay allows 15 note keys per order: one for the buyer, the rest for course ids.
-const MAX_COURSES_PER_ORDER = 14;
+// Razorpay allows 15 note keys per order: buyer, coupon, and up to 13 course ids.
+const MAX_COURSES_PER_ORDER = 13;
 
 // Initiate the Razorpay order
 exports.capturePayment = async (req, res) => {
@@ -22,6 +25,19 @@ exports.capturePayment = async (req, res) => {
   }
   if (courses.length > MAX_COURSES_PER_ORDER) {
     return res.status(400).json({ success: false, message: `You can buy up to ${MAX_COURSES_PER_ORDER} courses at once.` });
+  }
+
+  // Optional discount code, checked against the courses being bought
+  let coupon = null;
+  if (req.body?.couponCode) {
+    try {
+      const found = await findCoupon(req.body.couponCode, courses);
+      if (found.error) return res.status(400).json({ success: false, message: found.error });
+      coupon = found.coupon;
+    } catch (error) {
+      console.error("capturePayment coupon:", error.message);
+      return res.status(500).json({ success: false, message: "Couldn't check the discount code. Please try again." });
+    }
   }
 
   let totalAmount = 0;
@@ -37,7 +53,7 @@ exports.capturePayment = async (req, res) => {
       if (course.studentsEnrolled.some((id) => String(id) === String(userId))) {
         return res.status(409).json({ success: false, message: `You are already enrolled in ${course.courseName}` });
       }
-      totalAmount += course.price;
+      totalAmount += coupon && String(coupon.course) === String(courseId) ? discounted(course.price, coupon.percentOff) : course.price;
     }
   } catch (error) {
     console.error("capturePayment:", error.message);
@@ -45,7 +61,12 @@ exports.capturePayment = async (req, res) => {
   }
 
   // The order itself records who is buying which courses; verifyPayment trusts only this.
+  if (totalAmount < 1) {
+    return res.status(400).json({ success: false, message: "The order total is too low to pay online." });
+  }
+
   const notes = { userId: String(userId) };
+  if (coupon) notes.coupon = `${coupon.code}:${coupon.percentOff}:${coupon.course}`;
   courses.forEach((id, i) => { notes[`c${i}`] = id; });
 
   try {
@@ -118,12 +139,21 @@ const recordPurchase = async ({ order, paymentId, userId, courses }) => {
   try {
     const found = await Course.find({ _id: { $in: courses } }).select("courseName price").lean();
     const byId = new Map(found.map((c) => [String(c._id), c]));
-    await Purchase.updateOne(
+    // Discount used on this order (recorded in the order notes when it was created)
+    const [code, pct, couponCourse] = String(order.notes?.coupon || "").split(":");
+    const coupon = code ? { code, percentOff: Number(pct), course: couponCourse } : null;
+    const priceOf = (id) => {
+      const base = byId.get(String(id))?.price;
+      if (base == null) return null;
+      return coupon && String(coupon.course) === String(id) ? discounted(base, coupon.percentOff) : base;
+    };
+    const result = await Purchase.updateOne(
       { orderId: order.id },
       {
         $setOnInsert: {
           user: userId,
-          courses: courses.map((id) => ({ course: id, courseName: byId.get(String(id))?.courseName || "Course", price: byId.get(String(id))?.price ?? null })),
+          courses: courses.map((id) => ({ course: id, courseName: byId.get(String(id))?.courseName || "Course", price: priceOf(id) })),
+          ...(coupon ? { coupon } : {}),
           amount: Math.round(Number(order.amount || 0)) / 100,
           currency: order.currency || "INR",
           orderId: order.id,
@@ -132,8 +162,33 @@ const recordPurchase = async ({ order, paymentId, userId, courses }) => {
       },
       { upsert: true }
     );
+    // Count the code as used once per paid order
+    if (coupon && result?.upsertedCount) {
+      await Coupon.updateOne({ code: normalize(coupon.code), course: coupon.course }, { $inc: { uses: 1 } });
+    }
   } catch (error) {
     console.error("Could not record purchase:", error.message);
+  }
+};
+
+// POST /payment/coupon { code, courses } — check a code and show the new price before paying
+exports.checkCoupon = async (req, res) => {
+  const courses = Array.isArray(req.body?.courses) ? [...new Set(req.body.courses.map(String))].filter((id) => mongoose.Types.ObjectId.isValid(id)) : [];
+  if (!req.body?.code || courses.length === 0) return res.status(400).json({ success: false, message: "Enter a code." });
+  try {
+    const found = await findCoupon(req.body.code, courses);
+    if (found.error) return res.status(400).json({ success: false, message: found.error });
+    const c = found.coupon;
+    const course = await Course.findById(c.course).select("courseName price").lean();
+    const newPrice = discounted(course.price, c.percentOff);
+    return res.status(200).json({
+      success: true,
+      message: `${c.code} applied: ${c.percentOff}% off ${course.courseName}`,
+      data: { code: c.code, percentOff: c.percentOff, courseId: String(c.course), courseName: course.courseName, oldPrice: course.price, newPrice, saving: course.price - newPrice },
+    });
+  } catch (error) {
+    console.error("checkCoupon:", error.message);
+    return res.status(500).json({ success: false, message: "Couldn't check the code. Please try again." });
   }
 };
 
@@ -150,6 +205,17 @@ exports.getPurchases = async (req, res) => {
     return res.status(500).json({ success: false, message: "Your purchases couldn't load. Please try again." });
   }
 };
+
+async function notifyInstructor(course, student) {
+  if (!course.instructor) return;
+  const teacher = await User.findById(course.instructor).select("email firstName").lean();
+  if (!teacher?.email) return;
+  mailSender.inBackground(
+    teacher.email,
+    `New student in ${course.courseName}`,
+    newEnrolmentEmail(teacher.firstName, `${student.firstName} ${student.lastName || ""}`.trim(), course.courseName, (course.studentsEnrolled || []).length)
+  );
+}
 
 // Enrols the user in each course. Safe to call twice for the same order.
 const enrollStudents = async (courses, userId) => {
@@ -184,6 +250,8 @@ const enrollStudents = async (courses, userId) => {
           `Successfully Enrolled into ${enrolledCourse.courseName}`,
           courseEnrollmentEmail(enrolledCourse.courseName, enrolledStudent.firstName, enrolledCourse.thumbnail)
         );
+        // Tell the instructor about the new student (a notice only: never blocks enrolment)
+        notifyInstructor(enrolledCourse, enrolledStudent).catch((e) => console.error("Instructor notice:", e.message));
       }
     } catch (error) {
       console.error("Enrolment error:", error.message);
