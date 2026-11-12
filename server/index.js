@@ -16,13 +16,19 @@ const {rateLimit}=require('./middlewares/rateLimit');
 const {alertOnServerErrors,watchProcess}=require('./utils/alerts');
 const {cloudinaryConnect}=require('./config/cloudinary');
 const fileUpload=require('express-fileupload');
+const os=require('os');
+const path=require('path');
+const {backfillPurchases}=require('./utils/backfillPurchases');
 const dotenv=require('dotenv');
 dotenv.config();
 
 
 const PORT=process.env.PORT || 4000;
 
-connectDB();
+connectDB().then(()=>{
+  // Rebuild receipts for orders paid before purchases were recorded (idempotent)
+  setTimeout(()=>backfillPurchases(),5000);
+});
 
 // Render sits behind one proxy: trust it so req.ip is the visitor's address
 app.set('trust proxy', 1);
@@ -49,7 +55,16 @@ app.use(cors({
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
 }));
 
-app.use(fileUpload({useTempFiles:true,tempFileDir:"/temp"}))
+// Uploads go to the system temp folder (always writable; "/temp" isn't on Render)
+// and are capped at 500 MB for lesson videos. Images are checked per route.
+app.use(fileUpload({
+  useTempFiles:true,
+  tempFileDir:path.join(os.tmpdir(),'studynotion-uploads'),
+  createParentPath:true,
+  limits:{fileSize:500*1024*1024},
+  abortOnLimit:true,
+  responseOnLimit:JSON.stringify({success:false,message:'That file is too large. The limit is 500 MB.'}),
+}))
 app.use(sanitizeInput);
 // Email ALERT_EMAIL when something breaks (throttled)
 app.use(alertOnServerErrors);
