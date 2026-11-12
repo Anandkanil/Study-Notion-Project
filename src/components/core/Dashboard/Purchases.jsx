@@ -56,7 +56,7 @@ export default function Purchases() {
         </div>
       ) : list.length === 0 ? (
         <EmptyState title="No purchases yet" action={<Link to="/" className={buttonClass("primary")}>Browse courses</Link>}>
-          Courses you buy appear here with a receipt. Purchases made before 11 November 2026 aren't listed, but those courses are still in My learning.
+          Courses you buy appear here, each with a receipt you can download.
         </EmptyState>
       ) : (
         <ul className="flex flex-col gap-3">
