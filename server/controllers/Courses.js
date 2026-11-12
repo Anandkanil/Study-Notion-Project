@@ -270,7 +270,7 @@ const getCourseDetails = async (req, res) => {
             // Reviews with the reviewer's public name and photo only
             .populate({
                 path: 'ratingAndReviews',
-                select: 'rating review createdAt user',
+                select: 'rating review reply createdAt user',
                 options: { sort: { createdAt: -1 } },
                 populate: { path: 'user', select: 'firstName lastName image' },
             })

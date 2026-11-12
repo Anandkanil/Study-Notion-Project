@@ -23,6 +23,11 @@ const ratingAndReviewSchema = new mongoose.Schema({
     type: String,
     maxlength: 500, // Optional limit on the length of the review
     trim: true
+  },
+  // The instructor's public reply, shown under the review
+  reply: {
+    text: { type: String, trim: true, maxlength: 1000 },
+    at: Date
   }
 }, {
   timestamps: true // Automatically adds createdAt and updatedAt timestamps

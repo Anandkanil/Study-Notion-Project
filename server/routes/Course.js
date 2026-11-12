@@ -80,6 +80,8 @@ router.get("/getAllCourses", getAllCourses)
 router.get("/search", searchCourses)
 // Free preview: first lesson of a published course
 router.get("/preview/:courseId", getCoursePreview)
+// Announcements for enrolled students
+router.get("/:courseId/announcements", auth, require("../controllers/Instructor").listAnnouncementsForCourse)
 // Get Details for a Specific Courses
 router.post("/getCourseDetails", getCourseDetails)
 // Get Details for a Specific Courses
