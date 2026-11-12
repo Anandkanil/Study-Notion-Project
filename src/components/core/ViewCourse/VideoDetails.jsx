@@ -8,6 +8,7 @@ import { updateCompletedLectures } from "../../../slices/viewCourseSlice";
 import { Button, buttonClass } from "../../ui";
 import { formatClock, getPosition, setLastLesson, setPosition } from "../../../utils/learningMemory";
 import Announcements from "./Announcements";
+import LessonTabs from "./LessonTabs";
 
 // The last stretch of a video counts as watched: 10 s, or 15% of a short clip
 const endMargin = (duration) => Math.min(10, duration * 0.15);
@@ -224,6 +225,18 @@ const VideoDetails = () => {
           )
         )}
       </nav>
+      <LessonTabs
+        courseId={courseId}
+        lessonId={subSectionId}
+        getTime={() => videoRef.current?.currentTime || 0}
+        seek={(t) => {
+          const v = videoRef.current;
+          if (!v) return;
+          v.currentTime = t;
+          v.play?.().catch(() => {});
+          v.scrollIntoView({ behavior: "smooth", block: "center" });
+        }}
+      />
     </article>
   );
 };

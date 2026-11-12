@@ -29,6 +29,11 @@ export const studentEndpoints = {
   COUPON_API: BASE_URL + "/payment/coupon",
 }
 
+// LESSON NOTES AND Q&A (enrolled students and the course's instructor)
+export const learnEndpoints = {
+  BASE: BASE_URL + "/learn",
+}
+
 // INSTRUCTOR TOOLS (need an Instructor login; each course must be theirs)
 export const instructorEndpoints = {
   BASE: BASE_URL + "/instructor",
