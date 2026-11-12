@@ -57,12 +57,13 @@ exports.getCourseStats = async (req, res) => {
     const [progress, sales, salesByMonth, ratings] = await Promise.all([
       CourseProgress.find({ courseID: course._id }).select('completedVideos').lean(),
       Purchase.aggregate([
+        { $match: { 'refund.id': { $exists: false } } },
         { $unwind: '$courses' },
         { $match: { 'courses.course': courseOid } },
         { $group: { _id: null, revenue: { $sum: { $ifNull: ['$courses.price', 0] } }, orders: { $sum: 1 } } },
       ]),
       Purchase.aggregate([
-        { $match: { createdAt: { $gte: since } } },
+        { $match: { createdAt: { $gte: since }, 'refund.id': { $exists: false } } },
         { $unwind: '$courses' },
         { $match: { 'courses.course': courseOid } },
         { $group: { _id: { y: { $year: '$createdAt' }, m: { $month: '$createdAt' } }, revenue: { $sum: { $ifNull: ['$courses.price', 0] } }, sales: { $sum: 1 } } },
@@ -264,7 +265,7 @@ exports.createCoupon = async (req, res) => {
   const expiresAt = req.body?.expiresAt ? new Date(req.body.expiresAt) : null;
   const maxUses = req.body?.maxUses === '' || req.body?.maxUses == null ? null : Number(req.body.maxUses);
   if (!/^[A-Z0-9_-]{3,20}$/.test(code)) return res.status(400).json({ success: false, message: 'Codes are 3–20 letters, numbers, - or _.' });
-  if (!Number.isInteger(percentOff) || percentOff < 1 || percentOff > 90) return res.status(400).json({ success: false, message: 'The discount must be a whole number from 1 to 90 %.' });
+  if (!Number.isInteger(percentOff) || percentOff < 1 || percentOff > 90) return res.status(400).json({ success: false, message: 'The discount must be a whole number from 1 to 90%.' });
   if (expiresAt && (Number.isNaN(expiresAt.getTime()) || expiresAt <= new Date())) return res.status(400).json({ success: false, message: 'Pick an expiry date in the future, or leave it empty.' });
   if (maxUses !== null && (!Number.isInteger(maxUses) || maxUses < 1 || maxUses > 100000)) return res.status(400).json({ success: false, message: 'The use limit must be a whole number, or empty for unlimited.' });
   try {

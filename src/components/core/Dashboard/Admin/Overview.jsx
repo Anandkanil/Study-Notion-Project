@@ -111,9 +111,10 @@ export default function AdminOverview() {
                         "Deleted account"
                       )}{" "}
                       · {shortDate(p.createdAt)}
+                      {p.refund && " · Refunded"}
                     </p>
                   </div>
-                  <span className="shrink-0 font-semibold tabular-nums text-ink">{rupees(p.amount)}</span>
+                  <span className={`shrink-0 font-semibold tabular-nums ${p.refund ? "text-muted line-through" : "text-ink"}`}>{rupees(p.amount)}</span>
                 </li>
               ))}
             </ul>

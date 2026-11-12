@@ -124,7 +124,14 @@ function ReviewsTab({ courseId }) {
       {data.map((r) => (
         <li key={r._id} className="flex flex-col gap-3 rounded-2xl border border-line bg-surface p-5">
           <div className="flex flex-wrap items-baseline justify-between gap-2">
-            <p className="font-semibold text-ink">{fullName(r.user)}</p>
+            <p className="font-semibold text-ink">
+              {fullName(r.user)}
+              {r.hidden && (
+                <span className="ml-2 rounded-full border border-line px-2 py-0.5 align-middle text-xs font-semibold text-muted" title="An admin hid this review. Students don't see it and it doesn't count towards your rating.">
+                  Hidden by admin
+                </span>
+              )}
+            </p>
             <p className="text-sm text-muted">
               {"★".repeat(r.rating)}
               <span className="text-line">{"★".repeat(5 - r.rating)}</span> · {shortDate(r.createdAt)}
