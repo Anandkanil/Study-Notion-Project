@@ -3,6 +3,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { Link, useNavigate } from "react-router-dom";
 
 import toast from "react-hot-toast";
+import DiscountCode from "../../../common/DiscountCode";
 
 import { addToCart, removeFromCart } from "../../../../slices/cartSlice";
 import { buyCourse } from "../../../../services/operations/studentFeaturesAPI";
@@ -12,6 +13,9 @@ import { Button, EmptyState, buttonClass } from "../../../ui";
 
 export default function Cart() {
   const { cart, total, totalItems } = useSelector((state) => state.cart);
+  const [applied, setDiscount] = useState(null);
+  // Drop the discount if its course leaves the cart
+  const discount = applied && cart.some((c) => String(c._id) === String(applied.courseId)) ? applied : null;
   const { token } = useSelector((state) => state.auth);
   const { user } = useSelector((state) => state.profile);
   const dispatch = useDispatch();
@@ -21,7 +25,7 @@ export default function Cart() {
   const checkout = async () => {
     setBuying(true);
     try {
-      await buyCourse(token, cart.map((c) => c._id), user, navigate, dispatch);
+      await buyCourse(token, cart.map((c) => c._id), user, navigate, dispatch, discount?.code);
     } finally {
       setBuying(false);
     }
@@ -105,11 +109,20 @@ export default function Cart() {
                 </dt>
                 <dd>{formatINR(total)}</dd>
               </div>
+              {discount && (
+                <div className="flex justify-between text-success">
+                  <dt>Discount ({discount.code})</dt>
+                  <dd>−{formatINR(discount.saving)}</dd>
+                </div>
+              )}
               <div className="flex justify-between border-t border-line pt-3 text-lg font-bold text-ink">
                 <dt>Total</dt>
-                <dd>{formatINR(total)}</dd>
+                <dd>{formatINR(total - (discount?.saving || 0))}</dd>
               </div>
             </dl>
+            <div className="mt-4 flex flex-col">
+              <DiscountCode courseIds={cart.map((c) => c._id)} applied={discount} onApply={setDiscount} />
+            </div>
             <Button size="lg" className="mt-5 w-full" onClick={checkout} loading={buying} loadingText="Opening checkout…">
               Checkout
             </Button>

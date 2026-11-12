@@ -7,6 +7,7 @@ import { markLectureAsComplete } from "../../../services/operations/courseDetail
 import { updateCompletedLectures } from "../../../slices/viewCourseSlice";
 import { Button, buttonClass } from "../../ui";
 import { formatClock, getPosition, setLastLesson, setPosition } from "../../../utils/learningMemory";
+import Announcements from "./Announcements";
 
 // The last stretch of a video counts as watched: 10 s, or 15% of a short clip
 const endMargin = (duration) => Math.min(10, duration * 0.15);
@@ -122,6 +123,7 @@ const VideoDetails = () => {
 
   return (
     <article className="flex flex-col gap-5">
+      <Announcements courseId={courseId} />
       <div className="relative overflow-hidden rounded-2xl border border-line bg-[rgb(8_10_24)]">
         <video
           key={current.sub._id}

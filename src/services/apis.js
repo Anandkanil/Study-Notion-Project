@@ -26,6 +26,12 @@ export const studentEndpoints = {
   COURSE_VERIFY_API: BASE_URL + "/payment/verifyPayment",
   SEND_PAYMENT_SUCCESS_EMAIL_API: BASE_URL + "/payment/sendPaymentSuccessEmail",
   PURCHASES_API: BASE_URL + "/payment/purchases",
+  COUPON_API: BASE_URL + "/payment/coupon",
+}
+
+// INSTRUCTOR TOOLS (need an Instructor login; each course must be theirs)
+export const instructorEndpoints = {
+  BASE: BASE_URL + "/instructor",
 }
 
 // ADMIN ENDPOINTS (all need an Admin login)
@@ -38,6 +44,7 @@ export const courseEndpoints = {
   GET_ALL_COURSE_API: BASE_URL + "/course/getAllCourses",
   SEARCH_COURSES_API: BASE_URL + "/course/search",
   COURSE_PREVIEW_API: BASE_URL + "/course/preview",
+  COURSE_BASE: BASE_URL + "/course",
   COURSE_DETAILS_API: BASE_URL + "/course/getCourseDetails",
   EDIT_COURSE_API: BASE_URL + "/course/editCourse",
   COURSE_CATEGORIES_API: BASE_URL + "/course/showAllCategories",
