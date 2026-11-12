@@ -172,7 +172,8 @@ const enrollStudents = async (courses, userId) => {
 
       const enrolledStudent = await User.findByIdAndUpdate(
         userId,
-        { $addToSet: { courses: courseId, courseProgress: courseProgress._id } },
+        // Enrol, and drop the course from the wishlist now that it's bought
+        { $addToSet: { courses: courseId, courseProgress: courseProgress._id }, $pull: { wishlist: courseId } },
         { new: true }
       );
 

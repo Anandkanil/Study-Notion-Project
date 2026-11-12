@@ -4,46 +4,68 @@ const SubSection = require("../models/SubSection")
 const CourseProgress = require("../models/CourseProgress")
 const Course = require("../models/Course")
 
+const User = require("../models/User")
+const mailSender = require("../utils/mailSender")
+const { courseCompletionEmail } = require("../mail/templates/courseCompletionEmail")
+const { recordLesson } = require("../utils/learningDays")
+
+const FRONTEND_URL = (process.env.FRONTEND_URL || "https://studynotion-project-1.netlify.app").replace(/\/$/, "")
+
+// Marks one lesson as finished. Also logs the day for streaks, and emails the
+// certificate link the first time every lesson in the course is done.
 exports.updateCourseProgress = async (req, res) => {
-  const { courseId, subsectionId } = req.body
+  const { courseId, subsectionId } = req.body || {}
   const userId = req.user.userId
 
+  if (!mongoose.Types.ObjectId.isValid(String(courseId)) || !mongoose.Types.ObjectId.isValid(String(subsectionId))) {
+    return res.status(400).json({ success: false, message: "Invalid lesson." })
+  }
+
   try {
-    // Check if the subsection is valid
-    const subsection = await SubSection.findById(subsectionId)
-    if (!subsection) {
-      return res.status(404).json({ error: "Invalid subsection" })
+    // The lesson must belong to this course
+    const course = await Course.findById(courseId)
+      .select("courseName courseContent")
+      .populate({ path: "courseContent", select: "subSection" })
+      .lean()
+    if (!course) return res.status(404).json({ success: false, message: "Course not found." })
+    const lessonIds = (course.courseContent || []).flatMap((s) => (s.subSection || []).map(String))
+    if (!lessonIds.includes(String(subsectionId))) {
+      return res.status(400).json({ success: false, message: "That lesson isn't part of this course." })
     }
 
-    // Find the course progress document for the user and course
-    let courseProgress = await CourseProgress.findOne({
-      courseID: courseId,
-      userId: userId,
-    })
-
+    const courseProgress = await CourseProgress.findOne({ courseID: courseId, userId })
     if (!courseProgress) {
-      // If course progress doesn't exist, create a new one
-      return res.status(404).json({
-        success: false,
-        message: "Course progress Does Not Exist",
-      })
-    } else {
-      // If course progress exists, check if the subsection is already completed
-      if (courseProgress.completedVideos.includes(subsectionId)) {
-        return res.status(400).json({ error: "Subsection already completed" })
-      }
-
-      // Push the subsection into the completedVideos array
-      courseProgress.completedVideos.push(subsectionId)
+      return res.status(404).json({ success: false, message: "You're not enrolled in this course." })
+    }
+    if (courseProgress.completedVideos.map(String).includes(String(subsectionId))) {
+      return res.status(200).json({ success: true, message: "Already completed", completedCourse: false })
     }
 
-    // Save the updated course progress
+    const wasComplete = lessonIds.every((id) => courseProgress.completedVideos.map(String).includes(id))
+    courseProgress.completedVideos.push(subsectionId)
     await courseProgress.save()
 
-    return res.status(200).json({ message: "Course progress updated" })
+    const done = new Set(courseProgress.completedVideos.map(String))
+    const completedCourse = !wasComplete && lessonIds.every((id) => done.has(id))
+
+    // Streaks: count today's lesson (best effort; never blocks the progress save)
+    const user = await User.findById(userId).select("learningDays firstName email")
+    if (user) {
+      user.learningDays = recordLesson(user.learningDays)
+      await user.save().catch((e) => console.error("learningDays save:", e.message))
+      if (completedCourse) {
+        mailSender.inBackground(
+          user.email,
+          `You finished ${course.courseName}`,
+          courseCompletionEmail(user.firstName, course.courseName, `${FRONTEND_URL}/dashboard/certificate/${courseId}`)
+        )
+      }
+    }
+
+    return res.status(200).json({ success: true, message: "Course progress updated", completedCourse })
   } catch (error) {
-    console.error(error)
-    return res.status(500).json({ error: "Internal server error" })
+    console.error("updateCourseProgress:", error.message)
+    return res.status(500).json({ success: false, message: "Couldn't save your progress. Please try again." })
   }
 }
 

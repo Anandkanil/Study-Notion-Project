@@ -348,3 +348,86 @@ exports.instructorDashboard=async(req,res)=>{
       message:"Internal Server error",error});
   }
 }
+// ---- Wishlist (students) ----
+const { summarize } = require("../utils/learningDays")
+const CourseModel = require("../models/Course")
+const isObjectId = (id) => /^[a-f0-9]{24}$/i.test(String(id || ""))
+
+// GET /profile/wishlist: saved courses that are still published, newest first
+exports.getWishlist = async (req, res) => {
+  try {
+    const user = await User.findById(req.user.userId)
+      .select("wishlist")
+      .populate({
+        path: "wishlist",
+        match: { status: "Published" },
+        select: "courseName thumbnail price instructor ratingAndReviews",
+        populate: [{ path: "instructor", select: "firstName lastName" }, { path: "ratingAndReviews", select: "rating" }],
+      })
+      .lean()
+    const list = (user?.wishlist || []).filter(Boolean).reverse()
+    return res.status(200).json({ success: true, data: list })
+  } catch (error) {
+    console.error("getWishlist:", error.message)
+    return res.status(500).json({ success: false, message: "Your wishlist couldn't load. Please try again." })
+  }
+}
+
+// POST /profile/wishlist { courseId } — save a course
+exports.addToWishlist = async (req, res) => {
+  const { courseId } = req.body || {}
+  if (!isObjectId(courseId)) return res.status(400).json({ success: false, message: "Invalid course." })
+  try {
+    const course = await CourseModel.findOne({ _id: courseId, status: "Published" }).select("_id studentsEnrolled").lean()
+    if (!course) return res.status(404).json({ success: false, message: "That course isn't available." })
+    if ((course.studentsEnrolled || []).some((id) => String(id) === String(req.user.userId))) {
+      return res.status(409).json({ success: false, message: "You're already enrolled in this course." })
+    }
+    const user = await User.findByIdAndUpdate(req.user.userId, { $addToSet: { wishlist: courseId } }, { new: true }).select("wishlist").lean()
+    return res.status(200).json({ success: true, message: "Saved to your wishlist", data: (user?.wishlist || []).map(String) })
+  } catch (error) {
+    console.error("addToWishlist:", error.message)
+    return res.status(500).json({ success: false, message: "Couldn't save the course. Please try again." })
+  }
+}
+
+// DELETE /profile/wishlist/:courseId — remove a saved course
+exports.removeFromWishlist = async (req, res) => {
+  const { courseId } = req.params
+  if (!isObjectId(courseId)) return res.status(400).json({ success: false, message: "Invalid course." })
+  try {
+    const user = await User.findByIdAndUpdate(req.user.userId, { $pull: { wishlist: courseId } }, { new: true }).select("wishlist").lean()
+    return res.status(200).json({ success: true, message: "Removed from your wishlist", data: (user?.wishlist || []).map(String) })
+  } catch (error) {
+    console.error("removeFromWishlist:", error.message)
+    return res.status(500).json({ success: false, message: "Couldn't remove the course. Please try again." })
+  }
+}
+
+// ---- Learning streaks and weekly goal (students) ----
+
+// GET /profile/learning-stats
+exports.getLearningStats = async (req, res) => {
+  try {
+    const user = await User.findById(req.user.userId).select("learningDays weeklyGoal").lean()
+    return res.status(200).json({ success: true, data: summarize(user?.learningDays || [], user?.weeklyGoal || 3) })
+  } catch (error) {
+    console.error("getLearningStats:", error.message)
+    return res.status(500).json({ success: false, message: "Your progress couldn't load." })
+  }
+}
+
+// PUT /profile/weekly-goal { goal }
+exports.setWeeklyGoal = async (req, res) => {
+  const goal = Number(req.body?.goal)
+  if (!Number.isInteger(goal) || goal < 1 || goal > 50) {
+    return res.status(400).json({ success: false, message: "Pick a goal between 1 and 50 lessons a week." })
+  }
+  try {
+    const user = await User.findByIdAndUpdate(req.user.userId, { weeklyGoal: goal }, { new: true }).select("learningDays weeklyGoal").lean()
+    return res.status(200).json({ success: true, message: `Goal set: ${goal} ${goal === 1 ? "lesson" : "lessons"} a week`, data: summarize(user?.learningDays || [], goal) })
+  } catch (error) {
+    console.error("setWeeklyGoal:", error.message)
+    return res.status(500).json({ success: false, message: "Your goal couldn't be saved. Please try again." })
+  }
+}
