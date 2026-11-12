@@ -21,4 +21,6 @@ router.get("/courses/:courseId/coupons", I.listCoupons)
 router.post("/courses/:courseId/coupons", I.createCoupon)
 router.patch("/coupons/:id", I.setCouponActive)
 
+router.get("/courses/:courseId/questions", require("../controllers/Learn").listCourseQuestionsForInstructor)
+
 module.exports = router

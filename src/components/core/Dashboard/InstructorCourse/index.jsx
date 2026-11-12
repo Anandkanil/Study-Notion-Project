@@ -1,7 +1,9 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Link, useParams, useSearchParams } from "react-router-dom";
 
-import { instructorEndpoints } from "../../../../services/apis";
+import { instructorEndpoints, learnEndpoints } from "../../../../services/apis";
+import { QuestionItem } from "../../ViewCourse/LessonTabs";
+import { Segmented } from "../Admin/shared";
 import { formatINR } from "../../../../utils/formatINR";
 import ConfirmationModal from "../../../common/ConfirmationModal";
 import { Button, EmptyState, Field, buttonClass } from "../../../ui";
@@ -13,6 +15,7 @@ const TABS = [
   ["stats", "Stats"],
   ["reviews", "Reviews"],
   ["announcements", "Announcements"],
+  ["questions", "Q&A"],
   ["codes", "Discount codes"],
 ];
 const MONTH = (y, m, style) => new Date(Date.UTC(y, m - 1, 1)).toLocaleDateString("en-IN", { month: style, year: style === "long" ? "numeric" : undefined, timeZone: "UTC" });
@@ -274,6 +277,47 @@ function AnnouncementsTab({ courseId, students }) {
   );
 }
 
+// ---------- Q&A ----------
+function QuestionsTab({ courseId }) {
+  const learnApi = useAdminApi(learnEndpoints.BASE);
+  const [filter, setFilter] = useState("open");
+  const [{ status, data }, load] = useAdminLoad(`/courses/${courseId}/questions`, filter === "open" ? { open: "1" } : null, [courseId, filter], BASE);
+  const [list, setList] = useState(null);
+  const shown = list ?? data;
+
+  useEffect(() => setList(null), [data]);
+
+  return (
+    <div className="flex flex-col gap-4">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <p className="text-muted">Answer once and every student in the course sees it. The student who asked gets an email.</p>
+        <Segmented label="Show" value={filter} onChange={setFilter} options={[["open", "Waiting for you"], ["all", "All questions"]]} />
+      </div>
+      {status === "failed" ? (
+        <LoadFailed what="Questions" onRetry={load} />
+      ) : !shown ? (
+        <RowsSkeleton rows={3} label="Loading questions" />
+      ) : shown.length === 0 ? (
+        <EmptyState title={filter === "open" ? "You're all caught up" : "No questions yet"}>
+          {filter === "open" ? "Every question has an answer from you or is marked as answered." : "Students can ask under any lesson. Their questions appear here."}
+        </EmptyState>
+      ) : (
+        <ul className="flex flex-col divide-y divide-line rounded-2xl border border-line bg-surface px-4">
+          {shown.map((q) => (
+            <QuestionItem
+              key={q._id}
+              q={{ ...q, isInstructorView: true }}
+              api={learnApi}
+              showLesson
+              onChange={(next) => setList((shown || []).map((x) => (x._id === q._id ? next : x)).filter(Boolean))}
+            />
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
+
 // ---------- Discount codes ----------
 function CodesTab({ courseId, price }) {
   const api = useAdminApi(BASE);
@@ -393,6 +437,7 @@ export default function InstructorCourse() {
         {tab === "stats" && <StatsTab courseId={courseId} data={data} />}
         {tab === "reviews" && <ReviewsTab courseId={courseId} />}
         {tab === "announcements" && <AnnouncementsTab courseId={courseId} students={data.totals.students} />}
+        {tab === "questions" && <QuestionsTab courseId={courseId} />}
         {tab === "codes" && <CodesTab courseId={courseId} price={data.course.price} />}
       </div>
     </div>
