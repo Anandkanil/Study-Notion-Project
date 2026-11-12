@@ -9,7 +9,7 @@ import Navbar from "./components/common/Navbar";
 import ServerWakeNotice from "./components/common/ServerWakeNotice";
 import PageSkeleton from "./components/common/PageSkeleton";
 import PrivateRoute from "./components/core/Auth/PrivateRoute";
-import { ACCOUNT_TYPE } from "./utils/constants";
+import { ACCOUNT_TYPE, homeFor } from "./utils/constants";
 
 // Each page loads only when it is first visited
 const Home = lazy(() => import("./pages/Home"));
@@ -122,12 +122,7 @@ function App() {
   useScrollToTop(location.pathname);
   useOfflineNotice();
 
-  const dashboardHome =
-    user?.accountType === ACCOUNT_TYPE.INSTRUCTOR
-      ? "/dashboard/instructor"
-      : user?.accountType === ACCOUNT_TYPE.ADMIN
-        ? "/dashboard/admin"
-        : "/dashboard/enrolled-courses";
+  const dashboardHome = homeFor(user?.accountType);
 
   return (
     <div className="flex min-h-screen w-full flex-col bg-bg font-sans text-ink">
