@@ -48,7 +48,19 @@ const userSchema = new mongoose.Schema({
     courseProgress: [{
         type: mongoose.Schema.Types.ObjectId,
         ref: 'CourseProgress'
-    }]
+    }],
+    // Courses a student saved for later
+    wishlist: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Course'
+    }],
+    // Lessons finished per day (India time, "YYYY-MM-DD"), last 120 days: powers streaks and weekly goals
+    learningDays: [{
+        _id: false,
+        day: String,
+        lessons: { type: Number, default: 0 }
+    }],
+    weeklyGoal: { type: Number, default: 3, min: 1, max: 50 }
 
 }, {
     timestamps: true // Adds createdAt and updatedAt timestamps automatically

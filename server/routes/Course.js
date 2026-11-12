@@ -9,6 +9,7 @@ const {
   createCourse,
   getAllCourses,
   searchCourses,
+  getCoursePreview,
   getCourseDetails,
   // editCourseStatus,
   getInstructorCourses,
@@ -77,6 +78,8 @@ router.post("/addSubSection", auth, isInstructor, requireCourseOwner, createSubS
 router.get("/getAllCourses", getAllCourses)
 // Public course search
 router.get("/search", searchCourses)
+// Free preview: first lesson of a published course
+router.get("/preview/:courseId", getCoursePreview)
 // Get Details for a Specific Courses
 router.post("/getCourseDetails", getCourseDetails)
 // Get Details for a Specific Courses

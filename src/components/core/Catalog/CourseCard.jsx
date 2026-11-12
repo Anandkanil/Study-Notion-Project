@@ -2,6 +2,7 @@ import React from "react";
 import { Link } from "react-router-dom";
 import GetAvgRating from "../../../utils/avgRating";
 import { formatINR } from "../../../utils/formatINR";
+import WishlistButton from "../../common/WishlistButton";
 
 /** Course card used on Home and Catalog. `Height` is kept for older callers; the image is always 16:9. */
 const CourseCard = ({ course }) => {
@@ -10,6 +11,7 @@ const CourseCard = ({ course }) => {
   const instructor = [course?.instructor?.firstName, course?.instructor?.lastName].filter(Boolean).join(" ");
 
   return (
+    <div className="relative h-full">
     <Link
       to={`/courses/${course._id}`}
       className="group flex h-full flex-col overflow-hidden rounded-2xl border border-line bg-surface transition-colors hover:border-richblack-600 hover:bg-raised"
@@ -43,6 +45,11 @@ const CourseCard = ({ course }) => {
         <p className="mt-auto pt-2 text-lg font-bold text-accent-text">{formatINR(course?.price)}</p>
       </div>
     </Link>
+      {/* Sibling of the link (not inside it), so it's its own button for screen readers and keyboards */}
+      <div className="absolute right-3 top-3">
+        <WishlistButton courseId={course._id} courseName={course.courseName} />
+      </div>
+    </div>
   );
 };
 

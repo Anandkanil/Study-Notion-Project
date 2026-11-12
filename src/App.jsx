@@ -1,7 +1,7 @@
 import React, { Suspense, lazy, useEffect } from "react";
 import { Navigate, Route, Routes, useLocation } from "react-router-dom";
 import toast, { Toaster } from "react-hot-toast";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import "./App.css";
 
 import ErrorBoundary from "./components/common/ErrorBoundary";
@@ -10,6 +10,7 @@ import ServerWakeNotice from "./components/common/ServerWakeNotice";
 import PageSkeleton from "./components/common/PageSkeleton";
 import PrivateRoute from "./components/core/Auth/PrivateRoute";
 import { ACCOUNT_TYPE, homeFor } from "./utils/constants";
+import { loadWishlist } from "./slices/wishlistSlice";
 
 // Each page loads only when it is first visited
 const Home = lazy(() => import("./pages/Home"));
@@ -31,6 +32,7 @@ const Cart = lazy(() => import("./components/core/Dashboard/Cart"));
 const EnrolledCourses = lazy(() => import("./components/core/Dashboard/EnrolledCourses"));
 const Certificate = lazy(() => import("./components/core/Dashboard/Certificate"));
 const Purchases = lazy(() => import("./components/core/Dashboard/Purchases"));
+const Wishlist = lazy(() => import("./components/core/Dashboard/Wishlist"));
 const AdminOverview = lazy(() => import("./components/core/Dashboard/Admin/Overview"));
 const AdminSubjects = lazy(() => import("./components/core/Dashboard/Admin/Subjects"));
 const AdminCourses = lazy(() => import("./components/core/Dashboard/Admin/Courses"));
@@ -70,6 +72,7 @@ const TITLES = [
   [/^\/dashboard\/admin/, "Admin overview"],
   [/^\/dashboard\/purchases\/./, "Receipt"],
   [/^\/dashboard\/purchases/, "Purchases"],
+  [/^\/dashboard\/wishlist/, "Wishlist"],
   [/^\/dashboard\/instructor/, "Instructor dashboard"],
   [/^\/dashboard\/my-courses/, "My courses"],
   [/^\/dashboard\/add-course/, "New course"],
@@ -121,6 +124,14 @@ function App() {
   useRouteTitle(location.pathname);
   useScrollToTop(location.pathname);
   useOfflineNotice();
+
+  // Students: load saved courses once per login, for the hearts on course cards
+  const dispatch = useDispatch();
+  const token = useSelector((state) => state.auth.token);
+  const wishlistLoaded = useSelector((state) => state.wishlist.loaded);
+  useEffect(() => {
+    if (token && user?.accountType === ACCOUNT_TYPE.STUDENT && !wishlistLoaded) dispatch(loadWishlist(token));
+  }, [token, user?.accountType, wishlistLoaded, dispatch]);
 
   const dashboardHome = homeFor(user?.accountType);
 
@@ -193,6 +204,7 @@ function App() {
                 <Route path="/dashboard/cart" element={<RequireRole role={ACCOUNT_TYPE.STUDENT} fallback={dashboardHome}><Cart /></RequireRole>} />
                 <Route path="/dashboard/enrolled-courses" element={<RequireRole role={ACCOUNT_TYPE.STUDENT} fallback={dashboardHome}><EnrolledCourses /></RequireRole>} />
                 <Route path="/dashboard/certificate/:courseId" element={<RequireRole role={ACCOUNT_TYPE.STUDENT} fallback={dashboardHome}><Certificate /></RequireRole>} />
+                <Route path="/dashboard/wishlist" element={<RequireRole role={ACCOUNT_TYPE.STUDENT} fallback={dashboardHome}><Wishlist /></RequireRole>} />
                 <Route path="/dashboard/purchases" element={<RequireRole role={ACCOUNT_TYPE.STUDENT} fallback={dashboardHome}><Purchases /></RequireRole>} />
                 <Route path="/dashboard/purchases/:orderId" element={<RequireRole role={ACCOUNT_TYPE.STUDENT} fallback={dashboardHome}><Receipt /></RequireRole>} />
                 <Route path="/dashboard/admin" element={<RequireRole role={ACCOUNT_TYPE.ADMIN} fallback={dashboardHome}><AdminOverview /></RequireRole>} />

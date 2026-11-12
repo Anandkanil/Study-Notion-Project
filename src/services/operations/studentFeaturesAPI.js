@@ -4,6 +4,7 @@ import { apiConnector } from "../apiconnector";
 import rzpLogo from "../../assets/Logo/rzp_logo.png";
 import { setPaymentLoading } from "../../slices/courseSlice";
 import { resetCart } from "../../slices/cartSlice";
+import { loadWishlist } from "../../slices/wishlistSlice";
 
 // Define Razorpay Key ID from environment variables
 const RAZORPAY_KEY_ID = import.meta.env.REACT_APP_RAZORPAY;
@@ -136,6 +137,7 @@ async function verifyPayment(bodyData, token, navigate, dispatch) {
         }
         toast.success("You're enrolled! Your course is ready in My learning.", { duration: 6000 });
         dispatch(resetCart());
+        dispatch(loadWishlist(token)); // bought courses leave the wishlist
         navigate("/dashboard/enrolled-courses");
     } catch (error) {
         console.error("Payment Verification Error:", error);

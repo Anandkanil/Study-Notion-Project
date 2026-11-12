@@ -216,6 +216,31 @@ const searchCourses = async (req, res) => {
     }
 };
 
+// GET /course/preview/:courseId — the first lesson of a published course, free to watch
+const getCoursePreview = async (req, res) => {
+    const { courseId } = req.params;
+    if (!/^[a-f0-9]{24}$/i.test(String(courseId || ''))) {
+        return res.status(400).json({ success: false, message: 'Invalid course.' });
+    }
+    try {
+        const course = await Course.findOne({ _id: courseId, status: 'Published' })
+            .select('courseName courseContent')
+            .populate({ path: 'courseContent', select: 'sectionName subSection', populate: { path: 'subSection', select: 'title description videoUrl timeDuration' } })
+            .lean();
+        if (!course) return res.status(404).json({ success: false, message: 'That course isn\'t available.' });
+        const section = (course.courseContent || []).find((s) => (s.subSection || []).length > 0);
+        const lesson = section?.subSection?.[0];
+        if (!lesson?.videoUrl) return res.status(404).json({ success: false, message: 'This course has no preview yet.' });
+        return res.status(200).json({
+            success: true,
+            data: { courseName: course.courseName, sectionName: section.sectionName, lessonId: lesson._id, title: lesson.title, description: lesson.description, timeDuration: lesson.timeDuration, videoUrl: lesson.videoUrl },
+        });
+    } catch (error) {
+        console.error('getCoursePreview:', error.message);
+        return res.status(500).json({ success: false, message: 'The preview couldn\'t load. Please try again.' });
+    }
+};
+
 const getCourseDetails = async (req, res) => {
     const courseId = req.body.courseId;
 
@@ -661,4 +686,4 @@ const editCourse = async (req, res) => {
 }
 
 
-module.exports = { createCourse, getAllCourses, searchCourses,getCourseDetails,editCourseStatus, getInstructorCourses,deleteCourse, getFullCourseDetails, editCourse };
+module.exports = { createCourse, getAllCourses, searchCourses, getCoursePreview,getCourseDetails,editCourseStatus, getInstructorCourses,deleteCourse, getFullCourseDetails, editCourse };
