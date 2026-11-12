@@ -75,6 +75,7 @@ const TITLES = [
   [/^\/dashboard\/admin\/reviews/, "Reviews · Admin"],
   [/^\/dashboard\/admin\/activity/, "Activity · Admin"],
   [/^\/dashboard\/admin/, "Admin overview"],
+  [/^\/dashboard\/purchases\/.+\/refund/, "Refund receipt"],
   [/^\/dashboard\/purchases\/./, "Receipt"],
   [/^\/dashboard\/purchases/, "Purchases"],
   [/^\/dashboard\/wishlist/, "Wishlist"],
@@ -214,6 +215,7 @@ function App() {
                 <Route path="/dashboard/wishlist" element={<RequireRole role={ACCOUNT_TYPE.STUDENT} fallback={dashboardHome}><Wishlist /></RequireRole>} />
                 <Route path="/dashboard/purchases" element={<RequireRole role={ACCOUNT_TYPE.STUDENT} fallback={dashboardHome}><Purchases /></RequireRole>} />
                 <Route path="/dashboard/purchases/:orderId" element={<RequireRole role={ACCOUNT_TYPE.STUDENT} fallback={dashboardHome}><Receipt /></RequireRole>} />
+                <Route path="/dashboard/purchases/:orderId/refund" element={<RequireRole role={ACCOUNT_TYPE.STUDENT} fallback={dashboardHome}><Receipt refund /></RequireRole>} />
                 <Route path="/dashboard/admin" element={<RequireRole role={ACCOUNT_TYPE.ADMIN} fallback={dashboardHome}><AdminOverview /></RequireRole>} />
                 <Route path="/dashboard/admin/subjects" element={<RequireRole role={ACCOUNT_TYPE.ADMIN} fallback={dashboardHome}><AdminSubjects /></RequireRole>} />
                 <Route path="/dashboard/admin/courses" element={<RequireRole role={ACCOUNT_TYPE.ADMIN} fallback={dashboardHome}><AdminCourses /></RequireRole>} />

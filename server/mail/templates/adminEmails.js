@@ -24,8 +24,14 @@ exports.courseReviewEmail = (firstName, courseName, approved, note) =>
         { href: `${SITE}/dashboard/my-courses`, text: 'Edit your course' }
       );
 
-exports.refundEmail = (firstName, courseNames, amount) =>
-  shell('Your refund is on its way', p(`Hi ${esc(firstName)}, we've refunded ₹${Number(amount).toLocaleString('en-IN')} for ${esc(courseNames)}. It usually reaches your account in 5–7 working days. Access to these courses has ended.`));
+exports.refundEmail = (firstName, courseNames, amount, reason) =>
+  shell(
+    'Your refund is on its way',
+    p(`Hi ${esc(firstName)}, we've refunded ₹${Number(amount).toLocaleString('en-IN')} for ${esc(courseNames)}. It usually reaches your account in 5–7 working days. Access to these courses has ended.`) +
+      (reason ? p(`Reason: ${esc(reason)}`) : '') +
+      p('Your refund receipt is in Purchases on your dashboard.'),
+    { href: `${SITE}/dashboard/purchases`, text: 'See your receipts' }
+  );
 
 exports.suspensionEmail = (firstName, suspended, reason) =>
   suspended
