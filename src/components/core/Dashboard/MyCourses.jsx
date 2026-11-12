@@ -114,8 +114,8 @@ export default function MyCourses() {
                   <div className="flex min-w-0 flex-1 flex-col gap-1.5">
                     <div className="flex flex-wrap items-center gap-2">
                       <h2 className="text-lg font-bold text-ink">{c.courseName}</h2>
-                      <span className={`rounded-md px-2 py-0.5 text-xs font-bold ${isPublished ? "bg-success/15 text-success" : "bg-raised text-muted"}`}>
-                        {isPublished ? "Published" : "Draft"}
+                      <span className={`rounded-md px-2 py-0.5 text-xs font-bold ${isPublished ? "bg-success/15 text-success" : c.status === "Pending" ? "bg-accent/15 text-accent-text" : "bg-raised text-muted"}`}>
+                        {isPublished ? "Published" : c.status === "Pending" ? "Waiting for review" : c.reviewNote ? "Changes requested" : "Draft"}
                       </span>
                     </div>
                     <p className="line-clamp-2 text-muted">{c.courseDescription}</p>
@@ -123,6 +123,12 @@ export default function MyCourses() {
                       {c.studentsEnrolled?.length || 0} students · {lessons} {lessons === 1 ? "lesson" : "lessons"} · {formatINR(c.price)}
                     </p>
                     {!isPublished && lessons === 0 && <p className="text-sm font-medium text-accent-text">Add at least one lesson, then publish it.</p>}
+                    {c.status === "Pending" && <p className="text-sm text-muted">An admin is checking it. You'll get an email when it's live.</p>}
+                    {c.status === "Draft" && c.reviewNote && (
+                      <p className="rounded-lg border border-accent/40 bg-accent/10 px-3 py-2 text-sm text-ink">
+                        <span className="font-semibold">Reviewer's note:</span> {c.reviewNote} Fix it, then publish again.
+                      </p>
+                    )}
                   </div>
                   <div className="flex w-full flex-wrap items-start gap-2 sm:w-auto sm:flex-col">
                     <Link to={`/dashboard/instructor/courses/${c._id}`} className={buttonClass("primary", "sm")}>

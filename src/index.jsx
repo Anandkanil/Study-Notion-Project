@@ -24,15 +24,17 @@ axiosInstance.interceptors.response.use(
     const message = String(error?.response?.data?.message || "");
     const url = String(error?.config?.url || "");
     const isAuthCall = /\/auth\/(login|signup|sendotp|reset-password)/.test(url);
+    const suspended = status === 403 && error?.response?.data?.suspended === true;
     const sessionInvalid =
-      status === 401 || (status === 403 && /invalid or expired token/i.test(message));
+      status === 401 || (status === 403 && /invalid or expired token/i.test(message)) || suspended;
 
     if (sessionInvalid && !isAuthCall && store.getState().auth.token) {
       store.dispatch(setToken(null));
       store.dispatch(setUser(null));
       localStorage.removeItem("token");
       localStorage.removeItem("user");
-      toast.error("Your session has expired. Please log in again.", { id: "session-expired" });
+      if (suspended) toast.error(message, { id: "session-expired", duration: 10000 });
+      else toast.error("Your session has expired. Please log in again.", { id: "session-expired" });
     }
     return Promise.reject(error);
   }

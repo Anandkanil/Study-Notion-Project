@@ -24,6 +24,8 @@ const ratingAndReviewSchema = new mongoose.Schema({
     maxlength: 500, // Optional limit on the length of the review
     trim: true
   },
+  // Hidden by an admin: not shown and not counted in ratings
+  hidden: { type: Boolean, default: false },
   // The instructor's public reply, shown under the review
   reply: {
     text: { type: String, trim: true, maxlength: 1000 },

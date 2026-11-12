@@ -196,7 +196,7 @@ exports.checkCoupon = async (req, res) => {
 exports.getPurchases = async (req, res) => {
   try {
     const purchases = await Purchase.find({ user: req.user.userId })
-      .select("courses amount currency orderId paymentId createdAt")
+      .select("courses amount currency orderId paymentId coupon refund createdAt")
       .sort({ createdAt: -1 })
       .lean();
     return res.status(200).json({ success: true, data: purchases });

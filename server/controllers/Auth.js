@@ -189,6 +189,9 @@ exports.login = async function (req, res) {
 
         // Verify the password
         const isPasswordValid = await bcrypt.compare(password, user.password);
+        if (isPasswordValid && user.suspended) {
+            return res.status(403).json({ success: false, message: "This account is suspended. Contact support if you think this is a mistake." });
+        }
         if (!isPasswordValid) {
             return res.status(401).json({ success: false, message: "That password isn't right. Try again, or reset it." });
         }

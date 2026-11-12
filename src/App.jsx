@@ -40,6 +40,8 @@ const AdminCourses = lazy(() => import("./components/core/Dashboard/Admin/Course
 const AdminUsers = lazy(() => import("./components/core/Dashboard/Admin/Users"));
 const AdminUserDetail = lazy(() => import("./components/core/Dashboard/Admin/Users").then((m) => ({ default: m.AdminUserDetail })));
 const AdminPurchases = lazy(() => import("./components/core/Dashboard/Admin/Purchases"));
+const AdminReviews = lazy(() => import("./components/core/Dashboard/Admin/Reviews"));
+const AdminActivity = lazy(() => import("./components/core/Dashboard/Admin/Activity"));
 const Receipt = lazy(() => import("./components/core/Dashboard/Purchases").then((m) => ({ default: m.Receipt })));
 const Search = lazy(() => import("./pages/Search"));
 const AddCourse = lazy(() => import("./components/core/Dashboard/AddCourse/index"));
@@ -69,7 +71,9 @@ const TITLES = [
   [/^\/dashboard\/admin\/subjects/, "Subjects · Admin"],
   [/^\/dashboard\/admin\/courses/, "Courses · Admin"],
   [/^\/dashboard\/admin\/users/, "Users · Admin"],
-  [/^\/dashboard\/admin\/purchases/, "Purchases · Admin"],
+  [/^\/dashboard\/admin\/purchases/, "Sales · Admin"],
+  [/^\/dashboard\/admin\/reviews/, "Reviews · Admin"],
+  [/^\/dashboard\/admin\/activity/, "Activity · Admin"],
   [/^\/dashboard\/admin/, "Admin overview"],
   [/^\/dashboard\/purchases\/./, "Receipt"],
   [/^\/dashboard\/purchases/, "Purchases"],
@@ -216,6 +220,8 @@ function App() {
                 <Route path="/dashboard/admin/users" element={<RequireRole role={ACCOUNT_TYPE.ADMIN} fallback={dashboardHome}><AdminUsers /></RequireRole>} />
                 <Route path="/dashboard/admin/users/:id" element={<RequireRole role={ACCOUNT_TYPE.ADMIN} fallback={dashboardHome}><AdminUserDetail /></RequireRole>} />
                 <Route path="/dashboard/admin/purchases" element={<RequireRole role={ACCOUNT_TYPE.ADMIN} fallback={dashboardHome}><AdminPurchases /></RequireRole>} />
+                <Route path="/dashboard/admin/reviews" element={<RequireRole role={ACCOUNT_TYPE.ADMIN} fallback={dashboardHome}><AdminReviews /></RequireRole>} />
+                <Route path="/dashboard/admin/activity" element={<RequireRole role={ACCOUNT_TYPE.ADMIN} fallback={dashboardHome}><AdminActivity /></RequireRole>} />
                 <Route path="/dashboard/add-course" element={<RequireRole role={ACCOUNT_TYPE.INSTRUCTOR} fallback={dashboardHome}><AddCourse /></RequireRole>} />
                 <Route path="/dashboard/instructor" element={<RequireRole role={ACCOUNT_TYPE.INSTRUCTOR} fallback={dashboardHome}><Instructor /></RequireRole>} />
                 <Route path="/dashboard/my-courses" element={<RequireRole role={ACCOUNT_TYPE.INSTRUCTOR} fallback={dashboardHome}><MyCourses /></RequireRole>} />

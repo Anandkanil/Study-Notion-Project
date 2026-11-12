@@ -67,7 +67,7 @@ exports.getCourseStats = async (req, res) => {
         { $match: { 'courses.course': courseOid } },
         { $group: { _id: { y: { $year: '$createdAt' }, m: { $month: '$createdAt' } }, revenue: { $sum: { $ifNull: ['$courses.price', 0] } }, sales: { $sum: 1 } } },
       ]),
-      RatingAndReview.find({ course: course._id }).select('rating').lean(),
+      RatingAndReview.find({ course: course._id, hidden: { $ne: true } }).select('rating').lean(),
     ]);
 
     const students = (course.studentsEnrolled || []).length;
@@ -123,7 +123,7 @@ exports.listReviews = async (req, res) => {
     const reviews = await RatingAndReview.find({ course: course._id })
       .sort({ createdAt: -1 })
       .populate('user', 'firstName lastName image')
-      .select('rating review reply createdAt user')
+      .select('rating review reply hidden createdAt user')
       .lean();
     return res.status(200).json({ success: true, data: reviews });
   } catch (error) {

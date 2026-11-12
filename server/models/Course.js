@@ -61,9 +61,14 @@ const courseSchema = new mongoose.Schema({
     instructions:{
         type:[String]
     },
+    // Draft → Pending (sent for admin review) → Published; a rejected course goes back to Draft with a note
     status:{
         type:String,
-        enum:["Draft","Published"]
+        enum:["Draft","Pending","Published"]
+    },
+    reviewNote:{
+        type:String,
+        maxlength:500
     }
 }, {
     timestamps: true // Automatically adds createdAt and updatedAt timestamps

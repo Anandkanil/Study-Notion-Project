@@ -13,6 +13,7 @@ const purchaseSchema = new mongoose.Schema({
   currency: { type: String, default: 'INR' },
   orderId: { type: String, required: true, unique: true },
   paymentId: { type: String, required: true },
+  refund: { id: String, amount: Number, at: Date, by: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }, reason: String }, // set when refunded
   coupon: { code: String, percentOff: Number, course: { type: mongoose.Schema.Types.ObjectId, ref: 'Course' } }, // discount used, if any
 }, { timestamps: true });
 

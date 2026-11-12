@@ -362,7 +362,7 @@ exports.getWishlist = async (req, res) => {
         path: "wishlist",
         match: { status: "Published" },
         select: "courseName thumbnail price instructor ratingAndReviews",
-        populate: [{ path: "instructor", select: "firstName lastName" }, { path: "ratingAndReviews", select: "rating" }],
+        populate: [{ path: "instructor", select: "firstName lastName" }, { path: "ratingAndReviews", select: "rating", match: { hidden: { $ne: true } } }],
       })
       .lean()
     const list = (user?.wishlist || []).filter(Boolean).reverse()
