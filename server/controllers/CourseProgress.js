@@ -7,9 +7,25 @@ const Course = require("../models/Course")
 const User = require("../models/User")
 const mailSender = require("../utils/mailSender")
 const { courseCompletionEmail } = require("../mail/templates/courseCompletionEmail")
-const { recordLesson } = require("../utils/learningDays")
+const { recordLesson, summarize } = require("../utils/learningDays")
 
 const FRONTEND_URL = (process.env.FRONTEND_URL || "https://studynotion-project-1.netlify.app").replace(/\/$/, "")
+
+// What changed for the learner with this lesson, so the player can celebrate it.
+// firstToday: the first lesson of the day (the streak just grew).
+// newBest: the streak beat the previous longest run. goalReached: the weekly goal was just met.
+function streakUpdate(before, after) {
+  return {
+    currentStreak: after.currentStreak,
+    bestStreak: after.bestStreak,
+    firstToday: !before.learnedToday,
+    newBest: !before.learnedToday && after.currentStreak > 1 && after.currentStreak > before.bestStreak,
+    thisWeek: after.thisWeek,
+    weeklyGoal: after.weeklyGoal,
+    goalReached: before.thisWeek < after.weeklyGoal && after.thisWeek >= after.weeklyGoal,
+  }
+}
+exports._streakUpdate = streakUpdate
 
 // Marks one lesson as finished. Also logs the day for streaks, and emails the
 // certificate link the first time every lesson in the course is done.
@@ -49,9 +65,12 @@ exports.updateCourseProgress = async (req, res) => {
     const completedCourse = !wasComplete && lessonIds.every((id) => done.has(id))
 
     // Streaks: count today's lesson (best effort; never blocks the progress save)
-    const user = await User.findById(userId).select("learningDays firstName email")
+    const user = await User.findById(userId).select("learningDays weeklyGoal firstName email")
+    let streak = null
     if (user) {
+      const before = summarize(user.learningDays || [], user.weeklyGoal || 3)
       user.learningDays = recordLesson(user.learningDays)
+      streak = streakUpdate(before, summarize(user.learningDays, user.weeklyGoal || 3))
       await user.save().catch((e) => console.error("learningDays save:", e.message))
       if (completedCourse) {
         mailSender.inBackground(
@@ -62,7 +81,7 @@ exports.updateCourseProgress = async (req, res) => {
       }
     }
 
-    return res.status(200).json({ success: true, message: "Course progress updated", completedCourse })
+    return res.status(200).json({ success: true, message: "Course progress updated", completedCourse, streak })
   } catch (error) {
     console.error("updateCourseProgress:", error.message)
     return res.status(500).json({ success: false, message: "Couldn't save your progress. Please try again." })

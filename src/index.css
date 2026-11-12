@@ -123,6 +123,30 @@
 }
 @keyframes sn-shimmer { from { background-position: 200% 0; } to { background-position: -200% 0; } }
 
+/* Streak celebration toast */
+.sn-streak { box-shadow: 0 22px 50px -20px rgb(8 10 24 / 0.6), 0 0 0 1px rgb(var(--accent) / 0.25); }
+.sn-streak-in { animation: sn-streak-in 0.5s cubic-bezier(0.2, 1.4, 0.4, 1) both; }
+.sn-streak-out { animation: sn-streak-out 0.25s ease-in both; }
+.sn-flame { transform-origin: 50% 90%; animation: sn-flame-pop 0.6s cubic-bezier(0.2, 1.6, 0.4, 1) both, sn-flicker 1.6s ease-in-out 0.6s 3; }
+.sn-streak-glow { background: radial-gradient(circle, rgb(var(--accent) / 0.45), transparent 70%); animation: sn-glow 1.2s ease-out both; }
+.sn-tick { animation: sn-tick 0.35s cubic-bezier(0.2, 1.4, 0.4, 1) both; }
+.sn-spark {
+  position: absolute; left: 50%; top: 50%; width: 6px; height: 6px; margin: -3px; border-radius: 9999px;
+  background: rgb(var(--accent)); opacity: 0;
+  transform: rotate(calc(var(--i) * 60deg)) translateY(0);
+  animation: sn-spark 0.8s ease-out 0.35s both;
+}
+@keyframes sn-streak-in { from { opacity: 0; transform: translateY(-14px) scale(0.92); } to { opacity: 1; transform: none; } }
+@keyframes sn-streak-out { to { opacity: 0; transform: translateY(-10px) scale(0.96); } }
+@keyframes sn-flame-pop { from { transform: scale(0.2); } to { transform: scale(1); } }
+@keyframes sn-flicker { 0%, 100% { transform: scale(1) rotate(0); } 30% { transform: scale(1.06, 0.96) rotate(-3deg); } 65% { transform: scale(0.97, 1.05) rotate(2deg); } }
+@keyframes sn-glow { 0% { opacity: 0; transform: scale(0.4); } 40% { opacity: 1; } 100% { opacity: 0.5; transform: scale(1.25); } }
+@keyframes sn-tick { from { transform: translateY(110%); } to { transform: none; } }
+@keyframes sn-spark {
+  0% { opacity: 1; transform: rotate(calc(var(--i) * 60deg)) translateY(0) scale(1); }
+  100% { opacity: 0; transform: rotate(calc(var(--i) * 60deg)) translateY(-30px) scale(0.3); }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; scroll-behavior: auto !important; }
 }

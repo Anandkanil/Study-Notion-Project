@@ -9,6 +9,7 @@ import { Button, buttonClass } from "../../ui";
 import { formatClock, getPosition, setLastLesson, setPosition } from "../../../utils/learningMemory";
 import Announcements from "./Announcements";
 import LessonTabs from "./LessonTabs";
+import { celebrateLesson } from "../../common/StreakToast";
 
 // The last stretch of a video counts as watched: 10 s, or 15% of a short clip
 const endMargin = (duration) => Math.min(10, duration * 0.15);
@@ -98,9 +99,10 @@ const VideoDetails = () => {
       if (lessons.length && lessons.every((l) => nowDone.has(String(l.sub._id)))) {
         toast.success("Course complete! Your certificate is ready.", { id: "course-complete" });
       }
+      celebrateLesson(ok.streak);
     }
     setSaving(false);
-    return ok;
+    return Boolean(ok);
   };
 
   const completeAndContinue = async () => {

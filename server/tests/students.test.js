@@ -48,6 +48,17 @@ const C = 'cccccccccccccccccccccccc', L1 = 'aaaaaaaaaaaaaaaaaaaaaaa1', L2 = 'aaa
   await test('finishing the last lesson completes the course, logs the day and emails once', async () => {
     const r = await mark(L2); assert.strictEqual(r.body.completedCourse, true); assert.strictEqual(savedDays[0].lessons, 1);
     assert.strictEqual(mails.length, 1); assert.match(mails[0].subject, /finished React/);
+    assert.strictEqual(r.body.streak.firstToday, true); assert.strictEqual(r.body.streak.currentStreak, 1);
+  });
+  await test('streak update: first lesson of the day, new best and weekly goal', async () => {
+    const { _streakUpdate } = require(SRV + '/controllers/CourseProgress');
+    const now = at('2026-11-12T10:00:00Z'); // Thursday
+    const days = [{ day: '2026-11-10', lessons: 1 }, { day: '2026-11-11', lessons: 1 }];
+    const u = _streakUpdate(summarize(days, 3, now), summarize(recordLesson(days, now), 3, now));
+    assert.deepStrictEqual([u.firstToday, u.currentStreak, u.newBest, u.goalReached], [true, 3, true, true]);
+    const again = recordLesson(days, now);
+    const v = _streakUpdate(summarize(again, 3, now), summarize(recordLesson(again, now), 3, now));
+    assert.deepStrictEqual([v.firstToday, v.newBest, v.goalReached], [false, false, false]);
   });
   await test('marking a done lesson again is harmless and sends nothing', async () => { const r = await mark(L2); assert.strictEqual(r.code, 200); assert.strictEqual(mails.length, 1); });
 
