@@ -205,7 +205,8 @@ const CourseDetails = () => {
   }
 
   const { instructor, category } = course;
-  const isInstructorUser = user?.accountType === ACCOUNT_TYPE.INSTRUCTOR;
+  // Only student accounts can buy; instructors and admins get a clear message instead
+  const isInstructorUser = user && user.accountType !== ACCOUNT_TYPE.STUDENT;
   const isOwner = user?._id && String(instructor?._id) === String(user._id);
   const isEnrolled = Boolean(user?._id && course.studentsEnrolled?.some((s) => String(s?._id ?? s) === String(user._id)));
   const inCart = cart?.some((c) => c._id === course._id);
@@ -219,7 +220,7 @@ const CourseDetails = () => {
 
   const handleBuy = async () => {
     if (!token) return goLogin();
-    if (isInstructorUser) return toast.error("Instructor accounts can't buy courses. Log in with a student account.");
+    if (isInstructorUser) return toast.error(`${user.accountType} accounts can't buy courses. Log in with a student account.`);
     setBuying(true);
     try {
       await buyCourse(token, [courseId], user, navigate, dispatch);
@@ -229,7 +230,7 @@ const CourseDetails = () => {
   };
   const handleAddToCart = () => {
     if (!token) return goLogin();
-    if (isInstructorUser) return toast.error("Instructor accounts can't buy courses. Log in with a student account.");
+    if (isInstructorUser) return toast.error(`${user.accountType} accounts can't buy courses. Log in with a student account.`);
     dispatch(addToCart(course));
   };
   const handleShare = () => {

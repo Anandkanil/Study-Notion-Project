@@ -66,7 +66,7 @@ const Navbar = () => {
 
   const withCourses = subLinks.filter((c) => c?.courses?.length > 0);
   const onCatalog = Boolean(matchPath({ path: "/catalog/:catalogName" }, location.pathname));
-  const isStudent = user && user.accountType !== "Instructor";
+  const isStudent = user?.accountType === "Student";
 
   const categoryList = (onPick) =>
     catsLoading ? (
