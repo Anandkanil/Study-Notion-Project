@@ -35,6 +35,15 @@ router.patch("/courses/:id/status", A.setCourseStatus)
 router.get("/users", A.listUsers)
 router.get("/users/:id", A.getUser)
 
+router.patch("/users/:id/suspension", A.setSuspension)
+
 router.get("/purchases", A.listPurchases)
+router.post("/purchases/:orderId/refund", A.refundPurchase)
+
+router.get("/reviews", A.listReviews)
+router.patch("/reviews/:id", A.setReviewHidden)
+
+router.get("/logs", A.listLogs)
+router.get("/export/:kind", A.exportCsv)
 
 module.exports = router

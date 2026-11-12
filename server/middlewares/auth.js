@@ -1,6 +1,22 @@
 const jwt = require('jsonwebtoken');
 
-function authenticateToken(req, res, next) {
+// Suspended accounts are refused on every request. The answer is cached for 30 s per user
+// so this isn't a database read each time; suspending clears the cache straight away.
+const SUSPENSION_TTL_MS = 30 * 1000;
+const suspensionCache = new Map(); // userId -> { suspended, until }
+const forgetSuspension = (userId) => suspensionCache.delete(String(userId));
+
+async function isSuspended(userId) {
+    const hit = suspensionCache.get(String(userId));
+    if (hit && hit.until > Date.now()) return hit.suspended;
+    const User = require('../models/User');
+    const user = await User.findById(userId).select('suspended').lean();
+    const suspended = Boolean(user?.suspended);
+    suspensionCache.set(String(userId), { suspended, until: Date.now() + SUSPENSION_TTL_MS });
+    return suspended;
+}
+
+async function authenticateToken(req, res, next) {
     // Retrieve token from headers
     const authHeader = req.headers['authorization'];
     // const token = authHeader && authHeader.split(' ')[1]; // Extract token if Bearer format
@@ -19,12 +35,19 @@ function authenticateToken(req, res, next) {
         
         // Attach user information to request object
         req.user = decoded;
-        
-        // Call the next middleware or route handler
-        next();
     } catch (error) {
         return res.status(403).json({ success: false, message: `Invalid or expired token. ${error.message}` });
     }
+
+    try {
+        if (await isSuspended(req.user.userId)) {
+            return res.status(403).json({ success: false, suspended: true, message: 'This account is suspended. Contact support if you think this is a mistake.' });
+        }
+    } catch (error) {
+        // A failed check shouldn't lock everyone out; the token itself is valid
+        console.error('Suspension check:', error.message);
+    }
+    next();
 }
 
 // Middleware to check if the user is authenticated and authorized as a student
@@ -77,6 +100,7 @@ function checkAdminAuthorization(req, res, next) {
 
 // module.exports = {checkAdminAuthorization, checkInstructorAuthorization, checkStudentAuthorization, authenticateToken};
 module.exports = {
+    forgetSuspension,
     auth: authenticateToken,  // renamed from authenticateToken
     isInstructor: checkInstructorAuthorization,  // renamed from checkInstructorAuthorization
     isStudent: checkStudentAuthorization,  // renamed from checkStudentAuthorization

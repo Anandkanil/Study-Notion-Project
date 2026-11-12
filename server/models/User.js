@@ -60,7 +60,10 @@ const userSchema = new mongoose.Schema({
         day: String,
         lessons: { type: Number, default: 0 }
     }],
-    weeklyGoal: { type: Number, default: 3, min: 1, max: 50 }
+    weeklyGoal: { type: Number, default: 3, min: 1, max: 50 },
+    // Set by an admin: a suspended account can't log in or use the API
+    suspended: { type: Boolean, default: false },
+    suspendedReason: { type: String, maxlength: 300 }
 
 }, {
     timestamps: true // Adds createdAt and updatedAt timestamps automatically

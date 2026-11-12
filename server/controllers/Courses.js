@@ -57,9 +57,8 @@ const createCourse = async (req, res) => {
       return res.status(400).json({ success: false, message: "Price must be a whole number of rupees, 0 or more." })
     }
     price = priceNumber
-    if (!status || status === undefined) {
-      status = "Draft"
-    }
+    // New courses start as drafts; asking to publish sends them for admin review
+    status = status === "Published" || status === "Pending" ? "Pending" : "Draft"
     // Check if the user is an instructor
     const instructorDetails = await User.findById(userId, {
       accountType: "Instructor",
@@ -149,7 +148,7 @@ const getAllCourses = async (req, res) => {
             .select('-studentsEnrolled')
             .populate('instructor', 'firstName lastName image')
             .populate('category', 'name')
-            .populate('ratingAndReviews', 'rating')
+            .populate({ path: 'ratingAndReviews', select: 'rating', match: { hidden: { $ne: true } } })
             .lean();
         const counts = await Course.aggregate([
             { $match: { status: 'Published' } },
@@ -202,7 +201,7 @@ const searchCourses = async (req, res) => {
             .select('courseName thumbnail price instructor ratingAndReviews category')
             .populate('instructor', 'firstName lastName')
             .populate('category', 'name')
-            .populate('ratingAndReviews', 'rating')
+            .populate({ path: 'ratingAndReviews', select: 'rating', match: { hidden: { $ne: true } } })
             .limit(48)
             .lean();
 
@@ -271,6 +270,7 @@ const getCourseDetails = async (req, res) => {
             .populate({
                 path: 'ratingAndReviews',
                 select: 'rating review reply createdAt user',
+                match: { hidden: { $ne: true } }, // reviews hidden by an admin aren't shown or counted
                 options: { sort: { createdAt: -1 } },
                 populate: { path: 'user', select: 'firstName lastName image' },
             })
@@ -632,8 +632,19 @@ const editCourse = async (req, res) => {
       }
     }
     for (const key of EDITABLE) {
-      if (updates[key] === undefined) continue
+      if (updates[key] === undefined || key === "status") continue
       course[key] = JSON_FIELDS.includes(key) ? JSON.parse(updates[key]) : updates[key]
+    }
+    // Publishing needs an admin's approval: a draft asking to publish becomes "Pending".
+    // A course that's already published stays published; "Draft" withdraws it.
+    if (updates.status !== undefined) {
+      if (updates.status === "Draft") course.status = "Draft"
+      else if (updates.status === "Published" || updates.status === "Pending") {
+        if (course.status !== "Published") {
+          course.status = "Pending"
+          course.reviewNote = undefined
+        }
+      }
     }
 
     // Moving to another category: keep both category lists in sync

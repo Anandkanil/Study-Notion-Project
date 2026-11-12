@@ -90,7 +90,7 @@ const categoryPageDetails = async (req, res) => {
                 path: "courses",
                 match: { status: "Published" },
                 populate: [
-                    { path: "ratingAndReviews" },
+                    { path: "ratingAndReviews", match: { hidden: { $ne: true } } },
                     { path: "instructor", select: "firstName lastName image" },
                 ],
             })
@@ -128,7 +128,7 @@ const categoryPageDetails = async (req, res) => {
                     path: "courses",
                     match: { status: "Published" },
                     populate: [
-                        { path: "ratingAndReviews" },
+                        { path: "ratingAndReviews", match: { hidden: { $ne: true } } },
                         { path: "instructor", select: "firstName lastName image" },
                     ],
                 })
@@ -141,7 +141,7 @@ const categoryPageDetails = async (req, res) => {
                 path: "courses",
                 match: { status: "Published" },
                 populate: [
-                    { path: "ratingAndReviews" },
+                    { path: "ratingAndReviews", match: { hidden: { $ne: true } } },
                     { path: "instructor", select: "firstName lastName image" },
                 ],
             })
