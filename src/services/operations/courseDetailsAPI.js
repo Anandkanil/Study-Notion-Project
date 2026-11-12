@@ -325,7 +325,8 @@ export const markLectureAsComplete = async (data, token) => {
     if (!response.data.message) {
       throw new Error(response.data.error)
     }
-    result = true
+    // Truthy either way; carries the streak update when the server sends one
+    result = response.data
   } catch (error) {
     console.error("MARK_LECTURE_AS_COMPLETE_API API ERROR............", error)
     toast.error(error.response?.data?.message || "Couldn't save your progress. Please try again.")
