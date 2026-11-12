@@ -8,6 +8,8 @@
    Tailwind opacity modifiers (bg-accent/20) work. */
 :root,
 [data-theme="dark"] {
+  /* Chart marks: amber stepped to pass the dark-mode lightness band and 3:1 vs surface */
+  --chart-1: 188 132 24;
   --bg: 20 24 51;
   --surface: 30 35 71;
   --raised: 38 44 87;
@@ -52,6 +54,8 @@
 }
 
 [data-theme="light"] {
+  /* Chart marks: amber stepped to pass the light-mode lightness band and 3:1 vs white */
+  --chart-1: 176 116 6;
   --bg: 246 246 251;
   --surface: 255 255 255;
   --raised: 238 238 247;

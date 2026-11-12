@@ -14,6 +14,8 @@ const ICONS = {
   profile: "M12 12a4 4 0 100-8 4 4 0 000 8zM4 21a8 8 0 0116 0",
   settings: "M12 15a3 3 0 100-6 3 3 0 000 6zM19.4 15a1.7 1.7 0 00.3 1.8l.1.1a2 2 0 11-2.8 2.8l-.1-.1a1.7 1.7 0 00-1.8-.3 1.7 1.7 0 00-1 1.5V21a2 2 0 11-4 0v-.1a1.7 1.7 0 00-1.1-1.5 1.7 1.7 0 00-1.8.3l-.1.1a2 2 0 11-2.8-2.8l.1-.1a1.7 1.7 0 00.3-1.8 1.7 1.7 0 00-1.5-1H3a2 2 0 110-4h.1a1.7 1.7 0 001.5-1.1 1.7 1.7 0 00-.3-1.8l-.1-.1a2 2 0 112.8-2.8l.1.1a1.7 1.7 0 001.8.3H9a1.7 1.7 0 001-1.5V3a2 2 0 114 0v.1a1.7 1.7 0 001 1.5 1.7 1.7 0 001.8-.3l.1-.1a2 2 0 112.8 2.8l-.1.1a1.7 1.7 0 00-.3 1.8V9a1.7 1.7 0 001.5 1H21a2 2 0 110 4h-.1a1.7 1.7 0 00-1.5 1z",
   receipt: "M6 3h12v18l-3-2-3 2-3-2-3 2zM9 8h6M9 12h6",
+  tag: "M3 12V4a1 1 0 011-1h8l9 9-9 9-9-9zM7.5 7.5h.01",
+  users: "M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2M9 11a4 4 0 100-8 4 4 0 000 8zM22 21v-2a4 4 0 00-3-3.9M16 3.1a4 4 0 010 7.8",
   logout: "M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9",
 };
 
@@ -28,6 +30,13 @@ const LINKS = {
     ["My learning", "/dashboard/enrolled-courses", ICONS.learn],
     ["Cart", "/dashboard/cart", ICONS.cart],
     ["Purchases", "/dashboard/purchases", ICONS.receipt],
+  ],
+  [ACCOUNT_TYPE.ADMIN]: [
+    ["Overview", "/dashboard/admin", ICONS.chart, true],
+    ["Subjects", "/dashboard/admin/subjects", ICONS.tag],
+    ["Courses", "/dashboard/admin/courses", ICONS.courses],
+    ["Users", "/dashboard/admin/users", ICONS.users],
+    ["Sales", "/dashboard/admin/purchases", ICONS.receipt],
   ],
   [ACCOUNT_TYPE.INSTRUCTOR]: [
     ["Overview", "/dashboard/instructor", ICONS.chart],
@@ -56,8 +65,8 @@ export default function Sidebar() {
         aria-label="Dashboard"
         className="flex gap-1 overflow-x-auto border-b border-line bg-surface px-3 py-2 lg:sticky lg:top-16 lg:h-[calc(100vh-4rem)] lg:w-60 lg:shrink-0 lg:flex-col lg:overflow-visible lg:border-b-0 lg:border-r lg:px-3 lg:py-6"
       >
-        {links.map(([label, to, icon]) => (
-          <NavLink key={to} to={to} className={itemClass}>
+        {links.map(([label, to, icon, end]) => (
+          <NavLink key={to} to={to} end={end} className={itemClass}>
             <Icon d={icon} />
             {label}
             {to === "/dashboard/cart" && totalItems > 0 && (

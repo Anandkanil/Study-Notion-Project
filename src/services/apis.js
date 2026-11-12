@@ -25,6 +25,11 @@ export const studentEndpoints = {
   PURCHASES_API: BASE_URL + "/payment/purchases",
 }
 
+// ADMIN ENDPOINTS (all need an Admin login)
+export const adminEndpoints = {
+  BASE: BASE_URL + "/admin",
+}
+
 // COURSE ENDPOINTS
 export const courseEndpoints = {
   GET_ALL_COURSE_API: BASE_URL + "/course/getAllCourses",
