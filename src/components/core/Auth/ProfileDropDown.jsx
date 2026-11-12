@@ -1,3 +1,4 @@
+import { homeFor } from "../../../utils/constants";
 import { useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Link, useNavigate } from "react-router-dom";
@@ -20,7 +21,7 @@ export default function ProfileDropdown() {
     return () => document.removeEventListener("keydown", onKey);
   }, [open]);
 
-  const home = user?.accountType === "Instructor" ? "/dashboard/instructor" : "/dashboard/enrolled-courses";
+  const home = homeFor(user?.accountType);
   const itemClass =
     "flex w-full items-center gap-3 px-4 py-3 text-left text-sm text-ink transition-colors hover:bg-raised focus-visible:bg-raised";
 
@@ -47,7 +48,7 @@ export default function ProfileDropdown() {
             <p className="truncate text-sm text-muted">{user?.email}</p>
           </div>
           <Link role="menuitem" to={home} onClick={() => setOpen(false)} className={itemClass}>
-            {user?.accountType === "Instructor" ? "Instructor dashboard" : "My learning"}
+            {user?.accountType === "Instructor" ? "Instructor dashboard" : user?.accountType === "Admin" ? "Admin overview" : "My learning"}
           </Link>
           <Link role="menuitem" to="/dashboard/my-profile" onClick={() => setOpen(false)} className={itemClass}>
             Profile

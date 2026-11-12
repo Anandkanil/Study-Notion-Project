@@ -1,3 +1,4 @@
+import { homeFor } from "../../utils/constants"
 import { toast } from "react-hot-toast";
 import { setLoading, setToken } from "../../slices/authSlice";
 // import { resetCart } from "../../slices/cartSlice" // Uncomment when used
@@ -82,7 +83,8 @@ export function signUp(firstName, lastName, email, password, confirmPassword, ac
   };
 }
 
-export function login(email, password, navigate, redirectTo = "/dashboard/my-profile") {
+// redirectTo: the page that sent the user to log in, if any; otherwise their own home
+export function login(email, password, navigate, redirectTo) {
   return async (dispatch) => {
     dispatch(setLoading(true));
 
@@ -107,7 +109,7 @@ export function login(email, password, navigate, redirectTo = "/dashboard/my-pro
 
       // Notify the user and redirect
       toast.success(`Welcome back, ${user.firstName || "there"}!`);
-      navigate(redirectTo, { replace: true });
+      navigate(redirectTo || homeFor(user.accountType), { replace: true });
 
     } catch (error) {
       console.error("Login Error:", error);
