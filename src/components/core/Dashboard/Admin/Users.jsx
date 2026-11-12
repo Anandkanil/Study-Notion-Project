@@ -102,7 +102,7 @@ export function AdminUserDetail() {
   if (status === "failed") return <LoadFailed what="This user" onRetry={load} />;
   if (!u) return <RowsSkeleton rows={4} label="Loading user" />;
 
-  const spent = (u.purchases || []).reduce((n, p) => n + (p.amount || 0), 0);
+  const spent = (u.purchases || []).filter((p) => !p.refund).reduce((n, p) => n + (p.amount || 0), 0);
 
   return (
     <div className="flex flex-col gap-8">
@@ -199,9 +199,10 @@ export function AdminUserDetail() {
                       <p className="truncate font-semibold text-ink">{p.courses.map((c) => c.courseName).join(", ")}</p>
                       <p className="text-sm text-muted">
                         {shortDate(p.createdAt)} · {p.orderId}
+                        {p.refund && ` · Refunded ${shortDate(p.refund.at)}`}
                       </p>
                     </div>
-                    <span className="font-semibold tabular-nums text-ink">{formatINR(p.amount)}</span>
+                    <span className={`font-semibold tabular-nums ${p.refund ? "text-muted line-through" : "text-ink"}`}>{formatINR(p.amount)}</span>
                   </li>
                 ))}
               </ul>

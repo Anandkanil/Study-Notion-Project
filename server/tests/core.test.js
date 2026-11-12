@@ -67,7 +67,7 @@ let passed = 0; const test = async (name, fn) => { try { await fn(); passed++; c
 
   // ---------- payments ----------
   process.env.RAZORPAY_KEY_SECRET = 'sekret';
-  const pcourses = { [id(5)]: { _id: id(5), price: 499, courseName: 'Cheap', studentsEnrolled: [] }, [id(6)]: { _id: id(6), price: 7999, courseName: 'Pricey', studentsEnrolled: [] } };
+  const pcourses = { [id(5)]: { _id: id(5), price: 499, courseName: 'Cheap', status: 'Published', studentsEnrolled: [] }, [id(6)]: { _id: id(6), price: 7999, courseName: 'Pricey', status: 'Published', studentsEnrolled: [] }, [id(7)]: { _id: id(7), price: 999, courseName: 'Unreviewed', status: 'Pending', studentsEnrolled: [] } };
   const orders = {}; const progress = [];
   fakes['config/Razorpay'] = { orders: { create: async (o) => { const oid = 'order_' + Object.keys(orders).length; orders[oid] = { id: oid, ...o }; return orders[oid]; }, fetch: async (oid) => orders[oid] } };
   fakes['models/Course'] = { findById: (cid) => q(pcourses[cid] || null), findOneAndUpdate: async ({ _id }, upd) => { const c = pcourses[_id]; if (!c) return null; const u = upd.$addToSet.studentsEnrolled; if (!c.studentsEnrolled.includes(u)) c.studentsEnrolled.push(u); return c; } };
@@ -83,6 +83,10 @@ let passed = 0; const test = async (name, fn) => { try { await fn(); passed++; c
   await test('swapping course ids in verify does NOT enrol the expensive course', async () => {
     const r = res(); await P.verifyPayment({ body: { razorpay_order_id: orderId, razorpay_payment_id: 'pay_1', razorpay_signature: sign(orderId, 'pay_1'), courses: [id(6)] }, user: { userId: buyer } }, r);
     assert(r.code === 200 && r.body.success === true); assert(pcourses[id(5)].studentsEnrolled.includes(buyer)); assert(!pcourses[id(6)].studentsEnrolled.includes(buyer));
+  });
+  await test('a course that is not published cannot be bought', async () => {
+    const r = res(); await P.capturePayment({ body: { courses: [id(7)] }, user: { userId: buyer } }, r);
+    assert.strictEqual(r.code, 400); assert.match(r.body.message, /isn't available/);
   });
   await test('replaying verify is idempotent (no duplicate enrolment/progress)', async () => { await P.verifyPayment({ body: { razorpay_order_id: orderId, razorpay_payment_id: 'pay_1', razorpay_signature: sign(orderId, 'pay_1') }, user: { userId: buyer } }, res()); assert(pcourses[id(5)].studentsEnrolled.filter(x => x === buyer).length === 1 && progress.length === 1); });
   await test('bad signature -> 400, success false (boolean)', async () => { const r = res(); await P.verifyPayment({ body: { razorpay_order_id: orderId, razorpay_payment_id: 'pay_1', razorpay_signature: 'x'.repeat(64) }, user: { userId: buyer } }, r); assert(r.code === 400 && r.body.success === false); });

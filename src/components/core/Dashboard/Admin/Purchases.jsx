@@ -96,7 +96,7 @@ export default function AdminPurchases() {
         <ReasonDialog
           title={`Refund ${formatINR(refunding.amount)}?`}
           description={`Razorpay returns the full amount to ${fullName(refunding.user)}, and they lose access to ${refunding.courses.map((c) => c.courseName).join(", ")}. This can't be undone.`}
-          label="Reason for the refund"
+          label="Reason for the refund (shown to the student)"
           placeholder="e.g. Bought the wrong course"
           confirmText="Refund"
           danger

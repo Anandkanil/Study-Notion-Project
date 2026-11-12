@@ -60,7 +60,7 @@ export default function LearningStats() {
         <div className="flex items-baseline gap-3">
           <p className="font-display text-4xl font-semibold text-ink">{currentStreak}</p>
           <p className="font-semibold text-ink">day streak</p>
-          {bestStreak > currentStreak && <p className="ml-auto text-sm text-muted">Best: {bestStreak} days</p>}
+          {bestStreak > currentStreak && <p className="ml-auto text-sm text-muted">Best: {bestStreak} {bestStreak === 1 ? "day" : "days"}</p>}
         </div>
         <p className="text-sm text-muted">{streakText}</p>
         <ol className="mt-1 flex gap-1.5" aria-label="Last 14 days">

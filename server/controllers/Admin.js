@@ -38,9 +38,9 @@ exports.getOverview = async (req, res) => {
       Course.countDocuments({ status: 'Published' }),
       Course.countDocuments({ status: 'Draft' }),
       Course.countDocuments({ status: 'Pending' }),
-      Purchase.aggregate([{ $match: { refund: { $exists: false } } }, { $group: { _id: null, revenue: { $sum: '$amount' }, orders: { $sum: 1 } } }]),
+      Purchase.aggregate([{ $match: { 'refund.id': { $exists: false } } }, { $group: { _id: null, revenue: { $sum: '$amount' }, orders: { $sum: 1 } } }]),
       Purchase.aggregate([
-        { $match: { createdAt: { $gte: since }, refund: { $exists: false } } },
+        { $match: { createdAt: { $gte: since }, 'refund.id': { $exists: false } } },
         { $group: { _id: { y: { $year: '$createdAt' }, m: { $month: '$createdAt' } }, revenue: { $sum: '$amount' }, orders: { $sum: 1 } } },
       ]),
       User.aggregate([
@@ -48,13 +48,13 @@ exports.getOverview = async (req, res) => {
         { $group: { _id: { y: { $year: '$createdAt' }, m: { $month: '$createdAt' } }, count: { $sum: 1 } } },
       ]),
       Purchase.aggregate([
-        { $match: { refund: { $exists: false } } },
+        { $match: { 'refund.id': { $exists: false } } },
         { $unwind: '$courses' },
         { $group: { _id: '$courses.course', courseName: { $last: '$courses.courseName' }, revenue: { $sum: { $ifNull: ['$courses.price', 0] } }, sales: { $sum: 1 } } },
         { $sort: { revenue: -1, sales: -1 } },
         { $limit: 5 },
       ]),
-      Purchase.find().sort({ createdAt: -1 }).limit(6).populate('user', 'firstName lastName email').select('courses amount createdAt orderId user').lean(),
+      Purchase.find().sort({ createdAt: -1 }).limit(6).populate('user', 'firstName lastName email').select('courses amount createdAt orderId user refund.at').lean(),
     ]);
 
     // A slot for every month, so empty months show as zero instead of disappearing
@@ -253,7 +253,7 @@ exports.getUser = async (req, res) => {
       .lean();
     if (!user) return res.status(404).json({ success: false, message: 'That user no longer exists.' });
     const [purchases, taught] = await Promise.all([
-      Purchase.find({ user: user._id }).sort({ createdAt: -1 }).select('courses amount orderId paymentId createdAt').lean(),
+      Purchase.find({ user: user._id }).sort({ createdAt: -1 }).select('courses amount orderId paymentId refund.amount refund.at createdAt').lean(),
       user.accountType === 'Instructor'
         ? Course.find({ instructor: user._id }).select('courseName status price studentsEnrolled').lean()
         : [],
@@ -393,7 +393,7 @@ exports.refundPurchase = async (req, res) => {
     const name = [purchase.user?.firstName, purchase.user?.lastName].filter(Boolean).join(' ') || 'a deleted account';
     const names = purchase.courses.map((c) => c.courseName).join(', ');
     adminLog(req, 'purchase.refund', `Refunded ₹${purchase.amount} to ${name} for ${names}: ${reason}`, { kind: 'purchase', id: purchase.orderId });
-    if (purchase.user?.email) mailSender.inBackground(purchase.user.email, 'Your StudyNotion refund', refundEmail(purchase.user.firstName, names, purchase.amount));
+    if (purchase.user?.email) mailSender.inBackground(purchase.user.email, 'Your StudyNotion refund', refundEmail(purchase.user.firstName, names, purchase.amount, reason));
     return res.status(200).json({ success: true, message: `Refunded ₹${purchase.amount.toLocaleString('en-IN')}. Access to ${names} is removed.` });
   } catch (error) {
     return fail(res, error, "The refund couldn't be completed");

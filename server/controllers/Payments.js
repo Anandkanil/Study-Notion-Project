@@ -21,7 +21,7 @@ exports.capturePayment = async (req, res) => {
   const courses = Array.isArray(req.body?.courses) ? [...new Set(req.body.courses.map(String))] : [];
 
   if (courses.length === 0) {
-    return res.status(400).json({ success: false, message: "Please provide Course Id" });
+    return res.status(400).json({ success: false, message: "Choose at least one course to buy." });
   }
   if (courses.length > MAX_COURSES_PER_ORDER) {
     return res.status(400).json({ success: false, message: `You can buy up to ${MAX_COURSES_PER_ORDER} courses at once.` });
@@ -44,20 +44,23 @@ exports.capturePayment = async (req, res) => {
   try {
     for (const courseId of courses) {
       if (!mongoose.Types.ObjectId.isValid(courseId)) {
-        return res.status(400).json({ success: false, message: "Invalid course id" });
+        return res.status(400).json({ success: false, message: "One of these courses isn't valid. Refresh the page and try again." });
       }
       const course = await Course.findById(courseId).select("price status studentsEnrolled courseName");
       if (!course) {
-        return res.status(404).json({ success: false, message: "Could not find the course" });
+        return res.status(404).json({ success: false, message: "One of these courses no longer exists. Remove it from your cart and try again." });
       }
       if (course.studentsEnrolled.some((id) => String(id) === String(userId))) {
-        return res.status(409).json({ success: false, message: `You are already enrolled in ${course.courseName}` });
+        return res.status(409).json({ success: false, message: `You're already enrolled in ${course.courseName}.` });
+      }
+      if (course.status !== "Published") {
+        return res.status(400).json({ success: false, message: `${course.courseName} isn't available to buy right now.` });
       }
       totalAmount += coupon && String(coupon.course) === String(courseId) ? discounted(course.price, coupon.percentOff) : course.price;
     }
   } catch (error) {
     console.error("capturePayment:", error.message);
-    return res.status(500).json({ success: false, message: "Could not initiate order" });
+    return res.status(500).json({ success: false, message: "Couldn't start the payment. Please try again." });
   }
 
   // The order itself records who is buying which courses; verifyPayment trusts only this.
@@ -79,7 +82,7 @@ exports.capturePayment = async (req, res) => {
     return res.json({ success: true, message: paymentResponse });
   } catch (error) {
     console.error("Razorpay order error:", error?.error?.description || error.message);
-    return res.status(500).json({ success: false, message: "Could not Initiate Order" });
+    return res.status(500).json({ success: false, message: "Couldn't start the payment. Please try again." });
   }
 };
 
@@ -89,7 +92,7 @@ exports.verifyPayment = async (req, res) => {
   const userId = req.user.userId;
 
   if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
-    return res.status(400).json({ success: false, message: "Payment Failed" });
+    return res.status(400).json({ success: false, message: "The payment details are incomplete. If money was taken, it will be refunded automatically." });
   }
 
   const expectedSignature = crypto
@@ -102,7 +105,7 @@ exports.verifyPayment = async (req, res) => {
     crypto.timingSafeEqual(Buffer.from(expectedSignature), Buffer.from(String(razorpay_signature)));
 
   if (!sigOk) {
-    return res.status(400).json({ success: false, message: "Payment verification failed" });
+    return res.status(400).json({ success: false, message: "We couldn't verify this payment. If money was taken, contact us with your payment ID." });
   }
 
   // Course ids come from the paid order, never from the request body
@@ -111,12 +114,12 @@ exports.verifyPayment = async (req, res) => {
     order = await instance.orders.fetch(razorpay_order_id);
   } catch (error) {
     console.error("Razorpay order fetch error:", error?.error?.description || error.message);
-    return res.status(502).json({ success: false, message: "Could not confirm the order with Razorpay" });
+    return res.status(502).json({ success: false, message: "Couldn't confirm the payment with Razorpay. Refresh in a minute; your purchase is safe." });
   }
 
   const notes = order?.notes || {};
   if (String(notes.userId) !== String(userId)) {
-    return res.status(403).json({ success: false, message: "This order belongs to another account" });
+    return res.status(403).json({ success: false, message: "This payment belongs to another account." });
   }
   const courses = Object.keys(notes)
     .filter((k) => /^c\d+$/.test(k))
@@ -196,7 +199,7 @@ exports.checkCoupon = async (req, res) => {
 exports.getPurchases = async (req, res) => {
   try {
     const purchases = await Purchase.find({ user: req.user.userId })
-      .select("courses amount currency orderId paymentId coupon refund createdAt")
+      .select("courses amount currency orderId paymentId coupon refund.id refund.amount refund.at refund.reason createdAt")
       .sort({ createdAt: -1 })
       .lean();
     return res.status(200).json({ success: true, data: purchases });
