@@ -5,6 +5,8 @@ import copy from "copy-to-clipboard";
 import toast from "react-hot-toast";
 
 import Footer from "../components/common/Footer";
+import WishlistButton from "../components/common/WishlistButton";
+import PreviewModal from "../components/core/Course/PreviewModal";
 import { categorySlug } from "../components/common/Navbar";
 import { Button, EmptyState, buttonClass } from "../components/ui";
 import { buyCourse } from "../services/operations/studentFeaturesAPI";
@@ -145,6 +147,7 @@ const CourseDetails = () => {
   const course = state.data?.courseDetails;
 
   // Phones: once the price card scrolls away, keep price + main action in a bottom bar
+  const [previewOpen, setPreviewOpen] = useState(false);
   const mobileCardRef = useRef(null);
   const [showBar, setShowBar] = useState(false);
   useEffect(() => {
@@ -243,7 +246,23 @@ const CourseDetails = () => {
 
   const purchaseCard = (
     <div className="overflow-hidden rounded-2xl border border-line bg-surface lg:sticky lg:top-24">
-      <img src={course.thumbnail} alt="" className="aspect-video w-full object-cover" />
+      <div className="relative">
+        <img src={course.thumbnail} alt="" className="aspect-video w-full object-cover" />
+        {firstLesson && !isEnrolled && !isOwner && (
+          <button
+            type="button"
+            onClick={() => setPreviewOpen(true)}
+            className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-black/35 font-bold text-white transition-colors hover:bg-black/50"
+          >
+            <span className="grid h-14 w-14 place-items-center rounded-full bg-white/95 text-[#14172E] shadow-lg" aria-hidden="true">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M8 5l12 7-12 7z" />
+              </svg>
+            </span>
+            Watch free preview
+          </button>
+        )}
+      </div>
       <div className="flex flex-col gap-3 p-5">
         <p className="font-display text-3xl font-semibold text-ink">{formatINR(course.price)}</p>
         {isEnrolled ? (
@@ -268,6 +287,7 @@ const CourseDetails = () => {
                 Add to cart
               </Button>
             )}
+            <WishlistButton variant="inline" courseId={course._id} courseName={course.courseName} />
           </>
         )}
         <p className="text-center text-sm text-muted">One-time payment · Lifetime access</p>
@@ -398,6 +418,11 @@ const CourseDetails = () => {
                           <path d="M10 8.5l5 3.5-5 3.5z" className="fill-muted" />
                         </svg>
                         <span className="flex-1">{ss.title}</span>
+                        {firstLesson && String(ss._id) === String(firstLesson.subSection[0]._id) && !isEnrolled && (
+                          <button type="button" onClick={() => setPreviewOpen(true)} className="rounded-lg px-2 py-1 text-sm font-semibold text-accent-text underline-offset-4 hover:underline">
+                            Free preview
+                          </button>
+                        )}
                         {ss.timeDuration && <span className="text-sm text-muted">{fmtDuration(ss.timeDuration)}</span>}
                       </li>
                     ))}
@@ -465,6 +490,23 @@ const CourseDetails = () => {
             )}
           </div>
         </div>
+      )}
+
+      {previewOpen && (
+        <PreviewModal
+          courseId={course._id}
+          onClose={() => setPreviewOpen(false)}
+          cta={
+            <Button
+              onClick={() => {
+                setPreviewOpen(false);
+                handleBuy();
+              }}
+            >
+              Buy for {formatINR(course.price)}
+            </Button>
+          }
+        />
       )}
 
       <div className="pb-20 lg:pb-0">

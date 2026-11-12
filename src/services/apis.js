@@ -14,7 +14,10 @@ export const endpoints = {
 export const profileEndpoints = {
   GET_USER_DETAILS_API: BASE_URL + "/profile/getUserDetails",
   GET_USER_ENROLLED_COURSES_API: BASE_URL + "/profile/getEnrolledCourses",
-  GET_INSTRUCTOR_DATA_API: BASE_URL + "/profile/instructorDashboard"
+  GET_INSTRUCTOR_DATA_API: BASE_URL + "/profile/instructorDashboard",
+  WISHLIST_API: BASE_URL + "/profile/wishlist",
+  LEARNING_STATS_API: BASE_URL + "/profile/learning-stats",
+  WEEKLY_GOAL_API: BASE_URL + "/profile/weekly-goal",
 }
 
 // STUDENTS ENDPOINTS
@@ -34,6 +37,7 @@ export const adminEndpoints = {
 export const courseEndpoints = {
   GET_ALL_COURSE_API: BASE_URL + "/course/getAllCourses",
   SEARCH_COURSES_API: BASE_URL + "/course/search",
+  COURSE_PREVIEW_API: BASE_URL + "/course/preview",
   COURSE_DETAILS_API: BASE_URL + "/course/getCourseDetails",
   EDIT_COURSE_API: BASE_URL + "/course/editCourse",
   COURSE_CATEGORIES_API: BASE_URL + "/course/showAllCategories",

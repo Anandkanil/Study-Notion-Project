@@ -7,6 +7,7 @@ import { profileEndpoints } from "../../../services/apis";
 import { Button, EmptyState, buttonClass } from "../../ui";
 import { formatClock, getLastLesson, getPosition } from "../../../utils/learningMemory";
 import RatePrompt from "./RatePrompt";
+import LearningStats from "./LearningStats";
 
 /** First lesson not yet completed (or the first lesson, for a finished course). */
 const nextLesson = (course) => {
@@ -84,6 +85,8 @@ export default function EnrolledCourses() {
       <h1 className="font-display text-3xl font-bold text-ink">
         {user?.firstName ? `Welcome back, ${user.firstName}` : "My learning"}
       </h1>
+
+      {courses && courses.length > 0 && <LearningStats />}
 
       {failed ? (
         <EmptyState title="Your courses couldn't load" action={<Button variant="secondary" onClick={load}>Try again</Button>}>
