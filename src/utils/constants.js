@@ -15,4 +15,4 @@ export const homeFor = (accountType) =>
     ? "/dashboard/admin"
     : accountType === ACCOUNT_TYPE.INSTRUCTOR
       ? "/dashboard/instructor"
-      : "/dashboard/enrolled-courses";
+      : "/dashboard/overview";

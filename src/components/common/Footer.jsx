@@ -24,7 +24,7 @@ export default function Footer() {
 
   const account = token
     ? [
-        [user?.accountType === "Instructor" ? "Instructor dashboard" : "My learning", "/dashboard"],
+        [user?.accountType === "Instructor" ? "Instructor dashboard" : "Dashboard", "/dashboard"],
         ["Settings", "/dashboard/settings"],
       ]
     : [

@@ -87,7 +87,7 @@ export default function EnrolledCourses() {
   return (
     <div className="flex flex-col gap-8">
       <h1 className="font-display text-3xl font-bold text-ink">
-        {user?.firstName ? `Welcome back, ${user.firstName}` : "My learning"}
+        {user?.firstName ? `Welcome back, ${user.firstName}` : "Your courses"}
       </h1>
 
       {courses && courses.length > 0 && <LearningStats />}

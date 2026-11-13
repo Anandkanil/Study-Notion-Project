@@ -116,7 +116,7 @@ function DashboardPreview() {
       <div className="flex overflow-hidden rounded-2xl border border-ink/10 bg-bg/90">
         <div className="hidden w-[200px] shrink-0 flex-col gap-1 border-r border-ink/10 p-3 text-[13px] font-medium md:flex">
           <p className="mb-3 ml-2 text-base font-bold text-ink">StudyNotion</p>
-          {["My learning", "Wishlist", "Cart", "Purchases", "Settings"].map((item, i) => (
+          {["Dashboard", "Your courses", "Saved lessons", "Purchases", "Settings"].map((item, i) => (
             <span key={item} className={`rounded-lg px-2.5 py-2 ${i === 0 ? "bg-raised text-ink" : "text-muted"}`}>
               {item}
             </span>

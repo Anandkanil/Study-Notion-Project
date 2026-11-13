@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useState } from "react";
+import { LogoMark } from "../../common/Logo";
 import { useSelector } from "react-redux";
 import { Link, useParams } from "react-router-dom";
 
@@ -132,10 +133,7 @@ export function Receipt({ refund: isRefund = false }) {
       <section id="printable" aria-label="Payment receipt" className="w-full max-w-3xl rounded-2xl bg-white p-8 text-[#14172E] shadow-[var(--shadow-pop)] print:max-w-none print:rounded-none print:p-12 print:shadow-none sm:p-10">
         <div className="flex flex-wrap items-start justify-between gap-6 border-b border-[#DADCE8] pb-6">
           <div className="flex items-center gap-2.5">
-            <svg width="34" height="34" viewBox="0 0 64 64" aria-hidden="true">
-              <rect width="64" height="64" rx="14" fill="#0F0F0F" />
-              <path d="M14 20h22a8 8 0 0 1 0 16H28a8 8 0 0 0 0 16h22" fill="none" stroke="#AC84EB" strokeWidth="7" strokeLinecap="round" />
-            </svg>
+            <LogoMark size={34} />
             <span className="font-display text-lg font-semibold">StudyNotion</span>
           </div>
           <div className="text-right">
@@ -202,10 +200,7 @@ export function Receipt({ refund: isRefund = false }) {
 
 const Brand = () => (
   <div className="flex items-center gap-2.5">
-    <svg width="34" height="34" viewBox="0 0 64 64" aria-hidden="true">
-      <rect width="64" height="64" rx="14" fill="#0F0F0F" />
-      <path d="M14 20h22a8 8 0 0 1 0 16H28a8 8 0 0 0 0 16h22" fill="none" stroke="#AC84EB" strokeWidth="7" strokeLinecap="round" />
-    </svg>
+    <LogoMark size={34} />
     <span className="font-display text-lg font-semibold">StudyNotion</span>
   </div>
 );
