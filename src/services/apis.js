@@ -23,6 +23,7 @@ export const profileEndpoints = {
   LEARNING_STATS_API: BASE_URL + "/profile/learning-stats",
   SAVED_LESSONS_API: BASE_URL + "/profile/saved-lessons",
   LAST_LESSON_API: BASE_URL + "/profile/last-lesson",
+  CERTIFICATE_API: BASE_URL + "/profile/certificates",
   WEEKLY_GOAL_API: BASE_URL + "/profile/weekly-goal",
 }
 
@@ -106,3 +107,8 @@ export const notificationEndpoints = {
   READ_ALL_API: BASE_URL + "/notifications/read-all",
   READ_API: (id) => BASE_URL + `/notifications/${id}/read`,
 };
+
+// Public certificate check
+export const certificateEndpoints = {
+  VERIFY_API: BASE_URL + "/course/certificates/verify",
+}

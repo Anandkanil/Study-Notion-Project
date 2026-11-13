@@ -114,6 +114,7 @@ router.get("/getCourseRating", getCourseAllRatings)
 
 // Guided paths (public)
 const Paths = require("../controllers/Paths")
+router.get("/certificates/verify/:code", require("../controllers/Certificates").verify)
 router.get("/paths", Paths.listPublic)
 router.get("/paths/:slug", Paths.getPublic)
 
