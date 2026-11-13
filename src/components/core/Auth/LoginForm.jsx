@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import SocialSignIn from "./SocialSignIn";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { login } from "../../../services/operations/authAPI";
@@ -26,6 +27,7 @@ export default function LoginForm() {
 
   return (
     <form onSubmit={onSubmit} className="flex flex-col gap-5" noValidate={false}>
+      <SocialSignIn redirectTo={redirectTo} />
       {redirectTo && (
         <p role="status" className="rounded-xl border border-line bg-surface px-4 py-3 text-sm text-muted">
           Log in to continue to that page.

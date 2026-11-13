@@ -126,6 +126,34 @@ export function login(email, password, navigate, redirectTo) {
 }
 
 
+/** Google / GitHub sign-in. provider: "google" | "github". Resolves true on success. */
+export function socialLogin(provider, payload, navigate, redirectTo) {
+  return async (dispatch) => {
+    dispatch(setLoading(true));
+    const id = toast.loading(`Signing in with ${provider === "google" ? "Google" : "GitHub"}…`);
+    try {
+      const url = provider === "google" ? endpoints.GOOGLE_LOGIN_API : endpoints.GITHUB_LOGIN_API;
+      const response = await apiConnector("POST", url, payload);
+      if (!response.data?.success) throw new Error(response.data?.message);
+      const user = response.data.data;
+      const token = response.data.token;
+      dispatch(setUser(user));
+      dispatch(setToken(token));
+      localStorage.setItem("user", JSON.stringify(user));
+      localStorage.setItem("token", JSON.stringify(token));
+      toast.success(response.data.created ? `Welcome to StudyNotion, ${user.firstName || "there"}!` : `Welcome back, ${user.firstName || "there"}!`, { id });
+      navigate(redirectTo || homeFor(user.accountType), { replace: true });
+      return true;
+    } catch (error) {
+      console.error(`${provider} sign-in:`, error);
+      toast.error(error.response?.data?.message || "Sign-in didn't work. Please try again.", { id });
+      return false;
+    } finally {
+      dispatch(setLoading(false));
+    }
+  };
+}
+
 // Function to Log Out
 export function logout(navigate){
   return (dispatch)=>{

@@ -49,6 +49,9 @@ const userSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'CourseProgress'
     }],
+    // Linked sign-in providers (set when someone signs in with Google or GitHub)
+    googleId: { type: String, index: true, sparse: true },
+    githubId: { type: String, index: true, sparse: true },
     // Courses a student saved for later
     wishlist: [{
         type: mongoose.Schema.Types.ObjectId,
