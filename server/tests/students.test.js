@@ -76,6 +76,34 @@ const C = 'cccccccccccccccccccccccc', L1 = 'aaaaaaaaaaaaaaaaaaaaaaa1', L2 = 'aaa
   await test('weekly goal must be 1 to 50', async () => { const r = res(); await P.setWeeklyGoal({ body: { goal: 0 }, user: { userId: 'u' } }, r); assert.strictEqual(r.code, 400); });
 
   courseDoc = { courseName: 'React', courseContent: [{ sectionName: 'Intro', subSection: [] }, { sectionName: 'Basics', subSection: [{ _id: L1, title: 'Hello', videoUrl: 'https://v/1.mp4' }] }] };
+  // Saved lessons
+  const S1 = 'dddddddddddddddddddddddd';
+  let savedDoc = { savedLessons: [], save: async () => {} };
+  const saveFind = fakes['models/User'].findById;
+  await test('saving a lesson needs enrolment and a lesson from that course', async () => {
+    fakes['models/Course'].findById = () => q({ studentsEnrolled: ['someone-else'], courseContent: [{ _id: S1, subSection: [L1] }] });
+    let r = res(); await P.saveLesson({ body: { courseId: C, sectionId: S1, subSectionId: L1 }, user: { userId: 'u' } }, r); assert.strictEqual(r.code, 403);
+    fakes['models/Course'].findById = () => q({ studentsEnrolled: ['u'], courseContent: [{ _id: S1, subSection: [L1] }] });
+    r = res(); await P.saveLesson({ body: { courseId: C, sectionId: S1, subSectionId: L2 }, user: { userId: 'u' } }, r); assert.strictEqual(r.code, 400);
+  });
+  await test('saving the same lesson twice keeps one entry, newest first', async () => {
+    fakes['models/User'].findById = (id) => ({ select: (f) => (f === 'savedLessons' ? Object.assign(Promise.resolve(savedDoc), { populate: () => ({ populate: () => ({ lean: async () => ({ savedLessons: [] }) }) }) }) : saveFind(id).select(f)) });
+    for (let i = 0; i < 2; i++) { const r = res(); await P.saveLesson({ body: { courseId: C, sectionId: S1, subSectionId: L1 }, user: { userId: 'u' } }, r); assert.strictEqual(r.code, 200); }
+    assert.strictEqual(savedDoc.savedLessons.length, 1); assert.strictEqual(String(savedDoc.savedLessons[0].subSection), L1);
+    fakes['models/User'].findById = saveFind;
+  });
+  await test('last lesson is only remembered for an enrolled course', async () => {
+    let updated = null;
+    fakes['models/User'].exists = async () => null;
+    fakes['models/User'].updateOne = async (_q, u) => { updated = u; };
+    let r = res(); await P.setLastLesson({ body: { courseId: C, sectionId: S1, subSectionId: L1 }, user: { userId: 'u' } }, r); assert.strictEqual(r.code, 403); assert.strictEqual(updated, null);
+    fakes['models/User'].exists = async () => ({ _id: 'u' });
+    r = res(); await P.setLastLesson({ body: { courseId: C, sectionId: S1, subSectionId: L1 }, user: { userId: 'u' } }, r); assert.strictEqual(r.code, 200); assert.strictEqual(String(updated.lastLesson.subSection), L1);
+  });
+  await test('stats include the history for the calendar', async () => {
+    const s = summarize([{ day: '2026-11-01', lessons: 2 }, { day: '2026-11-03', lessons: 0 }], 3, new Date('2026-11-12T10:00:00Z'));
+    assert.deepStrictEqual(s.history, [{ day: '2026-11-01', lessons: 2 }]); assert.strictEqual(s.today, '2026-11-12');
+  });
   const { getCoursePreview } = require(SRV + '/controllers/Courses');
   await test('preview returns the first lesson that exists', async () => { const r = res(); await getCoursePreview({ params: { courseId: C } }, r); assert.strictEqual(r.body.data.title, 'Hello'); assert.strictEqual(r.body.data.sectionName, 'Basics'); });
   await test('preview of a missing or unpublished course is 404', async () => { courseDoc = null; const r = res(); await getCoursePreview({ params: { courseId: C } }, r); assert.strictEqual(r.code, 404); });

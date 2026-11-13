@@ -305,9 +305,14 @@ exports.getEnrolledCourses = async (req, res) => {
         message: `Could not find user with id: ${userDetails}`,
       })
     }
+    const last = userDetails.lastLesson
+    const lastLesson = last?.course && userDetails.courses.some((c) => String(c._id) === String(last.course))
+      ? { courseId: String(last.course), sectionId: String(last.section), subSectionId: String(last.subSection), at: last.at }
+      : null
     return res.status(200).json({
       success: true,
       data: userDetails.courses,
+      lastLesson,
     })
   } catch (error) {
     return res.status(500).json({
@@ -401,6 +406,104 @@ exports.removeFromWishlist = async (req, res) => {
   } catch (error) {
     console.error("removeFromWishlist:", error.message)
     return res.status(500).json({ success: false, message: "Couldn't remove the course. Please try again." })
+  }
+}
+
+// ---- Saved lessons (students) ----
+
+const SAVED_LESSONS_MAX = 200
+
+const savedLessonList = async (userId) => {
+  const user = await User.findById(userId)
+    .select("savedLessons")
+    .populate({ path: "savedLessons.course", select: "courseName thumbnail" })
+    .populate({ path: "savedLessons.subSection", select: "title timeDuration" })
+    .lean()
+  return (user?.savedLessons || [])
+    .filter((s) => s.course && s.subSection) // drop lessons or courses that were deleted
+    .map((s) => ({
+      courseId: String(s.course._id),
+      courseName: s.course.courseName,
+      thumbnail: s.course.thumbnail,
+      sectionId: String(s.section),
+      subSectionId: String(s.subSection._id),
+      title: s.subSection.title,
+      duration: s.subSection.timeDuration,
+      at: s.at,
+    }))
+}
+
+// GET /profile/saved-lessons
+exports.getSavedLessons = async (req, res) => {
+  try {
+    return res.status(200).json({ success: true, data: await savedLessonList(req.user.userId) })
+  } catch (error) {
+    console.error("getSavedLessons:", error.message)
+    return res.status(500).json({ success: false, message: "Your saved lessons couldn't load." })
+  }
+}
+
+// POST /profile/saved-lessons { courseId, sectionId, subSectionId }
+exports.saveLesson = async (req, res) => {
+  const { courseId, sectionId, subSectionId } = req.body || {}
+  if (![courseId, sectionId, subSectionId].every(isObjectId)) {
+    return res.status(400).json({ success: false, message: "Invalid lesson." })
+  }
+  try {
+    const course = await CourseModel.findById(courseId)
+      .select("studentsEnrolled courseContent")
+      .populate({ path: "courseContent", select: "subSection" })
+      .lean()
+    if (!course) return res.status(404).json({ success: false, message: "That course no longer exists." })
+    if (!(course.studentsEnrolled || []).some((id) => String(id) === String(req.user.userId))) {
+      return res.status(403).json({ success: false, message: "Enrol in the course to save its lessons." })
+    }
+    const section = (course.courseContent || []).find((s) => String(s._id) === String(sectionId))
+    if (!section || !(section.subSection || []).some((id) => String(id) === String(subSectionId))) {
+      return res.status(400).json({ success: false, message: "That lesson isn't part of this course." })
+    }
+    const user = await User.findById(req.user.userId).select("savedLessons")
+    const list = (user.savedLessons || []).filter((s) => String(s.subSection) !== String(subSectionId))
+    list.unshift({ course: courseId, section: sectionId, subSection: subSectionId, at: new Date() })
+    user.savedLessons = list.slice(0, SAVED_LESSONS_MAX)
+    await user.save()
+    return res.status(200).json({ success: true, message: "Lesson saved", data: await savedLessonList(req.user.userId) })
+  } catch (error) {
+    console.error("saveLesson:", error.message)
+    return res.status(500).json({ success: false, message: "Couldn't save the lesson. Please try again." })
+  }
+}
+
+// DELETE /profile/saved-lessons/:subSectionId
+exports.unsaveLesson = async (req, res) => {
+  const { subSectionId } = req.params
+  if (!isObjectId(subSectionId)) return res.status(400).json({ success: false, message: "Invalid lesson." })
+  try {
+    await User.updateOne({ _id: req.user.userId }, { $pull: { savedLessons: { subSection: subSectionId } } })
+    return res.status(200).json({ success: true, message: "Removed from saved lessons", data: await savedLessonList(req.user.userId) })
+  } catch (error) {
+    console.error("unsaveLesson:", error.message)
+    return res.status(500).json({ success: false, message: "Couldn't remove the lesson. Please try again." })
+  }
+}
+
+// PUT /profile/last-lesson { courseId, sectionId, subSectionId }: remembers the lesson just opened
+exports.setLastLesson = async (req, res) => {
+  const { courseId, sectionId, subSectionId } = req.body || {}
+  if (![courseId, sectionId, subSectionId].every(isObjectId)) {
+    return res.status(400).json({ success: false, message: "Invalid lesson." })
+  }
+  try {
+    const owns = await User.exists({ _id: req.user.userId, courses: courseId })
+    if (!owns) return res.status(403).json({ success: false, message: "You're not enrolled in this course." })
+    await User.updateOne(
+      { _id: req.user.userId },
+      { lastLesson: { course: courseId, section: sectionId, subSection: subSectionId, at: new Date() } }
+    )
+    return res.status(200).json({ success: true })
+  } catch (error) {
+    console.error("setLastLesson:", error.message)
+    return res.status(500).json({ success: false, message: "Couldn't remember your place." })
   }
 }
 

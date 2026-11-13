@@ -19,6 +19,7 @@ const ICONS = {
   log: "M12 8v4l3 2M21 12a9 9 0 11-18 0 9 9 0 0118 0z",
   tag: "M3 12V4a1 1 0 011-1h8l9 9-9 9-9-9zM7.5 7.5h.01",
   users: "M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2M9 11a4 4 0 100-8 4 4 0 000 8zM22 21v-2a4 4 0 00-3-3.9M16 3.1a4 4 0 010 7.8",
+  bookmark: "M6 3h12v18l-6-4-6 4z",
   logout: "M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9",
 };
 
@@ -32,6 +33,7 @@ const LINKS = {
   [ACCOUNT_TYPE.STUDENT]: [
     ["My learning", "/dashboard/enrolled-courses", ICONS.learn],
     ["Wishlist", "/dashboard/wishlist", ICONS.heart],
+    ["Saved lessons", "/dashboard/saved-lessons", ICONS.bookmark],
     ["Cart", "/dashboard/cart", ICONS.cart],
     ["Purchases", "/dashboard/purchases", ICONS.receipt],
   ],

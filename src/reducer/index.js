@@ -5,6 +5,7 @@ import cartReducer from '../slices/cartSlice'
 import courseReducer from '../slices/courseSlice'
 import viewCourseReducer from '../slices/viewCourseSlice'
 import wishlistReducer from '../slices/wishlistSlice'
+import savedLessonsReducer from '../slices/savedLessonsSlice'
 
 const rootReducer=combineReducers({
     auth:authReducer,
@@ -12,7 +13,8 @@ const rootReducer=combineReducers({
     cart:cartReducer,
     course:courseReducer,
     viewCourse:viewCourseReducer,
-    wishlist:wishlistReducer
+    wishlist:wishlistReducer,
+    savedLessons:savedLessonsReducer
 });
 
 export default rootReducer;

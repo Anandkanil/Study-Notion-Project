@@ -1,5 +1,6 @@
 import { homeFor } from "../../utils/constants"
 import { clearWishlist } from "../../slices/wishlistSlice"
+import { clearSavedLessons } from "../../slices/savedLessonsSlice"
 import { toast } from "react-hot-toast";
 import { setLoading, setToken } from "../../slices/authSlice";
 // import { resetCart } from "../../slices/cartSlice" // Uncomment when used
@@ -131,6 +132,7 @@ export function logout(navigate){
     dispatch((setToken(null)));
     dispatch((setUser(null)));
     dispatch(clearWishlist());
+    dispatch(clearSavedLessons());
     localStorage.removeItem('token');
     localStorage.removeItem('user');
     toast.success("You're logged out");
