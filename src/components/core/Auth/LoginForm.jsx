@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import SocialSignIn from "./SocialSignIn";
+import DemoLogin from "./DemoLogin";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { login } from "../../../services/operations/authAPI";
@@ -65,6 +66,7 @@ export default function LoginForm() {
           Create an account
         </Link>
       </p>
+      <DemoLogin />
     </form>
   );
 }

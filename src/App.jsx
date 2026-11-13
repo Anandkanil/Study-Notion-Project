@@ -7,6 +7,7 @@ import "./App.css";
 import ErrorBoundary from "./components/common/ErrorBoundary";
 import Navbar from "./components/common/Navbar";
 import ServerWakeNotice from "./components/common/ServerWakeNotice";
+import DemoBanner from "./components/common/DemoBanner";
 import PageSkeleton from "./components/common/PageSkeleton";
 import PrivateRoute from "./components/core/Auth/PrivateRoute";
 import { ACCOUNT_TYPE, homeFor } from "./utils/constants";
@@ -191,6 +192,7 @@ function App() {
         }}
       />
       <ServerWakeNotice />
+      <DemoBanner />
 
       {!location.pathname.startsWith("/dashboard") && <Navbar />}
 
