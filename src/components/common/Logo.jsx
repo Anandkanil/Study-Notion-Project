@@ -10,7 +10,7 @@ export default function Logo({ to = "/", className = "" }) {
         <rect x="1" y="1" width="62" height="62" rx="13" fill="none" className="stroke-line" strokeWidth="2" />
         <path d="M14 20h22a8 8 0 0 1 0 16H28a8 8 0 0 0 0 16h22" fill="none" className="stroke-accent" strokeWidth="7" strokeLinecap="round" />
       </svg>
-      <span className="font-display text-lg font-semibold tracking-tight text-ink">StudyNotion</span>
+      <span className="font-display text-xl font-bold tracking-tight text-ink">StudyNotion</span>
     </Link>
   );
 }

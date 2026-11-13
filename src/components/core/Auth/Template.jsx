@@ -19,11 +19,11 @@ export function AuthLayout({ title, subtitle, children }) {
       </div>
 
       <aside aria-label="Why StudyNotion" className="hidden rounded-3xl border border-line bg-surface p-8 md:block">
-        <div className="rounded-2xl bg-[rgb(14_17_40)] p-6" aria-hidden="true">
+        <div className="rounded-2xl bg-[rgb(10_10_10)] p-6" aria-hidden="true">
           <div className="flex items-center gap-3">
             <span className="grid h-12 w-12 place-items-center rounded-full bg-accent">
               <svg width="18" height="18" viewBox="0 0 24 24">
-                <path d="M8 5l12 7-12 7z" fill="rgb(20 24 51)" />
+                <path d="M8 5l12 7-12 7z" fill="rgb(15 15 15)" />
               </svg>
             </span>
             <div className="min-w-0 flex-1">

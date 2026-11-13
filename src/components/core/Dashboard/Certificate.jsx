@@ -127,23 +127,23 @@ export default function Certificate() {
         aria-label={`Certificate of completion for ${course.courseName}`}
         className="relative mx-auto aspect-[1.414] w-full max-w-4xl overflow-hidden rounded-2xl bg-white text-[#14172E] shadow-[var(--shadow-pop)] print:max-w-none print:rounded-none print:shadow-none"
       >
-        <div className="absolute inset-[3%] rounded-xl border-2 border-[#1E2347]" />
-        <div className="absolute inset-[4.2%] rounded-lg border border-[#E0A526]" />
+        <div className="absolute inset-[3%] rounded-xl border-2 border-[#0F0F0F]" />
+        <div className="absolute inset-[4.2%] rounded-lg border border-[#AC84EB]" />
 
         <div className="relative flex h-full flex-col items-center justify-between px-[9%] py-[8%] text-center">
           <div className="flex items-center gap-2.5">
             <svg width="34" height="34" viewBox="0 0 64 64" aria-hidden="true">
-              <rect width="64" height="64" rx="14" fill="#1E2347" />
-              <path d="M14 20h22a8 8 0 0 1 0 16H28a8 8 0 0 0 0 16h22" fill="none" stroke="#E0A526" strokeWidth="7" strokeLinecap="round" />
+              <rect width="64" height="64" rx="14" fill="#0F0F0F" />
+              <path d="M14 20h22a8 8 0 0 1 0 16H28a8 8 0 0 0 0 16h22" fill="none" stroke="#AC84EB" strokeWidth="7" strokeLinecap="round" />
             </svg>
             <span className="font-display text-lg font-semibold tracking-tight">StudyNotion</span>
           </div>
 
           <div className="flex flex-col items-center gap-[0.6em] text-[clamp(9px,2.1cqw,18px)]">
-            <p className="font-display text-[1.6em] font-medium text-[#1E2347]">Certificate of completion</p>
+            <p className="font-display text-[1.6em] font-medium text-[#0F0F0F]">Certificate of completion</p>
             <p className="text-[#4A4F6E]">This certifies that</p>
             <p className="font-display text-[2.6em] font-bold leading-tight">{learner || "StudyNotion learner"}</p>
-            <div className="h-[2px] w-1/2 bg-[#E0A526]" aria-hidden="true" />
+            <div className="h-[2px] w-1/2 bg-[#AC84EB]" aria-hidden="true" />
             <p className="text-[#4A4F6E]">has completed the course</p>
             <p className="max-w-[90%] font-display text-[1.6em] font-medium leading-snug">{course.courseName}</p>
             <p className="text-[#4A4F6E]">

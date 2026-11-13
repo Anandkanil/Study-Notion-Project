@@ -133,8 +133,8 @@ export function Receipt({ refund: isRefund = false }) {
         <div className="flex flex-wrap items-start justify-between gap-6 border-b border-[#DADCE8] pb-6">
           <div className="flex items-center gap-2.5">
             <svg width="34" height="34" viewBox="0 0 64 64" aria-hidden="true">
-              <rect width="64" height="64" rx="14" fill="#1E2347" />
-              <path d="M14 20h22a8 8 0 0 1 0 16H28a8 8 0 0 0 0 16h22" fill="none" stroke="#E0A526" strokeWidth="7" strokeLinecap="round" />
+              <rect width="64" height="64" rx="14" fill="#0F0F0F" />
+              <path d="M14 20h22a8 8 0 0 1 0 16H28a8 8 0 0 0 0 16h22" fill="none" stroke="#AC84EB" strokeWidth="7" strokeLinecap="round" />
             </svg>
             <span className="font-display text-lg font-semibold">StudyNotion</span>
           </div>
@@ -203,8 +203,8 @@ export function Receipt({ refund: isRefund = false }) {
 const Brand = () => (
   <div className="flex items-center gap-2.5">
     <svg width="34" height="34" viewBox="0 0 64 64" aria-hidden="true">
-      <rect width="64" height="64" rx="14" fill="#1E2347" />
-      <path d="M14 20h22a8 8 0 0 1 0 16H28a8 8 0 0 0 0 16h22" fill="none" stroke="#E0A526" strokeWidth="7" strokeLinecap="round" />
+      <rect width="64" height="64" rx="14" fill="#0F0F0F" />
+      <path d="M14 20h22a8 8 0 0 1 0 16H28a8 8 0 0 0 0 16h22" fill="none" stroke="#AC84EB" strokeWidth="7" strokeLinecap="round" />
     </svg>
     <span className="font-display text-lg font-semibold">StudyNotion</span>
   </div>
