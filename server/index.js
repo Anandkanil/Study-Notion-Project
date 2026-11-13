@@ -82,6 +82,7 @@ app.use('/api/v1/reach',contactRoute);
 app.use('/api/v1/admin',require('./routes/Admin'));
 app.use('/api/v1/instructor',require('./routes/Instructor'));
 app.use('/api/v1/learn',require('./routes/Learn'));
+app.use('/api/v1/notifications',require('./routes/Notifications'));
 
 app.get('/',(req,res)=>{res.send(`<h1>Welcome to the StudyNotion API</h1>`)});
 

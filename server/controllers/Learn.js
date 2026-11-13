@@ -4,6 +4,8 @@
  * lesson id must belong to the course.
  */
 const mongoose = require('mongoose');
+const notify = require('../utils/notify');
+const Section = require('../models/Section');
 const Course = require('../models/Course');
 const Note = require('../models/Note');
 const Question = require('../models/Question');
@@ -180,7 +182,7 @@ exports.answerQuestion = async (req, res) => {
   if (!isId(req.params.id)) return res.status(400).json({ success: false, message: 'Invalid question.' });
   if (text.length < 2) return res.status(400).json({ success: false, message: 'Write an answer first.' });
   try {
-    const question = await Question.findById(req.params.id).select('course user answers');
+    const question = await Question.findById(req.params.id).select('course user answers lesson');
     if (!question) return res.status(404).json({ success: false, message: 'That question no longer exists.' });
     const ctx = await access(req, res, question.course);
     if (!ctx) return;
@@ -194,6 +196,15 @@ exports.answerQuestion = async (req, res) => {
       User.findById(question.user).select('email firstName').lean()
         .then((asker) => asker?.email && mailSender.inBackground(asker.email, `Your question in ${ctx.course.courseName} was answered`, answerEmail(asker.firstName, ctx.course.courseName, text, String(ctx.course._id))))
         .catch((e) => console.error('Answer notice:', e.message));
+      Promise.resolve()
+        .then(() => Section.findOne({ subSection: question.lesson }).select('_id').lean())
+        .then((sec) => notify(question.user, {
+          type: 'answer',
+          title: `The instructor answered your question in ${ctx.course.courseName}`,
+          body: text,
+          link: sec ? `/view-course/${ctx.course._id}/section/${sec._id}/sub-section/${question.lesson}` : `/courses/${ctx.course._id}`,
+        }))
+        .catch((e) => console.error('Answer notify:', e.message));
     }
 
     const full = await Question.findById(question._id).populate('user', PEOPLE).populate('answers.user', PEOPLE).lean();

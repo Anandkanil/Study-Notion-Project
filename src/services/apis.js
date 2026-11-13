@@ -95,3 +95,9 @@ export const settingsEndpoints = {
   CHANGE_PASSWORD_API: BASE_URL + "/auth/changepassword",
   DELETE_PROFILE_API: BASE_URL + "/profile/deleteProfile",
 }
+
+export const notificationEndpoints = {
+  LIST_API: BASE_URL + "/notifications",
+  READ_ALL_API: BASE_URL + "/notifications/read-all",
+  READ_API: (id) => BASE_URL + `/notifications/${id}/read`,
+};

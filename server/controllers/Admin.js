@@ -3,6 +3,7 @@
  * Responses carry only what the screens show: no passwords, tokens or video URLs.
  */
 const mongoose = require('mongoose');
+const notify = require('../utils/notify');
 const User = require('../models/User');
 const Course = require('../models/Course');
 const Category = require('../models/Category');
@@ -201,6 +202,9 @@ exports.setCourseStatus = async (req, res) => {
       if (teacher?.email) {
         mailSender.inBackground(teacher.email, approved ? `${course.courseName} is live` : `Changes needed: ${course.courseName}`, courseReviewEmail(teacher.firstName, course.courseName, approved, note));
       }
+      notify(before.instructor, approved
+        ? { type: 'course-review', title: `${course.courseName} is approved and live`, body: 'Students can find it in the catalog now.', link: '/dashboard/my-courses' }
+        : { type: 'course-review', title: `Changes needed: ${course.courseName}`, body: note, link: '/dashboard/my-courses' });
     }
     const message = approved
       ? `${course.courseName} is approved and live`
@@ -394,6 +398,7 @@ exports.refundPurchase = async (req, res) => {
     const names = purchase.courses.map((c) => c.courseName).join(', ');
     adminLog(req, 'purchase.refund', `Refunded ₹${purchase.amount} to ${name} for ${names}: ${reason}`, { kind: 'purchase', id: purchase.orderId });
     if (purchase.user?.email) mailSender.inBackground(purchase.user.email, 'Your StudyNotion refund', refundEmail(purchase.user.firstName, names, purchase.amount, reason));
+    if (purchase.user?._id) notify(purchase.user._id, { type: 'refund', title: `Refund of ₹${purchase.amount.toLocaleString('en-IN')} issued`, body: `For ${names}. It usually arrives in 5–7 working days.`, link: `/dashboard/purchases/${purchase.orderId}/refund` });
     return res.status(200).json({ success: true, message: `Refunded ₹${purchase.amount.toLocaleString('en-IN')}. Access to ${names} is removed.` });
   } catch (error) {
     return fail(res, error, "The refund couldn't be completed");
