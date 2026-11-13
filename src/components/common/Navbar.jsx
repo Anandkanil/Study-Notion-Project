@@ -91,8 +91,8 @@ const Navbar = () => {
     );
 
   return (
-    <header className="sticky top-0 z-40 border-b border-line bg-bg/85 backdrop-blur supports-[backdrop-filter]:bg-bg/70">
-      <div className="mx-auto flex h-16 w-full max-w-6xl items-center gap-2 px-3 sm:gap-3 sm:px-6">
+    <header className="sticky top-0 z-40 border-b border-ink/[0.06] bg-bg/80 backdrop-blur-md supports-[backdrop-filter]:bg-bg/60">
+      <div className="mx-auto flex h-[68px] w-full max-w-6xl items-center gap-2 px-3 sm:gap-3 sm:px-6">
         <button
           type="button"
           className="grid h-11 w-11 place-items-center rounded-xl border border-line bg-surface text-ink lg:hidden"
@@ -108,7 +108,7 @@ const Navbar = () => {
 
         <Logo />
 
-        <nav aria-label="Main" className="ml-4 hidden items-center gap-1 lg:flex">
+        <nav aria-label="Main" className="hidden flex-1 items-center justify-center gap-1 lg:flex">
           <div className="relative" ref={catalogRef}>
             <button
               type="button"
@@ -136,7 +136,7 @@ const Navbar = () => {
           </NavLink>
         </nav>
 
-        <div className="ml-auto flex items-center gap-2">
+        <div className="ml-auto flex items-center gap-2 lg:ml-0">
           {!onSearchPage && (
             <form
               role="search"
@@ -202,7 +202,7 @@ const Navbar = () => {
               <Link to="/login" className="hidden rounded-xl px-4 py-2.5 font-semibold text-ink hover:bg-raised sm:inline-block">
                 Log in
               </Link>
-              <Link to="/signup" className="whitespace-nowrap rounded-xl bg-accent px-4 py-2.5 font-bold text-on-accent hover:brightness-105">
+              <Link to="/signup" className="btn-grad whitespace-nowrap rounded-xl px-4 py-2.5 font-bold">
                 <span className="sm:hidden">Join</span>
                 <span className="hidden sm:inline">Start learning</span>
               </Link>

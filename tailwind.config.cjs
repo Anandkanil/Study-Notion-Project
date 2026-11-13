@@ -3,10 +3,11 @@ module.exports = {
   content: ["./index.html", "./src/**/*.{js,jsx,ts,tsx}"],
   theme: {
     fontFamily: {
-      // "inter" kept as the class name used across the app; now Manrope
-      inter: ["Manrope", "system-ui", "sans-serif"],
-      sans: ["Manrope", "system-ui", "sans-serif"],
-      display: ["Unbounded", "Manrope", "system-ui", "sans-serif"],
+      // "inter" kept as the class name used across the app; now Plus Jakarta Sans
+      inter: ["Plus Jakarta Sans", "system-ui", "sans-serif"],
+      sans: ["Plus Jakarta Sans", "system-ui", "sans-serif"],
+      display: ["Plus Jakarta Sans", "system-ui", "sans-serif"],
+      serif: ["Merriweather", "Georgia", "serif"],
       "edu-sa": ["Edu SA Beginner", "cursive"],
       mono: ["Roboto Mono", "monospace"],
     },
