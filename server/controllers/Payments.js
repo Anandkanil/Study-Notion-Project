@@ -1,4 +1,5 @@
 const instance = require("../config/Razorpay");
+const notify = require("../utils/notify");
 const Course = require("../models/Course");
 const User = require("../models/User");
 const mailSender = require("../utils/mailSender");
@@ -211,6 +212,8 @@ exports.getPurchases = async (req, res) => {
 
 async function notifyInstructor(course, student) {
   if (!course.instructor) return;
+  const who = `${student.firstName} ${student.lastName || ""}`.trim();
+  notify(course.instructor, { type: "new-student", title: `New student in ${course.courseName}`, body: `${who} just enrolled.`, link: `/dashboard/instructor/courses/${course._id}` });
   const teacher = await User.findById(course.instructor).select("email firstName").lean();
   if (!teacher?.email) return;
   mailSender.inBackground(
@@ -253,6 +256,7 @@ const enrollStudents = async (courses, userId) => {
           `Successfully Enrolled into ${enrolledCourse.courseName}`,
           courseEnrollmentEmail(enrolledCourse.courseName, enrolledStudent.firstName, enrolledCourse.thumbnail)
         );
+        notify(userId, { type: "enrolled", title: `You're enrolled in ${enrolledCourse.courseName}`, body: "Start with the first lesson whenever you're ready.", link: "/dashboard/enrolled-courses" });
         // Tell the instructor about the new student (a notice only: never blocks enrolment)
         notifyInstructor(enrolledCourse, enrolledStudent).catch((e) => console.error("Instructor notice:", e.message));
       }

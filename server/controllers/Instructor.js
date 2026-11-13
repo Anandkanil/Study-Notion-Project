@@ -3,6 +3,7 @@
  * Every handler checks the logged-in instructor owns the course it touches.
  */
 const mongoose = require('mongoose');
+const notify = require('../utils/notify');
 const Course = require('../models/Course');
 const CourseProgress = require('../models/CourseProgress');
 const Purchase = require('../models/Purchase');
@@ -157,7 +158,8 @@ exports.replyToReview = async (req, res) => {
   try {
     const review = await ownedReview(req, res);
     if (!review) return;
-    const saved = await RatingAndReview.findByIdAndUpdate(review._id, { reply: { text, at: new Date() } }, { new: true }).select('reply').lean();
+    const saved = await RatingAndReview.findByIdAndUpdate(review._id, { reply: { text, at: new Date() } }, { new: true }).select('reply user course').lean();
+    if (saved?.user) notify(saved.user, { type: 'review-reply', title: 'The instructor replied to your review', body: text, link: `/courses/${saved.course}` });
     return res.status(200).json({ success: true, message: 'Reply posted', data: saved.reply });
   } catch (error) {
     return fail(res, error, "Your reply couldn't be posted");
@@ -209,6 +211,7 @@ exports.createAnnouncement = async (req, res) => {
       if ((course.studentsEnrolled || []).length > ANNOUNCEMENT_EMAIL_CAP) note = ` Emailed the first ${ANNOUNCEMENT_EMAIL_CAP}; everyone sees it in the course.`;
     }
     const a = await Announcement.create({ course: course._id, instructor: req.user.userId, title, body, emailedTo });
+    notify(course.studentsEnrolled || [], { type: 'announcement', title: `${course.courseName}: ${title}`, body, link: '/dashboard/enrolled-courses' });
     const message = emailedTo ? `Announcement posted and emailed to ${emailedTo} ${emailedTo === 1 ? 'student' : 'students'}.${note}` : 'Announcement posted';
     return res.status(201).json({ success: true, message, data: { _id: a._id, title, body, emailedTo, createdAt: a.createdAt } });
   } catch (error) {

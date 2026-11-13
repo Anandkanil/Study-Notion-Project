@@ -1,4 +1,5 @@
 const mongoose = require("mongoose")
+const notify = require("../utils/notify")
 const Section = require("../models/Section")
 const SubSection = require("../models/SubSection")
 const CourseProgress = require("../models/CourseProgress")
@@ -73,6 +74,7 @@ exports.updateCourseProgress = async (req, res) => {
       streak = streakUpdate(before, summarize(user.learningDays, user.weeklyGoal || 3))
       await user.save().catch((e) => console.error("learningDays save:", e.message))
       if (completedCourse) {
+        notify(userId, { type: 'completed', title: `You finished ${course.courseName}`, body: 'Your certificate is ready to download.', link: `/dashboard/certificate/${courseId}` })
         mailSender.inBackground(
           user.email,
           `You finished ${course.courseName}`,

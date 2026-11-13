@@ -5,6 +5,7 @@ import { useSelector } from "react-redux";
 import ProfileDropDown from "../core/Auth/ProfileDropDown";
 import ThemeToggle from "./ThemeToggle";
 import CommandSearch, { shortcutLabel } from "./CommandSearch";
+import NotificationBell from "./NotificationBell";
 import Logo from "./Logo";
 import useOnClickOutside from "../../hooks/useOnClickOutside";
 import { apiConnector } from "../../services/apiconnector";
@@ -212,7 +213,12 @@ const Navbar = () => {
               </Link>
             </>
           ) : (
-            user && <ProfileDropDown />
+            user && (
+              <>
+                <NotificationBell />
+                <ProfileDropDown />
+              </>
+            )
           )}
         </div>
       </div>
