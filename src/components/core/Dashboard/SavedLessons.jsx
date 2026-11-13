@@ -38,7 +38,7 @@ export default function SavedLessons() {
           ))}
         </div>
       ) : list.length === 0 ? (
-        <EmptyState title="No saved lessons yet" action={<Link to="/dashboard/enrolled-courses" className={buttonClass("primary")}>Go to My learning</Link>}>
+        <EmptyState title="No saved lessons yet" action={<Link to="/dashboard/enrolled-courses" className={buttonClass("primary")}>Go to your courses</Link>}>
           While watching, press the bookmark button next to the lesson title. It'll show up here.
         </EmptyState>
       ) : (

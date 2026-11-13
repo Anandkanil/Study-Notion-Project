@@ -235,3 +235,9 @@
 @media (prefers-reduced-motion: reduce) {
   .sn-planet, .sn-particle, .sn-vtrack, .sn-fill, .sn-caret, .sn-flare, .sn-flare-h { animation: none; }
 }
+
+/* Dialogs: fade the backdrop, pop the card */
+.sn-modal-backdrop { animation: sn-fade-in 0.18s ease both; }
+.sn-modal { animation: sn-pop 0.22s cubic-bezier(0.2, 1.1, 0.4, 1) both; }
+@keyframes sn-pop { from { opacity: 0; transform: translateY(8px) scale(0.96); } }
+@media (prefers-reduced-motion: reduce) { .sn-modal-backdrop, .sn-modal { animation: none; } }

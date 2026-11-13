@@ -37,6 +37,7 @@ const GithubCallback = lazy(() => import("./pages/GithubCallback"));
 const PlaygroundPage = lazy(() => import("./pages/PlaygroundPage"));
 const Wishlist = lazy(() => import("./components/core/Dashboard/Wishlist"));
 const SavedLessons = lazy(() => import("./components/core/Dashboard/SavedLessons"));
+const StudentOverview = lazy(() => import("./components/core/Dashboard/StudentOverview"));
 const InstructorCourse = lazy(() => import("./components/core/Dashboard/InstructorCourse"));
 const AdminOverview = lazy(() => import("./components/core/Dashboard/Admin/Overview"));
 const AdminSubjects = lazy(() => import("./components/core/Dashboard/Admin/Subjects"));
@@ -58,7 +59,7 @@ const Instructor = lazy(() => import("./components/core/Dashboard/InstructorDash
 const VideoDetails = lazy(() => import("./components/core/ViewCourse/VideoDetails"));
 
 // Browser-tab titles per route (pages with live data may refine them)
-const TITLES = [
+export const TITLES = [
   [/^\/$/, "StudyNotion — Video courses in web, cloud, AI and security"],
   [/^\/login/, "Log in"],
   [/^\/signup/, "Create your account"],
@@ -73,7 +74,8 @@ const TITLES = [
   [/^\/dashboard\/my-profile/, "My profile"],
   [/^\/dashboard\/settings/, "Settings"],
   [/^\/dashboard\/cart/, "Cart"],
-  [/^\/dashboard\/enrolled-courses/, "My learning"],
+  [/^\/dashboard\/enrolled-courses/, "Your courses"],
+  [/^\/dashboard\/overview/, "Dashboard"],
   [/^\/dashboard\/certificate/, "Certificate"],
   [/^\/dashboard\/admin\/subjects/, "Subjects · Admin"],
   [/^\/dashboard\/admin\/paths/, "Paths · Admin"],
@@ -190,7 +192,7 @@ function App() {
       />
       <ServerWakeNotice />
 
-      <Navbar />
+      {!location.pathname.startsWith("/dashboard") && <Navbar />}
 
       <main id="main" tabIndex={-1} className="flex flex-1 flex-col outline-none">
         <ErrorBoundary resetKey={location.pathname}>
@@ -231,6 +233,7 @@ function App() {
                 <Route path="/dashboard/instructor/courses/:courseId" element={<RequireRole role={ACCOUNT_TYPE.INSTRUCTOR} fallback={dashboardHome}><InstructorCourse /></RequireRole>} />
                 <Route path="/dashboard/wishlist" element={<RequireRole role={ACCOUNT_TYPE.STUDENT} fallback={dashboardHome}><Wishlist /></RequireRole>} />
                 <Route path="/dashboard/saved-lessons" element={<RequireRole role={ACCOUNT_TYPE.STUDENT} fallback={dashboardHome}><SavedLessons /></RequireRole>} />
+                <Route path="/dashboard/overview" element={<RequireRole role={ACCOUNT_TYPE.STUDENT} fallback={dashboardHome}><StudentOverview /></RequireRole>} />
                 <Route path="/dashboard/purchases" element={<RequireRole role={ACCOUNT_TYPE.STUDENT} fallback={dashboardHome}><Purchases /></RequireRole>} />
                 <Route path="/dashboard/purchases/:orderId" element={<RequireRole role={ACCOUNT_TYPE.STUDENT} fallback={dashboardHome}><Receipt /></RequireRole>} />
                 <Route path="/dashboard/purchases/:orderId/refund" element={<RequireRole role={ACCOUNT_TYPE.STUDENT} fallback={dashboardHome}><Receipt refund /></RequireRole>} />

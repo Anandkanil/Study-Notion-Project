@@ -11,7 +11,7 @@ const monthName = (y, m) => new Date(Date.UTC(y, m, 1)).toLocaleDateString("en-I
 const keyOf = (y, m, d) => `${y}-${String(m + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
 
 /** Month grid of learning days; darker squares mean more lessons that day. */
-function StreakCalendar({ today, history }) {
+export function StreakCalendar({ today, history, bare = false }) {
   const [ty, tm] = today.split("-").map(Number);
   const [view, setView] = useState({ y: ty, m: tm - 1 });
   const byDay = new Map(history.map((d) => [d.day, d.lessons]));
@@ -26,7 +26,7 @@ function StreakCalendar({ today, history }) {
   const activeThisMonth = cells.filter((d) => d && byDay.get(keyOf(view.y, view.m, d))).length;
 
   return (
-    <div className="flex flex-col gap-3 rounded-2xl border border-line bg-surface p-5">
+    <div className={`flex flex-col gap-3 ${bare ? "rounded-xl border border-line bg-bg/50 p-4" : "rounded-2xl border border-line bg-surface p-5"}`}>
       <div className="flex items-center justify-between gap-2">
         <button type="button" onClick={() => step(-1)} disabled={!canPrev} aria-label="Previous month" className="grid h-9 w-9 place-items-center rounded-lg text-muted hover:bg-raised hover:text-ink disabled:opacity-30">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><path d="M15 6l-6 6 6 6" /></svg>

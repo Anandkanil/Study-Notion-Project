@@ -48,7 +48,7 @@ export default function ProfileDropdown() {
             <p className="truncate text-sm text-muted">{user?.email}</p>
           </div>
           <Link role="menuitem" to={home} onClick={() => setOpen(false)} className={itemClass}>
-            {user?.accountType === "Instructor" ? "Instructor dashboard" : user?.accountType === "Admin" ? "Admin overview" : "My learning"}
+            {user?.accountType === "Instructor" ? "Instructor dashboard" : user?.accountType === "Admin" ? "Admin overview" : "Dashboard"}
           </Link>
           <Link role="menuitem" to="/dashboard/my-profile" onClick={() => setOpen(false)} className={itemClass}>
             Profile

@@ -15,7 +15,7 @@ const quickLinks = (user) => {
   const base = [["Browse all courses", "/search"]];
   if (!user) return base;
   if (user.accountType === "Student")
-    return [["My learning", "/dashboard/enrolled-courses"], ["Saved lessons", "/dashboard/saved-lessons"], ["Wishlist", "/dashboard/wishlist"], ["Purchases", "/dashboard/purchases"], ...base];
+    return [["Dashboard", "/dashboard/overview"], ["Your courses", "/dashboard/enrolled-courses"], ["Saved lessons", "/dashboard/saved-lessons"], ["Wishlist", "/dashboard/wishlist"], ["Purchases", "/dashboard/purchases"], ...base];
   if (user.accountType === "Instructor") return [["My courses", "/dashboard/my-courses"], ["New course", "/dashboard/add-course"], ...base];
   return [["Admin overview", "/dashboard/admin"], ["Courses to review", "/dashboard/admin/courses"], ...base];
 };

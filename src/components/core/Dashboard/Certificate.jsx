@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { LogoMark } from "../../common/Logo";
 import { useSelector } from "react-redux";
 import { Link, useParams } from "react-router-dom";
 
@@ -82,7 +83,7 @@ export default function Certificate() {
 
   if (state.status === "not-enrolled") {
     return (
-      <EmptyState title="No certificate for this course" action={<Link to="/dashboard/enrolled-courses" className={buttonClass("primary")}>Go to My learning</Link>}>
+      <EmptyState title="No certificate for this course" action={<Link to="/dashboard/enrolled-courses" className={buttonClass("primary")}>Go to your courses</Link>}>
         Certificates are for courses you're enrolled in and have finished.
       </EmptyState>
     );
@@ -132,10 +133,7 @@ export default function Certificate() {
 
         <div className="relative flex h-full flex-col items-center justify-between px-[9%] py-[8%] text-center">
           <div className="flex items-center gap-2.5">
-            <svg width="34" height="34" viewBox="0 0 64 64" aria-hidden="true">
-              <rect width="64" height="64" rx="14" fill="#0F0F0F" />
-              <path d="M14 20h22a8 8 0 0 1 0 16H28a8 8 0 0 0 0 16h22" fill="none" stroke="#AC84EB" strokeWidth="7" strokeLinecap="round" />
-            </svg>
+            <LogoMark size={34} />
             <span className="font-display text-lg font-semibold tracking-tight">StudyNotion</span>
           </div>
 
