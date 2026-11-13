@@ -9,6 +9,7 @@ export const endpoints = {
   PROVIDERS_API: BASE_URL + "/auth/providers",
   GOOGLE_LOGIN_API: BASE_URL + "/auth/google",
   GITHUB_LOGIN_API: BASE_URL + "/auth/github",
+  DEMO_LOGIN_API: BASE_URL + "/auth/demo",
   RESETPASSTOKEN_API: BASE_URL + "/auth/reset-password-token",
   RESETPASSWORD_API: BASE_URL + "/auth/reset-password",
 }

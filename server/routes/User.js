@@ -68,5 +68,8 @@ router.get("/providers", social.providers)
 router.post("/google", limits.loginIp, social.google)
 router.post("/github", limits.loginIp, social.github)
 
+// One-click read-only demo: { role: "student" | "instructor" | "admin" }
+router.post("/demo", limits.loginIp, require("../controllers/Demo").demoLogin)
+
 // Export the router for use in the main application
 module.exports = router

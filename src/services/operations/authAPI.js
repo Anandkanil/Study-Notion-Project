@@ -154,6 +154,33 @@ export function socialLogin(provider, payload, navigate, redirectTo) {
   };
 }
 
+// One-click read-only demo: role is "student", "instructor" or "admin"
+export function demoLogin(role, navigate) {
+  return async (dispatch) => {
+    dispatch(setLoading(true));
+    const id = toast.loading(`Opening the ${role} demo…`);
+    try {
+      const response = await apiConnector("POST", endpoints.DEMO_LOGIN_API, { role });
+      if (!response.data?.success) throw new Error(response.data?.message);
+      const user = { ...response.data.data, demo: true };
+      const token = response.data.token;
+      dispatch(setUser(user));
+      dispatch(setToken(token));
+      localStorage.setItem("user", JSON.stringify(user));
+      localStorage.setItem("token", JSON.stringify(token));
+      toast.success(`You're exploring as ${user.firstName}. Look around: changes aren't saved.`, { id });
+      navigate(homeFor(user.accountType), { replace: true });
+      return true;
+    } catch (error) {
+      console.error("Demo sign-in:", error);
+      toast.error(error.response?.data?.message || "The demo didn't open. Please try again.", { id });
+      return false;
+    } finally {
+      dispatch(setLoading(false));
+    }
+  };
+}
+
 // Function to Log Out
 export function logout(navigate){
   return (dispatch)=>{

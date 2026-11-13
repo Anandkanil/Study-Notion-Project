@@ -47,6 +47,8 @@ async function authenticateToken(req, res, next) {
         // A failed check shouldn't lock everyone out; the token itself is valid
         console.error('Suspension check:', error.message);
     }
+    // Demo sessions: read-only, and real people's personal details hidden
+    if (require('../utils/demoSession').applyDemoRules(req, res)) return;
     next();
 }
 
