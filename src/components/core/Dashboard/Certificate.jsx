@@ -1,25 +1,13 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
+import { toast } from "react-hot-toast";
 import { LogoMark } from "../../common/Logo";
 import { useSelector } from "react-redux";
 import { Link, useParams } from "react-router-dom";
 
 import { apiConnector } from "../../../services/apiconnector";
 import { courseEndpoints, profileEndpoints } from "../../../services/apis";
-import { getCertificateDate } from "../../../utils/learningMemory";
 import { Button, EmptyState, buttonClass } from "../../ui";
 import RatePrompt from "./RatePrompt";
-
-/** Short, stable reference for a learner + course pair, e.g. "SN-4K7Q-2M9X". */
-const certificateId = (userId, courseId) => {
-  let h1 = 0x811c9dc5;
-  let h2 = 0x01000193;
-  for (const ch of `${userId}:${courseId}`) {
-    h1 = Math.imul(h1 ^ ch.charCodeAt(0), 16777619) >>> 0;
-    h2 = Math.imul(h2 + ch.charCodeAt(0), 2246822519) >>> 0;
-  }
-  const code = (h1.toString(36) + h2.toString(36)).toUpperCase().padEnd(8, "0").slice(0, 8);
-  return `SN-${code.slice(0, 4)}-${code.slice(4)}`;
-};
 
 const countLessons = (course) => (course?.courseContent || []).reduce((n, s) => n + (s.subSection?.length || 0), 0);
 
@@ -40,7 +28,9 @@ export default function Certificate() {
       const course = (enrolled.data?.data || []).find((c) => String(c._id) === String(courseId));
       if (!course) return setState({ status: "not-enrolled" });
       const info = details.data?.data || {};
-      setState({ status: "ready", course, instructor: info.courseDetails?.instructor, totalDuration: info.totalDuration || course.totalDuration });
+      // Issued by the server once every lesson is done; null while the course is unfinished
+      const cert = await apiConnector("GET", `${profileEndpoints.CERTIFICATE_API}/${courseId}`, null, auth);
+      setState({ status: "ready", course, cert: cert.data?.data || null, instructor: info.courseDetails?.instructor, totalDuration: info.totalDuration || course.totalDuration });
     } catch (error) {
       console.error("Certificate error:", error);
       setState({ status: "failed" });
@@ -52,13 +42,19 @@ export default function Certificate() {
   }, [load]);
 
   const { course } = state;
-  const finished = course && countLessons(course) > 0 && (course.progressPercentage || 0) >= 100;
-  const learner = [user?.firstName, user?.lastName].filter(Boolean).join(" ");
-  const teacher = [state.instructor?.firstName, state.instructor?.lastName].filter(Boolean).join(" ");
-  const issued = useMemo(
-    () => (finished ? getCertificateDate(user?._id, courseId) : null),
-    [finished, user?._id, courseId]
-  );
+  const { cert } = state;
+  const finished = Boolean(cert);
+  const learner = cert?.learnerName || [user?.firstName, user?.lastName].filter(Boolean).join(" ");
+  const teacher = cert?.instructorName || [state.instructor?.firstName, state.instructor?.lastName].filter(Boolean).join(" ");
+  const verifyUrl = cert ? `${window.location.origin}/verify/${cert.code}` : "";
+  const copyLink = async () => {
+    try {
+      await navigator.clipboard.writeText(verifyUrl);
+      toast.success("Verification link copied");
+    } catch {
+      toast.error(`Couldn't copy. The link is ${verifyUrl}`);
+    }
+  };
 
   useEffect(() => {
     if (finished && course?.courseName) document.title = `Certificate · ${course.courseName} · StudyNotion`;
@@ -101,8 +97,8 @@ export default function Certificate() {
     );
   }
 
-  const issuedText = issued.toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" });
-  const lessons = countLessons(course);
+  const issuedText = new Date(cert.issuedAt).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" });
+  const lessons = cert.lessons || countLessons(course);
 
   return (
     <div className="flex flex-col gap-6">
@@ -110,11 +106,19 @@ export default function Certificate() {
         <div>
           <h1 className="font-display text-3xl font-bold text-ink">Your certificate</h1>
           <p className="mt-1 text-muted">Download it as a PDF or print it. In the print window, choose "Save as PDF".</p>
+          <p className="mt-1 text-muted">
+            Anyone can check it's genuine at{" "}
+            <Link to={`/verify/${cert.code}`} className="font-semibold text-accent-text underline-offset-4 hover:underline">
+              /verify/{cert.code}
+            </Link>
+            .
+          </p>
         </div>
         <div className="flex flex-wrap gap-3">
           <Link to="/dashboard/enrolled-courses" className={buttonClass("secondary")}>
             Back to My learning
           </Link>
+          <Button variant="secondary" onClick={copyLink}>Copy verification link</Button>
           <Button onClick={() => window.print()}>Download PDF</Button>
         </div>
       </div>
@@ -146,7 +150,7 @@ export default function Certificate() {
             <p className="max-w-[90%] font-display text-[1.6em] font-medium leading-snug">{course.courseName}</p>
             <p className="text-[#4A4F6E]">
               {lessons} {lessons === 1 ? "lesson" : "lessons"}
-              {state.totalDuration ? ` · ${state.totalDuration} of video` : ""}
+              {(cert.totalDuration || state.totalDuration) ? ` · ${cert.totalDuration || state.totalDuration} of video` : ""}
               {teacher ? ` · taught by ${teacher}` : ""}
             </p>
           </div>
@@ -158,8 +162,9 @@ export default function Certificate() {
             </div>
             <div className="text-right">
               <dt className="text-[#4A4F6E]">Certificate ID</dt>
-              <dd className="font-bold tabular-nums">{certificateId(user?._id, courseId)}</dd>
+              <dd className="font-bold tabular-nums">{cert.code}</dd>
             </div>
+            <p className="col-span-2 text-center text-[#4A4F6E]">Verify at {verifyUrl.replace(/^https?:\/\//, "")}</p>
           </dl>
         </div>
       </section>
