@@ -16,13 +16,13 @@ export const endpoints = {
 // PROFILE ENDPOINTS
 export const profileEndpoints = {
   GET_USER_DETAILS_API: BASE_URL + "/profile/getUserDetails",
+  EMAIL_PREFS_API: BASE_URL + "/profile/email-prefs",
   GET_USER_ENROLLED_COURSES_API: BASE_URL + "/profile/getEnrolledCourses",
   GET_INSTRUCTOR_DATA_API: BASE_URL + "/profile/instructorDashboard",
   WISHLIST_API: BASE_URL + "/profile/wishlist",
   LEARNING_STATS_API: BASE_URL + "/profile/learning-stats",
   SAVED_LESSONS_API: BASE_URL + "/profile/saved-lessons",
   LAST_LESSON_API: BASE_URL + "/profile/last-lesson",
-  EMAIL_PREFS_API: BASE_URL + "/profile/email-prefs",
   WEEKLY_GOAL_API: BASE_URL + "/profile/weekly-goal",
 }
 
