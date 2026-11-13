@@ -109,6 +109,11 @@ export default function SignupForm() {
       <Button type="submit" size="lg" loading={loading} loadingText="Sending code…">
         Create account
       </Button>
+      <p className="text-center text-sm text-muted">
+        By creating an account, you agree to the{" "}
+        <Link to="/terms" className="font-semibold text-accent-text hover:underline">Terms of Use</Link> and{" "}
+        <Link to="/privacy" className="font-semibold text-accent-text hover:underline">Privacy Policy</Link>.
+      </p>
       <p className="text-center text-muted">
         Already have an account?{" "}
         <Link to="/login" className="font-semibold text-accent-text hover:underline">

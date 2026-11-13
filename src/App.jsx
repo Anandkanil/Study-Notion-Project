@@ -15,6 +15,7 @@ import { loadSavedLessons } from "./slices/savedLessonsSlice";
 
 // Each page loads only when it is first visited
 const Home = lazy(() => import("./pages/Home"));
+const Legal = lazy(() => import("./pages/Legal"));
 const Login = lazy(() => import("./pages/Login"));
 const Signup = lazy(() => import("./pages/Signup"));
 const Contact = lazy(() => import("./pages/Contact"));
@@ -207,6 +208,8 @@ function App() {
               <Route path="/paths/:slug" element={<PathDetail />} />
               <Route path="/auth/github/callback" element={<GithubCallback />} />
               <Route path="/about" element={<About />} />
+              <Route path="/privacy" element={<Legal page="privacy" />} />
+              <Route path="/terms" element={<Legal page="terms" />} />
               <Route path="/contact" element={<Contact />} />
               <Route path="/catalog/:catalogName" element={<Catalog />} />
               <Route path="/search" element={<Search />} />
