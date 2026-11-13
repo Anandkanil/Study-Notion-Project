@@ -59,6 +59,7 @@ const EditCourse = lazy(() => import("./components/core/Dashboard/AddCourse/Cour
 const MyCourses = lazy(() => import("./components/core/Dashboard/MyCourses"));
 const Instructor = lazy(() => import("./components/core/Dashboard/InstructorDashboard/Instructor"));
 const VideoDetails = lazy(() => import("./components/core/ViewCourse/VideoDetails"));
+const Legal = lazy(() => import("./pages/Legal"));
 
 // Browser-tab titles per route (pages with live data may refine them)
 export const TITLES = [
@@ -212,6 +213,8 @@ function App() {
               <Route path="/paths/:slug" element={<PathDetail />} />
               <Route path="/auth/github/callback" element={<GithubCallback />} />
               <Route path="/about" element={<About />} />
+              <Route path="/privacy" element={<Legal page="privacy" />} />
+              <Route path="/terms" element={<Legal page="terms" />} />
               <Route path="/contact" element={<Contact />} />
               <Route path="/catalog/:catalogName" element={<Catalog />} />
               <Route path="/search" element={<Search />} />
