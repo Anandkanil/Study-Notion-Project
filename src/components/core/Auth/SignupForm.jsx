@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from "react";
+import SocialSignIn from "./SocialSignIn";
 import { useDispatch, useSelector } from "react-redux";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 
@@ -81,6 +82,8 @@ export default function SignupForm() {
           ))}
         </div>
       </fieldset>
+
+      <SocialSignIn accountType={accountType} mode="signup" />
 
       <div className="grid gap-5 sm:grid-cols-2">
         <Field label="First name" name="firstName" autoComplete="given-name" required value={formData.firstName} onChange={onChange} onBlur={onBlur} error={show("firstName")} />

@@ -15,6 +15,7 @@ const {
 } = require("../controllers/ResetPassword")
 
 const { auth } = require("../middlewares/auth")
+const social = require("../controllers/SocialAuth")
 const { rateLimit, emailKey } = require("../middlewares/rateLimit")
 
 const MIN = 60 * 1000
@@ -61,6 +62,11 @@ router.post("/reset-password-token", limits.resetIp, limits.resetAccount, create
 
 // Route for resetting user's password after verification
 router.post("/reset-password", limits.newPasswordIp, resetPassword)
+
+// Sign in with Google / GitHub
+router.get("/providers", social.providers)
+router.post("/google", limits.loginIp, social.google)
+router.post("/github", limits.loginIp, social.github)
 
 // Export the router for use in the main application
 module.exports = router
