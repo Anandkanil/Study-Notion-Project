@@ -112,4 +112,9 @@ router.get("/getAverageRating", getAverageRating)
 router.get("/getReviews", getAllRatingAndReviews)
 router.get("/getCourseRating", getCourseAllRatings)
 
+// Guided paths (public)
+const Paths = require("../controllers/Paths")
+router.get("/paths", Paths.listPublic)
+router.get("/paths/:slug", Paths.getPublic)
+
 module.exports = router
