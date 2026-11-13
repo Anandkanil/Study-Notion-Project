@@ -59,7 +59,12 @@ async function sendWithSmtp(to, subject, html) {
   return transporter.sendMail({ from: process.env.EMAIL_USER, to, subject, html });
 }
 
+// Demo accounts use the reserved .test domain, which can never belong to a real
+// person. Mail to them is skipped (returns a truthy result so callers carry on).
+const isDemoAddress = (email) => /\.test$/i.test(String(email || '').trim());
+
 const mailSender = async (email, title, body) => {
+  if (isDemoAddress(email)) return { skipped: 'demo address' };
   try {
     if (BREVO_API_KEY) return await sendWithBrevo(email, title, body);
     return await sendWithSmtp(email, title, body);
@@ -73,5 +78,7 @@ const mailSender = async (email, title, body) => {
 mailSender.inBackground = (email, title, body) => {
   mailSender(email, title, body).catch(() => {});
 };
+
+mailSender.isDemoAddress = isDemoAddress;
 
 module.exports = mailSender;
