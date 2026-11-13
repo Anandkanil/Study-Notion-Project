@@ -43,6 +43,13 @@ router.post("/purchases/:orderId/refund", A.refundPurchase)
 router.get("/reviews", A.listReviews)
 router.patch("/reviews/:id", A.setReviewHidden)
 
+const Paths = require("../controllers/Paths")
+router.get("/paths", Paths.adminList)
+router.get("/paths/course-options", Paths.courseOptions)
+router.post("/paths", Paths.create)
+router.put("/paths/:id", Paths.update)
+router.delete("/paths/:id", Paths.remove)
+
 router.get("/logs", A.listLogs)
 router.get("/export/:kind", A.exportCsv)
 

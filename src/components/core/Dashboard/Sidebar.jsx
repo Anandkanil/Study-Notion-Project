@@ -20,6 +20,7 @@ const ICONS = {
   tag: "M3 12V4a1 1 0 011-1h8l9 9-9 9-9-9zM7.5 7.5h.01",
   users: "M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2M9 11a4 4 0 100-8 4 4 0 000 8zM22 21v-2a4 4 0 00-3-3.9M16 3.1a4 4 0 010 7.8",
   bookmark: "M6 3h12v18l-6-4-6 4z",
+  path: "M6 19a2 2 0 1 0 0-4 2 2 0 0 0 0 4zM18 9a2 2 0 1 0 0-4 2 2 0 0 0 0 4zM6 15V9a4 4 0 0 1 4-4h6M18 9v6a4 4 0 0 1-4 4H8",
   logout: "M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9",
 };
 
@@ -40,6 +41,7 @@ const LINKS = {
   [ACCOUNT_TYPE.ADMIN]: [
     ["Overview", "/dashboard/admin", ICONS.chart, true],
     ["Subjects", "/dashboard/admin/subjects", ICONS.tag],
+    ["Paths", "/dashboard/admin/paths", ICONS.path],
     ["Courses", "/dashboard/admin/courses", ICONS.courses],
     ["Users", "/dashboard/admin/users", ICONS.users],
     ["Sales", "/dashboard/admin/purchases", ICONS.receipt],

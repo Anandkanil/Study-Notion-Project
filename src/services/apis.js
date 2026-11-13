@@ -55,6 +55,7 @@ export const courseEndpoints = {
   SEARCH_COURSES_API: BASE_URL + "/course/search",
   COURSE_PREVIEW_API: BASE_URL + "/course/preview",
   COURSE_BASE: BASE_URL + "/course",
+  PATHS_API: BASE_URL + "/course/paths",
   COURSE_DETAILS_API: BASE_URL + "/course/getCourseDetails",
   EDIT_COURSE_API: BASE_URL + "/course/editCourse",
   COURSE_CATEGORIES_API: BASE_URL + "/course/showAllCategories",
