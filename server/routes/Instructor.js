@@ -23,4 +23,10 @@ router.patch("/coupons/:id", I.setCouponActive)
 
 router.get("/courses/:courseId/questions", require("../controllers/Learn").listCourseQuestionsForInstructor)
 
+// Section quizzes
+const Q = require("../controllers/Quizzes")
+router.get("/courses/:courseId/quizzes", Q.instructorList)
+router.put("/courses/:courseId/sections/:sectionId/quiz", Q.upsert)
+router.delete("/courses/:courseId/sections/:sectionId/quiz", Q.remove)
+
 module.exports = router
