@@ -56,6 +56,21 @@ const pop = (v) => ({ populate: async () => v });
   await test('a suspended account cannot sign in', async () => {
     existing = { suspended: true }; google(good); const r = res(); await S.google({ body: { credential: 'x' } }, r); assert.strictEqual(r.code, 403);
   });
+  await test('custom button: an access token for another app is refused', async () => {
+    existing = null;
+    S._fetch = async (url) => ({ ok: true, json: async () => (url.includes('tokeninfo') ? { aud: 'other-app', azp: 'other-app', expires_in: '3500', sub: 'g9' } : { sub: 'g9', email: 'a@b.c', email_verified: true }) });
+    const r = res(); await S.google({ body: { accessToken: 'ya29.x' } }, r); assert.strictEqual(r.code, 401);
+  });
+  await test('custom button: a valid access token signs in with the verified profile', async () => {
+    existing = null; created = null;
+    S._fetch = async (url) => ({ ok: true, json: async () => (url.includes('tokeninfo') ? { azp: 'my-client', aud: 'my-client', expires_in: '3500', sub: 'g9' } : { sub: 'g9', email: 'Neha@Gmail.com', email_verified: true, given_name: 'Neha', family_name: 'S', picture: 'p' }) });
+    const r = res(); await S.google({ body: { accessToken: 'ya29.x' } }, r);
+    assert.strictEqual(r.code, 200); assert.strictEqual(created.email, 'neha@gmail.com'); assert.strictEqual(created.googleId, 'g9');
+  });
+  await test('custom button: profile must belong to the same Google account as the token', async () => {
+    S._fetch = async (url) => ({ ok: true, json: async () => (url.includes('tokeninfo') ? { azp: 'my-client', expires_in: '3500', sub: 'g9' } : { sub: 'someone-else', email: 'x@y.z', email_verified: true }) });
+    const r = res(); await S.google({ body: { accessToken: 'ya29.x' } }, r); assert.strictEqual(r.code, 401);
+  });
   await test('GitHub needs a verified email', async () => {
     existing = null;
     S._fetch = async (url) => ({ ok: true, json: async () => (url.includes('access_token') ? { access_token: 't' } : url.endsWith('/emails') ? [{ email: 'a@b.c', primary: true, verified: false }] : { id: 5, login: 'dev' }) });
