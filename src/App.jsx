@@ -34,6 +34,7 @@ const EnrolledCourses = lazy(() => import("./components/core/Dashboard/EnrolledC
 const Certificate = lazy(() => import("./components/core/Dashboard/Certificate"));
 const Purchases = lazy(() => import("./components/core/Dashboard/Purchases"));
 const GithubCallback = lazy(() => import("./pages/GithubCallback"));
+const PlaygroundPage = lazy(() => import("./pages/PlaygroundPage"));
 const Wishlist = lazy(() => import("./components/core/Dashboard/Wishlist"));
 const SavedLessons = lazy(() => import("./components/core/Dashboard/SavedLessons"));
 const InstructorCourse = lazy(() => import("./components/core/Dashboard/InstructorCourse"));
@@ -195,6 +196,7 @@ function App() {
               <Route path="/" element={<Home />} />
               <Route path="/login" element={<Login />} />
               <Route path="/signup" element={<Signup />} />
+              <Route path="/playground" element={<PlaygroundPage />} />
               <Route path="/auth/github/callback" element={<GithubCallback />} />
               <Route path="/about" element={<About />} />
               <Route path="/contact" element={<Contact />} />

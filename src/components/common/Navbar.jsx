@@ -147,6 +147,9 @@ const Navbar = () => {
               </div>
             )}
           </div>
+          <NavLink to="/playground" className={linkClass}>
+            Playground
+          </NavLink>
           <NavLink to="/about" className={linkClass}>
             About
           </NavLink>
@@ -261,6 +264,9 @@ const Navbar = () => {
           <div className="mt-3 flex flex-col border-t border-line pt-3">
             <NavLink to="/" end className={linkClass}>
               Home
+            </NavLink>
+            <NavLink to="/playground" className={linkClass}>
+              Playground
             </NavLink>
             <NavLink to="/about" className={linkClass}>
               About
