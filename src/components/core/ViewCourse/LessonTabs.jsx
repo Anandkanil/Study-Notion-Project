@@ -1,10 +1,12 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { Suspense, lazy, useCallback, useEffect, useState } from "react";
 
 import { learnEndpoints } from "../../../services/apis";
 import { formatClock } from "../../../utils/learningMemory";
 import ConfirmationModal from "../../common/ConfirmationModal";
 import { Button } from "../../ui";
 import { fullName, useAdminApi, withToast } from "../Dashboard/Admin/shared";
+
+const Playground = lazy(() => import("../../common/Playground/Playground"));
 
 const when = (d) => new Date(d).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });
 const avatar = (u) => u?.image || `https://api.dicebear.com/9.x/initials/svg?seed=${encodeURIComponent(fullName(u))}`;
@@ -319,7 +321,7 @@ function QandA({ courseId, lessonId }) {
   );
 }
 
-/** Notes and Q&A for the lesson being watched. */
+/** Notes, Q&A and a code playground for the lesson being watched. */
 export default function LessonTabs({ courseId, lessonId, getTime, seek }) {
   const [tab, setTab] = useState("notes");
   return (
@@ -328,6 +330,7 @@ export default function LessonTabs({ courseId, lessonId, getTime, seek }) {
         {[
           ["notes", "My notes"],
           ["qa", "Questions"],
+          ["code", "Code"],
         ].map(([k, label]) => (
           <button
             key={k}
@@ -342,7 +345,15 @@ export default function LessonTabs({ courseId, lessonId, getTime, seek }) {
         ))}
       </div>
       <div role="tabpanel" className="p-4 sm:p-5">
-        {tab === "notes" ? <Notes key={lessonId} courseId={courseId} lessonId={lessonId} getTime={getTime} seek={seek} /> : <QandA key={lessonId} courseId={courseId} lessonId={lessonId} />}
+        {tab === "notes" ? (
+          <Notes key={lessonId} courseId={courseId} lessonId={lessonId} getTime={getTime} seek={seek} />
+        ) : tab === "qa" ? (
+          <QandA key={lessonId} courseId={courseId} lessonId={lessonId} />
+        ) : (
+          <Suspense fallback={<div className="skeleton h-64" aria-hidden="true" />}>
+            <Playground storageKey={`course-${courseId}`} compact />
+          </Suspense>
+        )}
       </div>
     </section>
   );
