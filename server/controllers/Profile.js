@@ -147,7 +147,7 @@ exports.getCurrentUserDetails = async (req, res) => {
 
     return res.status(200).json({
       success: true,
-      data: user,
+      data: req.user?.demo ? { ...(typeof user.toObject === 'function' ? user.toObject() : user), demo: true } : user,
       message: "User details retrieved successfully.",
     });
   } catch (error) {
