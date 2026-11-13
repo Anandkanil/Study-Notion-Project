@@ -13,6 +13,10 @@ const {
   removeFromWishlist,
   getLearningStats,
   setWeeklyGoal,
+  getSavedLessons,
+  saveLesson,
+  unsaveLesson,
+  setLastLesson,
 } = require("../controllers/Profile")
 
 // ********************************************************************************************************
@@ -32,6 +36,10 @@ router.get("/wishlist", auth, isStudent, getWishlist)
 router.post("/wishlist", auth, isStudent, addToWishlist)
 router.delete("/wishlist/:courseId", auth, isStudent, removeFromWishlist)
 router.get("/learning-stats", auth, isStudent, getLearningStats)
+router.put("/last-lesson", auth, isStudent, setLastLesson)
+router.get("/saved-lessons", auth, isStudent, getSavedLessons)
+router.post("/saved-lessons", auth, isStudent, saveLesson)
+router.delete("/saved-lessons/:subSectionId", auth, isStudent, unsaveLesson)
 router.put("/weekly-goal", auth, isStudent, setWeeklyGoal)
 
 module.exports = router

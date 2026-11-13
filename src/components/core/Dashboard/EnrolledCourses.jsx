@@ -41,6 +41,7 @@ export default function EnrolledCourses() {
   const { token } = useSelector((state) => state.auth);
   const { user } = useSelector((state) => state.profile);
   const [courses, setCourses] = useState(null);
+  const [serverLast, setServerLast] = useState(null);
   const [failed, setFailed] = useState(false);
 
   const load = useCallback(async () => {
@@ -49,6 +50,7 @@ export default function EnrolledCourses() {
     try {
       const res = await apiConnector("GET", profileEndpoints.GET_USER_ENROLLED_COURSES_API, null, { Authorization: `Bearer ${token}` });
       setCourses(res.data?.data || []);
+      setServerLast(res.data?.lastLesson || null);
     } catch (error) {
       console.error("Enrolled courses error:", error);
       setFailed(true);
@@ -63,7 +65,9 @@ export default function EnrolledCourses() {
   // still in progress; otherwise the next lesson of the most progressed course.
   const resume = useMemo(() => {
     const list = courses || [];
-    const last = getLastLesson(user?._id);
+    const local = getLastLesson(user?._id);
+    // Whichever is newer: this device's memory or the server's (another device)
+    const last = !local ? serverLast : !serverLast ? local : (new Date(serverLast.at) > new Date(local.at || 0) ? serverLast : local);
     if (last) {
       const course = list.find((c) => String(c._id) === String(last.courseId));
       const section = course?.courseContent?.find((s) => String(s._id) === String(last.sectionId));
@@ -78,7 +82,7 @@ export default function EnrolledCourses() {
     if (!course) return null;
     const ref = nextLesson(course);
     return { course, ref, position: ref ? getPosition(user?._id, ref.sub._id) : 0 };
-  }, [courses, user?._id]);
+  }, [courses, user?._id, serverLast]);
 
   return (
     <div className="flex flex-col gap-8">

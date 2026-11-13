@@ -10,6 +10,9 @@ import { formatClock, getPosition, setLastLesson, setPosition } from "../../../u
 import Announcements from "./Announcements";
 import LessonTabs from "./LessonTabs";
 import { celebrateLesson } from "../../common/StreakToast";
+import { toggleSavedLesson } from "../../../slices/savedLessonsSlice";
+import { apiConnector } from "../../../services/apiconnector";
+import { profileEndpoints } from "../../../services/apis";
 
 // The last stretch of a video counts as watched: 10 s, or 15% of a short clip
 const endMargin = (duration) => Math.min(10, duration * 0.15);
@@ -25,6 +28,16 @@ const VideoDetails = () => {
   const [resumedAt, setResumedAt] = useState(0);
   const { courseSectionData, courseEntireData, completedLectures } = useSelector((state) => state.viewCourse);
   const [saving, setSaving] = useState(false);
+  // Remember this lesson on the server too, so "Pick up where you left off" works on any device
+  useEffect(() => {
+    if (!token || user?.accountType !== "Student" || !subSectionId) return undefined;
+    const t = setTimeout(() => {
+      apiConnector("PUT", profileEndpoints.LAST_LESSON_API, { courseId, sectionId, subSectionId }, { Authorization: `Bearer ${token}` }).catch(() => {});
+    }, 1500);
+    return () => clearTimeout(t);
+  }, [token, user?.accountType, courseId, sectionId, subSectionId]);
+  const savedList = useSelector((state) => state.savedLessons.list);
+  const isSaved = savedList.some((l) => l.subSectionId === String(subSectionId));
   const [ended, setEnded] = useState(false);
 
   // Flat, ordered list of every lesson, for previous/next
@@ -183,6 +196,23 @@ const VideoDetails = () => {
           </p>
           <h1 className="mt-1 font-display text-2xl font-medium text-ink">{current.sub.title}</h1>
         </div>
+        <div className="flex flex-wrap items-center gap-2">
+        {user?.accountType === "Student" && (
+          <button
+            type="button"
+            onClick={() =>
+              dispatch(toggleSavedLesson({ courseId, sectionId, subSectionId, title: current.sub.title, courseName: courseEntireData?.courseName, thumbnail: courseEntireData?.thumbnail }, token))
+            }
+            aria-pressed={isSaved}
+            aria-label={isSaved ? "Remove from saved lessons" : "Save this lesson"}
+            title={isSaved ? "Saved. Click to remove" : "Save this lesson to watch again"}
+            className={`grid h-11 w-11 place-items-center rounded-xl border transition-colors ${isSaved ? "border-accent/50 bg-accent/15 text-accent-text" : "border-line bg-surface text-muted hover:text-ink"}`}
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill={isSaved ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinejoin="round" aria-hidden="true">
+              <path d="M6 3h12v18l-6-4-6 4z" />
+            </svg>
+          </button>
+        )}
         {isDone ? (
           <span className="inline-flex items-center gap-2 rounded-xl bg-success/15 px-4 py-2.5 font-semibold text-success">
             <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true">
@@ -195,6 +225,7 @@ const VideoDetails = () => {
             Mark as complete
           </Button>
         )}
+        </div>
       </div>
 
       {current.sub.description && <p className="max-w-prose whitespace-pre-line text-ink">{current.sub.description}</p>}

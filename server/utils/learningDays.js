@@ -53,7 +53,9 @@ function summarize(days = [], weeklyGoal = 3, now = new Date()) {
     const key = addDays(today, i - 13);
     return { day: key, lessons: days.find((d) => d.day === key)?.lessons || 0 };
   });
-  return { currentStreak: current, bestStreak: Math.max(best, current), learnedToday: active.has(today), thisWeek, weeklyGoal, last14 };
+  // Full stored history (up to 120 days) for the month calendar
+  const history = days.filter((d) => d.lessons > 0).map((d) => ({ day: d.day, lessons: d.lessons })).sort((a, b) => a.day.localeCompare(b.day));
+  return { currentStreak: current, bestStreak: Math.max(best, current), learnedToday: active.has(today), thisWeek, weeklyGoal, last14, today, history };
 }
 
 module.exports = { dayKey, recordLesson, summarize };

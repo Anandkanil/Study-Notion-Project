@@ -11,6 +11,7 @@ import PageSkeleton from "./components/common/PageSkeleton";
 import PrivateRoute from "./components/core/Auth/PrivateRoute";
 import { ACCOUNT_TYPE, homeFor } from "./utils/constants";
 import { loadWishlist } from "./slices/wishlistSlice";
+import { loadSavedLessons } from "./slices/savedLessonsSlice";
 
 // Each page loads only when it is first visited
 const Home = lazy(() => import("./pages/Home"));
@@ -33,6 +34,7 @@ const EnrolledCourses = lazy(() => import("./components/core/Dashboard/EnrolledC
 const Certificate = lazy(() => import("./components/core/Dashboard/Certificate"));
 const Purchases = lazy(() => import("./components/core/Dashboard/Purchases"));
 const Wishlist = lazy(() => import("./components/core/Dashboard/Wishlist"));
+const SavedLessons = lazy(() => import("./components/core/Dashboard/SavedLessons"));
 const InstructorCourse = lazy(() => import("./components/core/Dashboard/InstructorCourse"));
 const AdminOverview = lazy(() => import("./components/core/Dashboard/Admin/Overview"));
 const AdminSubjects = lazy(() => import("./components/core/Dashboard/Admin/Subjects"));
@@ -79,6 +81,7 @@ const TITLES = [
   [/^\/dashboard\/purchases\/./, "Receipt"],
   [/^\/dashboard\/purchases/, "Purchases"],
   [/^\/dashboard\/wishlist/, "Wishlist"],
+  [/^\/dashboard\/saved-lessons/, "Saved lessons"],
   [/^\/dashboard\/instructor\/courses\//, "Course stats and tools"],
   [/^\/dashboard\/instructor/, "Instructor dashboard"],
   [/^\/dashboard\/my-courses/, "My courses"],
@@ -139,6 +142,10 @@ function App() {
   useEffect(() => {
     if (token && user?.accountType === ACCOUNT_TYPE.STUDENT && !wishlistLoaded) dispatch(loadWishlist(token));
   }, [token, user?.accountType, wishlistLoaded, dispatch]);
+  const savedLoaded = useSelector((state) => state.savedLessons.loaded);
+  useEffect(() => {
+    if (token && user?.accountType === ACCOUNT_TYPE.STUDENT && !savedLoaded) dispatch(loadSavedLessons(token));
+  }, [token, user?.accountType, savedLoaded, dispatch]);
 
   const dashboardHome = homeFor(user?.accountType);
 
@@ -213,6 +220,7 @@ function App() {
                 <Route path="/dashboard/certificate/:courseId" element={<RequireRole role={ACCOUNT_TYPE.STUDENT} fallback={dashboardHome}><Certificate /></RequireRole>} />
                 <Route path="/dashboard/instructor/courses/:courseId" element={<RequireRole role={ACCOUNT_TYPE.INSTRUCTOR} fallback={dashboardHome}><InstructorCourse /></RequireRole>} />
                 <Route path="/dashboard/wishlist" element={<RequireRole role={ACCOUNT_TYPE.STUDENT} fallback={dashboardHome}><Wishlist /></RequireRole>} />
+                <Route path="/dashboard/saved-lessons" element={<RequireRole role={ACCOUNT_TYPE.STUDENT} fallback={dashboardHome}><SavedLessons /></RequireRole>} />
                 <Route path="/dashboard/purchases" element={<RequireRole role={ACCOUNT_TYPE.STUDENT} fallback={dashboardHome}><Purchases /></RequireRole>} />
                 <Route path="/dashboard/purchases/:orderId" element={<RequireRole role={ACCOUNT_TYPE.STUDENT} fallback={dashboardHome}><Receipt /></RequireRole>} />
                 <Route path="/dashboard/purchases/:orderId/refund" element={<RequireRole role={ACCOUNT_TYPE.STUDENT} fallback={dashboardHome}><Receipt refund /></RequireRole>} />

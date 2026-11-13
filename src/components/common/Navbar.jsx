@@ -4,6 +4,7 @@ import { useSelector } from "react-redux";
 
 import ProfileDropDown from "../core/Auth/ProfileDropDown";
 import ThemeToggle from "./ThemeToggle";
+import CommandSearch, { shortcutLabel } from "./CommandSearch";
 import Logo from "./Logo";
 import useOnClickOutside from "../../hooks/useOnClickOutside";
 import { apiConnector } from "../../services/apiconnector";
@@ -19,6 +20,7 @@ const Navbar = () => {
   const [catsLoading, setCatsLoading] = useState(true);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [catalogOpen, setCatalogOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
   const catalogRef = useRef(null);
 
   const location = useLocation();
@@ -58,6 +60,22 @@ const Navbar = () => {
       if (e.key === "Escape") {
         setCatalogOpen(false);
         setMobileOpen(false);
+      }
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, []);
+
+  // Ctrl+K / ⌘K opens search from anywhere; "/" too, unless you're typing
+  useEffect(() => {
+    const onKey = (e) => {
+      const typing = /^(INPUT|TEXTAREA|SELECT)$/.test(e.target?.tagName) || e.target?.isContentEditable;
+      if ((e.key === "k" || e.key === "K") && (e.metaKey || e.ctrlKey)) {
+        e.preventDefault();
+        setSearchOpen((o) => !o);
+      } else if (e.key === "/" && !typing) {
+        e.preventDefault();
+        setSearchOpen(true);
       }
     };
     document.addEventListener("keydown", onKey);
@@ -137,37 +155,23 @@ const Navbar = () => {
         </nav>
 
         <div className="ml-auto flex items-center gap-2 lg:ml-0">
-          {!onSearchPage && (
-            <form
-              role="search"
-              onSubmit={(e) => {
-                e.preventDefault();
-                const q = searchText.trim();
-                navigate(q ? `/search?q=${encodeURIComponent(q)}` : "/search");
-                setSearchText("");
-              }}
-              className="hidden h-11 items-center gap-2 rounded-xl border border-line bg-surface px-3 text-muted focus-within:border-accent focus-within:ring-2 focus-within:ring-accent/30 xl:flex"
-            >
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
-                <circle cx="11" cy="11" r="7" />
-                <path d="M20 20l-3.5-3.5" />
-              </svg>
-              <label htmlFor="nav-search" className="sr-only">
-                Search courses
-              </label>
-              <input
-                id="nav-search"
-                type="search"
-                value={searchText}
-                onChange={(e) => setSearchText(e.target.value)}
-                placeholder="Search courses"
-                className="w-44 bg-transparent text-ink placeholder:text-muted focus:outline-none"
-              />
-            </form>
-          )}
-          {!onSearchPage && (
-            <Link
-              to="/search"
+          <button
+            type="button"
+            onClick={() => setSearchOpen(true)}
+            aria-keyshortcuts="Control+K Meta+K"
+            className="hidden h-11 items-center gap-2 rounded-xl border border-line bg-surface pl-3 pr-2 text-muted transition-colors hover:text-ink xl:flex"
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
+              <circle cx="11" cy="11" r="7" />
+              <path d="M20 20l-3.5-3.5" />
+            </svg>
+            <span className="w-32 text-left">Search courses</span>
+            <kbd className="rounded-md border border-line bg-bg px-1.5 py-0.5 font-sans text-xs" aria-hidden="true">{shortcutLabel}</kbd>
+          </button>
+          {(
+            <button
+              type="button"
+              onClick={() => setSearchOpen(true)}
               aria-label="Search courses"
               className="hidden h-11 w-11 place-items-center rounded-xl border border-line bg-surface text-ink hover:bg-raised sm:grid xl:hidden"
             >
@@ -175,7 +179,7 @@ const Navbar = () => {
                 <circle cx="11" cy="11" r="7" />
                 <path d="M20 20l-3.5-3.5" />
               </svg>
-            </Link>
+            </button>
           )}
           <ThemeToggle />
           {isStudent && (
@@ -212,6 +216,8 @@ const Navbar = () => {
           )}
         </div>
       </div>
+
+      <CommandSearch open={searchOpen} onClose={() => setSearchOpen(false)} />
 
       {mobileOpen && (
         <nav id="mobile-nav" aria-label="Main" className="border-t border-line bg-surface px-4 pb-6 pt-3 lg:hidden">
