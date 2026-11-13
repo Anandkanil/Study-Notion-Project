@@ -72,20 +72,45 @@ function sendSession(res, user, created) {
   return res.status(200).json({ success: true, message: created ? 'Account created' : 'Login successful', created, token, data });
 }
 
-// POST /auth/google { credential, accountType }
-exports.google = async (req, res) => {
-  const clientId = process.env.GOOGLE_CLIENT_ID;
-  if (!clientId) return res.status(503).json({ success: false, message: "Google sign-in isn't set up yet." });
-  const credential = typeof req.body?.credential === 'string' ? req.body.credential : '';
-  if (!credential || credential.length > 4096) return res.status(400).json({ success: false, message: 'Google sign-in failed. Please try again.' });
-  try {
+/**
+ * Checks a Google sign-in and returns the person's verified profile, or null.
+ * Accepts either an ID token (`credential`, from Google's own button) or an access token
+ * (`accessToken`, from our custom button using Google's token popup). Both are checked with Google:
+ * issued to our client id, not expired, email verified.
+ */
+async function verifyGoogle({ credential, accessToken }, clientId) {
+  if (credential) {
     const r = await http(`https://oauth2.googleapis.com/tokeninfo?id_token=${encodeURIComponent(credential)}`);
     const info = r.ok ? await r.json() : null;
     const issuerOk = info && ['accounts.google.com', 'https://accounts.google.com'].includes(info.iss);
     const fresh = info && Number(info.exp) * 1000 > Date.now();
-    if (!info || info.aud !== clientId || !issuerOk || !fresh) {
-      return res.status(401).json({ success: false, message: 'Google sign-in failed. Please try again.' });
-    }
+    if (!info || info.aud !== clientId || !issuerOk || !fresh) return { error: 'Google sign-in failed. Please try again.' };
+    return { info };
+  }
+  const t = await http(`https://oauth2.googleapis.com/tokeninfo?access_token=${encodeURIComponent(accessToken)}`);
+  const tok = t.ok ? await t.json() : null;
+  // The token must have been issued to our app, or anyone else's Google token could sign in here
+  if (!tok || (tok.aud !== clientId && tok.azp !== clientId) || !(Number(tok.expires_in) > 0)) {
+    return { error: 'Google sign-in failed. Please try again.' };
+  }
+  const u = await http('https://openidconnect.googleapis.com/v1/userinfo', { headers: { Authorization: `Bearer ${accessToken}` } });
+  const info = u.ok ? await u.json() : null;
+  if (!info?.sub || info.sub !== tok.sub) return { error: 'Google sign-in failed. Please try again.' };
+  return { info };
+}
+
+// POST /auth/google { credential | accessToken, accountType }
+exports.google = async (req, res) => {
+  const clientId = process.env.GOOGLE_CLIENT_ID;
+  if (!clientId) return res.status(503).json({ success: false, message: "Google sign-in isn't set up yet." });
+  const credential = typeof req.body?.credential === 'string' ? req.body.credential : '';
+  const accessToken = typeof req.body?.accessToken === 'string' ? req.body.accessToken : '';
+  const token = credential || accessToken;
+  if (!token || token.length > 4096) return res.status(400).json({ success: false, message: 'Google sign-in failed. Please try again.' });
+  try {
+    const v = await verifyGoogle({ credential, accessToken }, clientId);
+    if (v.error) return res.status(401).json({ success: false, message: v.error });
+    const info = v.info;
     if (String(info.email_verified) !== 'true' || !info.email) {
       return res.status(401).json({ success: false, message: 'Your Google email address isn’t verified yet.' });
     }
