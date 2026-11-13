@@ -1,4 +1,4 @@
-import React, { useLayoutEffect, useRef, useState } from "react";
+import React, { useLayoutEffect, useState } from "react";
 
 /*
  * Small hand-rolled charts for the admin dashboard, following the house chart rules:
@@ -9,19 +9,19 @@ import React, { useLayoutEffect, useRef, useState } from "react";
  * pass the lightness band and 3:1 contrast against the surface.
  */
 
+// Callback ref: re-measures whenever the chart element mounts again (e.g. after "Show chart")
 function useWidth() {
-  const ref = useRef(null);
+  const [el, setEl] = useState(null);
   const [width, setWidth] = useState(0);
   useLayoutEffect(() => {
-    const el = ref.current;
     if (!el) return;
     setWidth(el.clientWidth);
     if (typeof ResizeObserver === "undefined") return;
     const ro = new ResizeObserver(([entry]) => setWidth(Math.round(entry.contentRect.width)));
     ro.observe(el);
     return () => ro.disconnect();
-  }, []);
-  return [ref, width];
+  }, [el]);
+  return [setEl, width];
 }
 
 /** Round axis maximum and step: 0, 1,000, 2,000 … */
