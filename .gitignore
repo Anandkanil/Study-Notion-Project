@@ -24,3 +24,7 @@ yarn-error.log*
 
 # Folder image
 desktop.ini
+
+# Playwright
+test-results/
+playwright-report/

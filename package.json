@@ -26,7 +26,8 @@
     "build": "vite build",
     "preview": "vite preview",
     "server": "cd server && npm run dev",
-    "dev:all": "concurrently -n \"client,server\" -c \"bgBlue,bgGreen\" \"npm start\" \"npm run server\""
+    "dev:all": "concurrently -n \"client,server\" -c \"bgBlue,bgGreen\" \"npm start\" \"npm run server\"",
+    "test:e2e": "playwright test"
   },
   "devDependencies": {
     "tailwindcss": "^3.4.0",
