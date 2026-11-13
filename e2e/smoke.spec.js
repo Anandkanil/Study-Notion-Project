@@ -3,8 +3,11 @@ import { test, expect } from "@playwright/test";
 import { fixtures } from "./fixtures.js";
 
 test.beforeEach(async ({ page }) => {
-  // Third-party scripts aren't needed for these checks
-  await page.route(/accounts\.google\.com|checkout\.razorpay\.com/, (route) => route.abort());
+  // Stand-in for Google's sign-in script (the real one isn't needed, and the button hides if it fails to load)
+  await page.route(/accounts\.google\.com\/gsi\/client/, (route) =>
+    route.fulfill({ contentType: "text/javascript", body: "window.google={accounts:{id:{},oauth2:{initTokenClient:()=>({requestAccessToken(){}})}}};" })
+  );
+  await page.route(/checkout\.razorpay\.com/, (route) => route.abort());
   await page.route(/\/api\/v1\//, (route) => {
     const req = route.request();
     const path = new URL(req.url()).pathname.replace(/^.*\/api\/v1/, "");
