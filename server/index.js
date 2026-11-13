@@ -28,6 +28,8 @@ const PORT=process.env.PORT || 4000;
 connectDB().then(()=>{
   // Rebuild receipts for orders paid before purchases were recorded (idempotent)
   setTimeout(()=>backfillPurchases(),5000);
+  // One-off demo catalogue: set SEED_DEMO=add (or remove) on the host, restart, then unset it
+  if (process.env.SEED_DEMO) require('./seed/demo').runDemoSeed();
 });
 
 // Render sits behind one proxy: trust it so req.ip is the visitor's address

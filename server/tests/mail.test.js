@@ -14,6 +14,12 @@ let passed = 0; const test = async (n, fn) => { try { await fn(); passed++; cons
     assert.strictEqual(lastReq.opts.headers['api-key'], 'xkeysib-test'); assert.strictEqual(lastReq.opts.body.sender.email, 'sender@example.com');
     assert.strictEqual(lastReq.opts.body.to[0].email, 'to@example.com'); assert.strictEqual(lastReq.opts.body.htmlContent, '<b>x</b>');
   });
+  lastReq = null;
+  await test('demo .test address: skipped, nothing sent', async () => {
+    const r = await mailSender('meera.krishnan@demo.studynotion.test', 'Hi', 'x');
+    assert(r && r.skipped); assert.strictEqual(lastReq, null);
+    assert(mailSender.isDemoAddress('A@B.TEST ')); assert(!mailSender.isDemoAddress('a@testing.com'));
+  });
   global.fetch = async () => ({ ok: false, status: 400, text: async () => 'sender email is invalid' });
   await test('Brevo error -> null, no throw', async () => assert.strictEqual(await mailSender('a@b.c', 's', 'h'), null));
   global.fetch = (url, opts) => new Promise((_, rej) => opts.signal.addEventListener('abort', () => { const e = new Error('aborted'); e.name = 'AbortError'; rej(e); }));
