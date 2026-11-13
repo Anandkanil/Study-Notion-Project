@@ -18,4 +18,9 @@ router.post("/questions/:id/answers", L.answerQuestion)
 router.patch("/questions/:id", L.setResolved)
 router.delete("/questions/:id", L.deleteQuestion)
 
+const Q = require("../controllers/Quizzes")
+router.get("/:courseId/quizzes", Q.listForCourse)
+router.get("/:courseId/quizzes/:sectionId", Q.getForSection)
+router.post("/quizzes/:quizId/attempts", Q.attempt)
+
 module.exports = router

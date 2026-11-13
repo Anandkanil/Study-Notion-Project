@@ -261,6 +261,8 @@ const VideoDetails = () => {
       <LessonTabs
         courseId={courseId}
         lessonId={subSectionId}
+        sectionId={sectionId}
+        sectionName={current.sectionName}
         getTime={() => videoRef.current?.currentTime || 0}
         seek={(t) => {
           const v = videoRef.current;

@@ -8,6 +8,7 @@ import { formatINR } from "../../../../utils/formatINR";
 import ConfirmationModal from "../../../common/ConfirmationModal";
 import { Button, EmptyState, Field, buttonClass } from "../../../ui";
 import { ColumnChart } from "../Admin/charts";
+import QuizzesTab from "./QuizzesTab";
 import { LoadFailed, RowsSkeleton, fullName, shortDate, useAdminApi, useAdminLoad, withToast } from "../Admin/shared";
 
 const BASE = instructorEndpoints.BASE;
@@ -16,6 +17,7 @@ const TABS = [
   ["reviews", "Reviews"],
   ["announcements", "Announcements"],
   ["questions", "Q&A"],
+  ["quizzes", "Quizzes"],
   ["codes", "Discount codes"],
 ];
 const MONTH = (y, m, style) => new Date(Date.UTC(y, m - 1, 1)).toLocaleDateString("en-IN", { month: style, year: style === "long" ? "numeric" : undefined, timeZone: "UTC" });
@@ -445,6 +447,7 @@ export default function InstructorCourse() {
         {tab === "reviews" && <ReviewsTab courseId={courseId} />}
         {tab === "announcements" && <AnnouncementsTab courseId={courseId} students={data.totals.students} />}
         {tab === "questions" && <QuestionsTab courseId={courseId} />}
+        {tab === "quizzes" && <QuizzesTab courseId={courseId} />}
         {tab === "codes" && <CodesTab courseId={courseId} price={data.course.price} />}
       </div>
     </div>

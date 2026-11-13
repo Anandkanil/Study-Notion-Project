@@ -7,6 +7,7 @@ import { Button } from "../../ui";
 import { fullName, useAdminApi, withToast } from "../Dashboard/Admin/shared";
 
 const Playground = lazy(() => import("../../common/Playground/Playground"));
+const SectionQuiz = lazy(() => import("./SectionQuiz"));
 
 const when = (d) => new Date(d).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });
 const avatar = (u) => u?.image || `https://api.dicebear.com/9.x/initials/svg?seed=${encodeURIComponent(fullName(u))}`;
@@ -321,8 +322,8 @@ function QandA({ courseId, lessonId }) {
   );
 }
 
-/** Notes, Q&A and a code playground for the lesson being watched. */
-export default function LessonTabs({ courseId, lessonId, getTime, seek }) {
+/** Notes, Q&A, the section quiz and a code playground for the lesson being watched. */
+export default function LessonTabs({ courseId, lessonId, sectionId, sectionName, getTime, seek }) {
   const [tab, setTab] = useState("notes");
   return (
     <section className="rounded-2xl border border-line bg-surface">
@@ -330,6 +331,7 @@ export default function LessonTabs({ courseId, lessonId, getTime, seek }) {
         {[
           ["notes", "My notes"],
           ["qa", "Questions"],
+          ["quiz", "Section quiz"],
           ["code", "Code"],
         ].map(([k, label]) => (
           <button
@@ -349,6 +351,10 @@ export default function LessonTabs({ courseId, lessonId, getTime, seek }) {
           <Notes key={lessonId} courseId={courseId} lessonId={lessonId} getTime={getTime} seek={seek} />
         ) : tab === "qa" ? (
           <QandA key={lessonId} courseId={courseId} lessonId={lessonId} />
+        ) : tab === "quiz" ? (
+          <Suspense fallback={<div className="skeleton h-40" aria-hidden="true" />}>
+            <SectionQuiz key={sectionId} courseId={courseId} sectionId={sectionId} sectionName={sectionName} />
+          </Suspense>
         ) : (
           <Suspense fallback={<div className="skeleton h-64" aria-hidden="true" />}>
             <Playground storageKey={`course-${courseId}`} compact />
