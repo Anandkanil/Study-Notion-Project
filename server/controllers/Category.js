@@ -82,7 +82,6 @@ const categoryPageDetails = async (req, res) => {
             });
         }
 
-        console.log("PRINTING CATEGORY ID: ", categoryId);
 
         // Get courses for the specified category
         const selectedCategory = await Category.findById(categoryId)
@@ -152,10 +151,26 @@ const categoryPageDetails = async (req, res) => {
             .sort((a, b) => (b.studentsEnrolled?.length || 0) - (a.studentsEnrolled?.length || 0))
             .slice(0, 10);
 
+        // Course length for the catalogue filters: total lesson seconds per course
+        const selected = selectedCategory.toObject();
+        const ids = selected.courses.map((c) => c._id);
+        const lengths = await Course.aggregate([
+            { $match: { _id: { $in: ids } } },
+            { $lookup: { from: "sections", localField: "courseContent", foreignField: "_id", as: "sec" } },
+            { $lookup: { from: "subsections", localField: "sec.subSection", foreignField: "_id", as: "lessons" } },
+            { $project: { lessons: { $size: "$lessons" }, seconds: { $sum: { $map: { input: "$lessons", as: "l", in: { $convert: { input: "$$l.timeDuration", to: "double", onError: 0, onNull: 0 } } } } } } },
+        ]);
+        const byId = new Map(lengths.map((l) => [String(l._id), l]));
+        selected.courses = selected.courses.map((c) => ({
+            ...c,
+            totalSeconds: Math.round(byId.get(String(c._id))?.seconds || 0),
+            lessonCount: byId.get(String(c._id))?.lessons || 0,
+        }));
+
         return res.status(200).json({
             success: true,
             data: {
-                selectedCategory,
+                selectedCategory: selected,
                 differentCategory,
                 mostSellingCourses,
             },

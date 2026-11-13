@@ -35,10 +35,27 @@ const CourseGrid = ({ courses }) => (
   </ul>
 );
 
+// Catalogue filters: [key, label, test]
+const PRICES = [
+  ["any", "Any price", () => true],
+  ["under1000", "Under ₹1,000", (p) => p < 1000],
+  ["1000-2999", "₹1,000 – ₹2,999", (p) => p >= 1000 && p < 3000],
+  ["3000plus", "₹3,000 and up", (p) => p >= 3000],
+];
+const LENGTHS = [
+  ["any", "Any length", () => true],
+  ["short", "Under 3 hours", (h) => h < 3],
+  ["medium", "3 – 5 hours", (h) => h >= 3 && h < 5],
+  ["long", "5 hours or more", (h) => h >= 5],
+];
+const selectClass = "rounded-xl border border-line bg-surface px-3 py-2.5 text-sm font-semibold text-ink focus:border-accent focus:outline-none";
+
 const Catalog = () => {
   const { catalogName } = useParams();
   const [state, setState] = useState({ status: "loading" });
   const [sort, setSort] = useState("popular");
+  const [price, setPrice] = useState("any");
+  const [length, setLength] = useState("any");
 
   const load = useCallback(async () => {
     setState({ status: "loading" });
@@ -71,12 +88,20 @@ const Catalog = () => {
     if (state.category) document.title = `${state.category.name} courses · StudyNotion`;
   }, [state.category]);
 
+  const allCourses = state.data?.selectedCategory?.courses || [];
   const courses = useMemo(() => {
-    const list = [...(state.data?.selectedCategory?.courses || [])];
+    const p = PRICES.find(([k]) => k === price) || PRICES[0];
+    const l = LENGTHS.find(([k]) => k === length) || LENGTHS[0];
+    const list = allCourses.filter((c) => p[2](c.price || 0) && (length === "any" || l[2]((c.totalSeconds || 0) / 3600)));
     if (sort === "newest") list.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
     else list.sort((a, b) => (b.studentsEnrolled?.length || 0) - (a.studentsEnrolled?.length || 0));
     return list;
-  }, [state.data, sort]);
+  }, [allCourses, sort, price, length]);
+  const filtered = price !== "any" || length !== "any";
+  const clearFilters = () => {
+    setPrice("any");
+    setLength("any");
+  };
 
   const other = state.data?.differentCategory;
   const popularEverywhere = (state.data?.mostSellingCourses || []).filter(
@@ -138,8 +163,17 @@ const Catalog = () => {
           <section aria-labelledby="cat-courses">
             <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
               <h2 id="cat-courses" className="font-display text-2xl font-medium text-ink">
-                Courses{state.status === "ready" ? ` (${courses.length})` : ""}
+                Courses{state.status === "ready" ? ` (${filtered ? `${courses.length} of ${allCourses.length}` : courses.length})` : ""}
               </h2>
+              <div className="flex flex-wrap items-center gap-2">
+              <label className="sr-only" htmlFor="cat-price">Price</label>
+              <select id="cat-price" value={price} onChange={(e) => setPrice(e.target.value)} className={selectClass}>
+                {PRICES.map(([k, label]) => <option key={k} value={k}>{label}</option>)}
+              </select>
+              <label className="sr-only" htmlFor="cat-length">Length</label>
+              <select id="cat-length" value={length} onChange={(e) => setLength(e.target.value)} className={selectClass}>
+                {LENGTHS.map(([k, label]) => <option key={k} value={k}>{label}</option>)}
+              </select>
               <div role="radiogroup" aria-label="Sort courses" className="flex gap-1 rounded-xl border border-line bg-surface p-1">
                 {SORTS.map(([key, label]) => (
                   <button
@@ -154,11 +188,16 @@ const Catalog = () => {
                   </button>
                 ))}
               </div>
+              </div>
             </div>
             {state.status === "loading" ? (
               <CardSkeletons />
             ) : courses.length ? (
               <CourseGrid courses={courses} />
+            ) : filtered && allCourses.length ? (
+              <EmptyState title="No courses match these filters" action={<Button variant="secondary" onClick={clearFilters}>Clear filters</Button>}>
+                Try a different price or length.
+              </EmptyState>
             ) : (
               <EmptyState title="No courses here yet">New courses in {state.category?.name} will appear here once instructors publish them.</EmptyState>
             )}
