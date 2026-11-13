@@ -22,6 +22,7 @@ export const profileEndpoints = {
   LEARNING_STATS_API: BASE_URL + "/profile/learning-stats",
   SAVED_LESSONS_API: BASE_URL + "/profile/saved-lessons",
   LAST_LESSON_API: BASE_URL + "/profile/last-lesson",
+  EMAIL_PREFS_API: BASE_URL + "/profile/email-prefs",
   WEEKLY_GOAL_API: BASE_URL + "/profile/weekly-goal",
 }
 

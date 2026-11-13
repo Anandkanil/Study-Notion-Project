@@ -5,6 +5,10 @@ import { useNavigate } from "react-router-dom";
 
 import { changePassword, deleteProfile, updateDisplayPicture, updateProfile } from "../../../../services/operations/SettingsAPI";
 import { logout } from "../../../../services/operations/authAPI";
+import { apiConnector } from "../../../../services/apiconnector";
+import { profileEndpoints } from "../../../../services/apis";
+import { setUser } from "../../../../slices/profileSlice";
+import { toast } from "react-hot-toast";
 import ConfirmationModal from "../../../common/ConfirmationModal";
 import { Button, Field, PasswordField } from "../../../ui";
 
@@ -233,13 +237,60 @@ function DeleteSection() {
   );
 }
 
+function EmailSection() {
+  const { user } = useSelector((state) => state.profile);
+  const { token } = useSelector((state) => state.auth);
+  const dispatch = useDispatch();
+  const [saving, setSaving] = useState(false);
+  const on = user?.emailPrefs?.weeklyDigest !== false;
+
+  const toggle = async () => {
+    setSaving(true);
+    try {
+      const res = await apiConnector("PUT", profileEndpoints.EMAIL_PREFS_API, { weeklyDigest: !on }, { Authorization: `Bearer ${token}` });
+      const updated = { ...user, emailPrefs: { ...(user.emailPrefs || {}), weeklyDigest: !on } };
+      dispatch(setUser(updated));
+      localStorage.setItem("user", JSON.stringify(updated));
+      toast.success(res.data?.message || "Saved");
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Couldn't save that. Please try again.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <Section id="st-email" title="Emails" description="Receipts, sign-in codes and course updates always arrive. This is the only optional email.">
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <div>
+          <p className="font-semibold text-ink">Weekly learning reminder</p>
+          <p className="text-sm text-muted">On Sundays: your lessons that week, your streak and where to pick up. Only sent if you learned in the last four weeks.</p>
+        </div>
+        <button
+          type="button"
+          role="switch"
+          aria-checked={on}
+          aria-label="Weekly learning reminder"
+          disabled={saving}
+          onClick={toggle}
+          className={`relative h-7 w-12 shrink-0 rounded-full transition-colors disabled:opacity-60 ${on ? "bg-accent" : "bg-line"}`}
+        >
+          <span className={`absolute top-1 h-5 w-5 rounded-full bg-white shadow transition-[left] ${on ? "left-6" : "left-1"}`} />
+        </button>
+      </div>
+    </Section>
+  );
+}
+
 export default function Settings() {
+  const { user } = useSelector((state) => state.profile);
   return (
     <div className="flex flex-col gap-6">
       <h1 className="font-display text-3xl font-bold text-ink">Settings</h1>
       <PhotoSection />
       <ProfileSection />
       <PasswordSection />
+      {user?.accountType === "Student" && <EmailSection />}
       <DeleteSection />
     </div>
   );

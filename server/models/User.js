@@ -80,6 +80,13 @@ const userSchema = new mongoose.Schema({
         lessons: { type: Number, default: 0 }
     }],
     weeklyGoal: { type: Number, default: 3, min: 1, max: 50 },
+    // Email choices; the weekly learning reminder is on unless turned off
+    emailPrefs: {
+        _id: false,
+        weeklyDigest: { type: Boolean, default: true },
+    },
+    // The Sunday a weekly reminder was last sent ("week-YYYY-MM-DD"), so it goes once a week
+    lastDigestWeek: { type: String },
     // Set by an admin: a suspended account can't log in or use the API
     suspended: { type: Boolean, default: false },
     suspendedReason: { type: String, maxlength: 300 }
