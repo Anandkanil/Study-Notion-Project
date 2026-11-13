@@ -1,5 +1,9 @@
-name: Keep the API awake
+name: Keep the API awake (backup)
 
+# Backup only: the main ping is the Netlify scheduled function in
+# netlify/functions/keep-awake.mjs, because GitHub runs scheduled workflows late
+# (often only every hour or two).
+#
 # Render's free plan puts the server to sleep after 15 minutes without traffic,
 # so the next visitor waits 30-60 seconds. This pings the health check every
 # 10 minutes from 8 am to midnight India time (02:30-18:30 UTC).
