@@ -42,5 +42,7 @@ router.get("/saved-lessons", auth, isStudent, getSavedLessons)
 router.post("/saved-lessons", auth, isStudent, saveLesson)
 router.delete("/saved-lessons/:subSectionId", auth, isStudent, unsaveLesson)
 router.put("/weekly-goal", auth, isStudent, setWeeklyGoal)
+router.put("/email-prefs", auth, require("../controllers/EmailPrefs").update)
+router.get("/digest/unsubscribe", require("../controllers/EmailPrefs").unsubscribe)
 
 module.exports = router
